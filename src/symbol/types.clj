@@ -93,7 +93,7 @@
           
 
 ; TODO special handling of sets, maps and vectors?
-; TODO def loop recur new set!
+; TODO loop recur
 (defnu typedo
   [env form type]
   ([_ ['if . _] _] (ifo env form type))
@@ -102,5 +102,6 @@
   ([_ [?dot . _] _] (== ?dot '.) (dot env form type))
   ([_ ['new . _] _] (newo env form type))
   ([_ [?fn . _] _] (applyo env form type))  
+  ([_ ['def ?n ?x] _] (typedo env ?x type))
   ([_ _ _] (conda ((membero [form type] env))
                   ((literalo form type))))) ; TODO use typeo only for simple types

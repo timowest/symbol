@@ -68,6 +68,10 @@
   (typed '{a (fn [long] long)} '(a 1)) => 'long
   (typed '{+ (fn [long long] long)} '(+ 1 2)) => 'long)
 
+(facts "def"
+  (typed '(def a 1)) => 'long
+  (typed '(def b (fn [] 1))) => '(fn [] long))
+
 (facts "constants"
    (typed 1) => 'long
    (typed "s") => 'string
