@@ -32,7 +32,7 @@
   ([_ ['fn [] ?stmt . _] ['fn [] ?type]] ; TODO should be last stmt
     (typedo env ?stmt ?type)))
                               
-(defne leto ; (let* bindings body)
+(defne leto ; (let* bindings body*)
   [env form type]
   ([_ ['let* [?k ?v . ?rest] . ?body] _]
     (fresh [vtype new-env new-let]
@@ -43,7 +43,7 @@
   ([_ ['let* [] ?stmt . _] _] ; TODO should be last stmt
     (typedo env ?stmt type)))
 
-(defne applyo ; (f args)
+(defne applyo ; (f args*)
   [env form type]
   ([_ [?f . ?args] _]
     (fresh [ftype types]
@@ -51,7 +51,7 @@
            (typeso env ?args types)
            (== ftype ['fn types type]))))
 
-(defne dot ; (. obj member args?)
+(defne dot ; (. obj member args*)
   [env form type]
   ([_ [_ ?obj ?member . ?args] _]
     (fresh [members membert argst]
@@ -61,15 +61,28 @@
            (matcha [membert type]
                    ([['fn argst type] type]) 
                    ([type type])))))
+
+(defne newo ; (new Class args*)
+  [env form type]
+  ([_ ['new ?class . ?args] ['object ?members]]
+    (fresh [argst]
+           (typedo env ?class ['class ?members])
+           (typeso env ?args argst)
+           (membero [:new argst] ?members))))
+            
+(def ^:private literal-types
+  {Long      'long
+   Double    'double
+   String    'string
+   Character 'char
+   clojure.lang.Ratio     'ratio})
     
-; TODO optimize
-; TODO this should only transform literals
-(defn typeo 
+(defn literalo
   [form type]
   (fn [a]
-    (let [gf (walk a form)
-          t (-> gf .getClass .getSimpleName .toLowerCase symbol)]
-      (unify a [type] [t]))))
+    (let [gf (walk a form)]
+      (if-let [t (literal-types (.getClass gf))]
+        (unify a [type] [t])))))
 
 (defne typeso 
   [env args types]
@@ -87,6 +100,7 @@
   ([_ ['fn . _] _] (fno env form type))
   ([_ ['let* . _] _] (leto env form type))
   ([_ [?dot . _] _] (== ?dot '.) (dot env form type))
+  ([_ ['new . _] _] (newo env form type))
   ([_ [?fn . _] _] (applyo env form type))  
   ([_ _ _] (conda ((membero [form type] env))
-                  ((typeo form type))))) ; TODO use typeo only for simple types
+                  ((literalo form type))))) ; TODO use typeo only for simple types

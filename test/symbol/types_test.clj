@@ -49,6 +49,21 @@
   (typed env3 '(. person age)) => 'long
   (typed env3 '(. person olderThan 10)) => 'boolean)
 
+(def env4 '{Person (class ((name string) 
+                           (age long)
+                           (:new [string])
+                           (:new [string long])))})
+
+(defn object
+  [clazz]
+  (list 'object (second (env4 clazz))))
+
+(facts "new"
+  (typed env4 '(new Person 1)) => nil
+  (typed env4 '(new Person)) => nil
+  (typed env4 '(new Person "a")) => (object 'Person)
+  (typed env4 '(new Person "a" 1)) => (object 'Person))
+
 (facts "apply"
   (typed '{a (fn [long] long)} '(a 1)) => 'long
   (typed '{+ (fn [long long] long)} '(+ 1 2)) => 'long)
@@ -56,7 +71,7 @@
 (facts "constants"
    (typed 1) => 'long
    (typed "s") => 'string
-   (typed \s) => 'character
+   (typed \s) => 'char
    (typed 1.2) => 'double
    (typed 1/2) => 'ratio)
     
