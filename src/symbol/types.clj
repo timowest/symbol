@@ -1,5 +1,6 @@
 (ns symbol.types
   (:refer-clojure :exclude [== reify inc type])
+  (:require [clojure.walk :as walk])
   (:use [clojure.core.logic]))
 
 (declare typedo typeso annotatedo)
@@ -97,7 +98,9 @@
   ([_ ['def ?name ?expr] _]
     (fresh [new-env]
            (conso [?name type] env new-env)
-           (typedo new-env ?expr type))))
+           (typedo new-env ?expr type)))
+  ([_ ['def ?name] _]
+    (annotatedo ?name type)))
             
 (def ^:private literal-types
   {Long      'long
@@ -106,13 +109,22 @@
    Character 'char
    Boolean   'boolean
    clojure.lang.Ratio     'ratio})
-    
+   
+
+(defn expand-type
+  [type]
+  (if (seq? type)
+    (walk/postwalk-replace 
+      (zipmap '(A B C D E F G H) (repeatedly lvar))
+      type)
+    type))
+        
 (defn annotatedo
   [form type]
   (fn [a]
     (let [gf (walk a form)]
       (if-let [t (-> gf meta :tag)]
-        (unify a [type] [t])))))
+        (unify a [type] [(expand-type t)])))))
 
 (defn literalo
   [form type]

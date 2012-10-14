@@ -83,6 +83,11 @@
   (typed '(def a 1)) => 'long
   (typed '(def b (fn [] 1))) => '(fn [] long))
 
+(facts "def annotated"
+  (typed '(def ^int a)) => 'int
+  (typed '(def + ^{:tag (fn [A A] A)} 'native)) => '(fn [_.0 _.0] _.0)
+  (typed '(def cos ^{:tag (fn [double] double)} 'native)) => '(fn [double] double))
+
 (facts "constants"
    (typed 1) => 'long
    (typed "s") => 'string
