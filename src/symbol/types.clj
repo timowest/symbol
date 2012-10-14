@@ -10,11 +10,15 @@
     (pset! (fn [(pointer A) A] void))
     (pset! (fn [(pointer A) long A] void))
     (pref  (fn [(pointer A long)] A))
+    (<     (fn [A A] boolean))
+    (>     (fn [A A] boolean))
+    (<=    (fn [A A] boolean))
+    (>=    (fn [A A] boolean))
     (+     (fn [A A] A))
     (-     (fn [A A] A))
     (*     (fn [A A] A))
     (/     (fn [A A] A))))
-
+  
 (defne ifo ; (if c t e) (if c t)
   [env form type]
   ([_ ['if ?c ?t ?e] _] 
@@ -69,12 +73,20 @@
            (typedo env ?class ['class ?members])
            (typeso env ?args argst)
            (membero [:new argst] ?members))))
+
+(defne defo ; (def name expr)
+  [env form type]
+  ([_ ['def ?name ?expr] _]
+    (fresh [new-env]
+           (conso [?name type] env new-env)
+           (typedo new-env ?expr type))))
             
 (def ^:private literal-types
   {Long      'long
    Double    'double
    String    'string
    Character 'char
+   Boolean   'boolean
    clojure.lang.Ratio     'ratio})
     
 (defn literalo
@@ -93,7 +105,6 @@
           
 
 ; TODO special handling of sets, maps and vectors?
-; TODO loop recur
 (defnu typedo
   [env form type]
   ([_ ['if . _] _] (ifo env form type))
@@ -101,7 +112,7 @@
   ([_ ['let* . _] _] (leto env form type))
   ([_ [?dot . _] _] (== ?dot '.) (dot env form type))
   ([_ ['new . _] _] (newo env form type))
-  ([_ [?fn . _] _] (applyo env form type))  
-  ([_ ['def ?n ?x] _] (typedo env ?x type))
+  ([_ ['def . _] _] (defo env form type))
+  ([_ [?fn . _] _] (applyo env form type))    
   ([_ _ _] (conda ((membero [form type] env))
                   ((literalo form type))))) ; TODO use typeo only for simple types

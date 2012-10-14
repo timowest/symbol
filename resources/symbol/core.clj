@@ -173,6 +173,7 @@
            ~@body
            (recur (unchecked-inc ~i)))))))
 
+; TODO support named let
 (defmacro let
   "binding => binding-form init-expr
 
