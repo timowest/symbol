@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [== reify inc type])
   (:use [clojure.core.logic]))
 
-(declare typedo typeso)
+(declare typedo typeso annotatedo)
 
 ; TODO convert uppercase letters to lvars
 (def ^:private env 
@@ -30,6 +30,9 @@
   [env form type]
   ([_ ['fn [?arg . ?rest] . ?body] ['fn [?argt . ?argst] ?type]]
     (fresh [new-env new-fn]
+           (conda 
+             ((annotatedo ?arg ?argt))
+             ((== ?argt ?argt)))             
            (conso [?arg ?argt] env new-env)
            (appendo ['fn ?rest] ?body new-fn)
            (fno new-env new-fn ['fn ?argst ?type])))
@@ -40,7 +43,10 @@
   [env bindings kt t]
   ([_ [?k ?v . ?rest] [[?k ?vt] . ?rest-kt] [?vt . ?rest-t]]
     (fresh [new-env]
-           (typedo env ?v ?vt)
+           (conda
+             ; TODO type of v should still be inferred and made available to outside
+             ((annotatedo ?k ?vt)) 
+             ((typedo env ?v ?vt)))
            (conso [?k ?vt] env new-env)
            (bindingso new-env ?rest ?rest-kt ?rest-t)))
   ([_ [] [] []]))    
@@ -101,6 +107,13 @@
    Boolean   'boolean
    clojure.lang.Ratio     'ratio})
     
+(defn annotatedo
+  [form type]
+  (fn [a]
+    (let [gf (walk a form)]
+      (if-let [t (-> gf meta :tag)]
+        (unify a [type] [t])))))
+
 (defn literalo
   [form type]
   (fn [a]
@@ -127,4 +140,5 @@
   ([_ ['def . _] _] (defo env form type))
   ([_ [?fn . _] _] (applyo env form type))    
   ([_ _ _] (conda ((membero [form type] env))
-                  ((literalo form type))))) ; TODO use typeo only for simple types
+                  ((annotatedo form type))
+                  ((literalo form type))))) 

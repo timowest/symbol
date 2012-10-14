@@ -43,6 +43,9 @@
   (typed env '(fn [a] (substr a 1))) => '(fn [string] string)
   (typed env '(fn [a] (fn [b] (+ a b)))) => '(fn [long] (fn [long] long)))
 
+(facts "fn annotated"
+  (typed env '(fn [^int a] a)) => '(fn [int] int))
+
 (facts "fn generic"
   (typed env2 '(fn [a] a)) => '(fn [_.0] _.0)
   (typed env2 '(fn [a b] (+ a b))) => '(fn [_.0 _.0] _.0)
@@ -52,6 +55,10 @@
 (facts "let"
   (typed '(let* [a 1 b "x"] a)) => 'long
   (typed '(let* [a 1 b "x"] b)) => 'string)
+
+(facts "let annotated"
+  (typed env2 '(let* [^int a 1] (+ a 2))) => nil ; FIXME
+  (typed env2 '(let* [^int a 1 ^int b 2] (+ a b))) => 'int) 
 
 (facts "named let"
   (typed env2 '(let* fact [x 5] (if (<= x 1) 1 (* x  (fact (- x 1)))))) => 'long)
