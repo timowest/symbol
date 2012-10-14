@@ -36,16 +36,28 @@
   ([_ ['fn [] ?stmt . _] ['fn [] ?type]] ; TODO should be last stmt
     (typedo env ?stmt ?type)))
                               
+(defne bindingso
+  [env bindings kt t]
+  ([_ [?k ?v . ?rest] [[?k ?vt] . ?rest-kt] [?vt . ?rest-t]]
+    (fresh [new-env]
+           (typedo env ?v ?vt)
+           (conso [?k ?vt] env new-env)
+           (bindingso new-env ?rest ?rest-kt ?rest-t)))
+  ([_ [] [] []]))    
+
 (defne leto ; (let* bindings body*)
   [env form type]
-  ([_ ['let* [?k ?v . ?rest] . ?body] _]
-    (fresh [vtype new-env new-let]
-           (typedo env ?v vtype)
-           (conso [?k vtype] env new-env)
-           (appendo ['let* ?rest] ?body new-let)
-           (leto new-env new-let type)))
-  ([_ ['let* [] ?stmt . _] _] ; TODO should be last stmt
-    (typedo env ?stmt type)))
+ ([_ ['let* ?name ?bindings ?stmt . _] _] ; named let
+    (fresh [kt types new-env new-env2]
+           (bindingso env ?bindings kt types)
+           (appendo kt env new-env)
+           (conso [?name ['fn types type]] new-env new-env2)
+           (typedo new-env2 ?stmt type)))  
+  ([_ ['let* ?bindings ?stmt . _] _] ; normal let
+    (fresh [kt types new-env]
+           (bindingso env ?bindings kt types)
+           (appendo kt env new-env)
+           (typedo new-env ?stmt type))))
 
 (defne applyo ; (f args*)
   [env form type]

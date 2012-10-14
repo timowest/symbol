@@ -49,9 +49,12 @@
   (typed env2 '(fn [a] (+ a 1))) => '(fn [long] long)
   (typed env2 '(fn [a] (+ a 1.0))) => '(fn [double] double))
   
-(facts "let*"
+(facts "let"
   (typed '(let* [a 1 b "x"] a)) => 'long
   (typed '(let* [a 1 b "x"] b)) => 'string)
+
+(facts "named let"
+  (typed env2 '(let* fact [x 5] (if (<= x 1) 1 (* x  (fact (- x 1)))))) => 'long)
 
 (facts "dot"
   (typed env3 '(. person name)) => 'string
