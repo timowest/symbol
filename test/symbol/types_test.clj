@@ -5,9 +5,9 @@
 
 (defn typed
   ([env form]
-    (first (logic/run* [q] (typedo (seq env) form q))))
+    (typeof env form))
   ([form]
-    (first (logic/run* [q] (typedo [] form q))))) 
+    (typed [] form))) 
 
 (def env '{+ (fn [long long] long)
            - (fn [long long] long)
@@ -33,10 +33,10 @@
   (list 'object (second (env4 clazz))))
 
 (facts "if"
-  (typed '(if a 1)) => 'long
-  (typed '(if a 1 2)) => 'long
-  (typed '(if :any (let* [b 1] b))) => 'long
-  (typed '(if (< a 10) (let* [x 15 z "s"] z))) => 'string)
+  (typed '(if true 1)) => 'long
+  (typed '(if true 1 2)) => 'long
+  (typed '(if true (let* [b 1] b))) => 'long
+  (typed '(if true (let* [x 15 z "s"] z))) => 'string)
 
 (facts "fn"
   (typed env '(fn [a b] (+ a b))) => '(fn [long long] long)
