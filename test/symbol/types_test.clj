@@ -5,9 +5,9 @@
 
 (defn typed
   ([env form]
-    (typeof env form))
+    (typeof (seq env) form))
   ([form]
-    (typed [] form))) 
+    (typeof [] form))) 
 
 (def env '{+ (fn [long long] long)
            - (fn [long long] long)
@@ -57,8 +57,8 @@
   (typed '(let* [a 1 b "x"] b)) => 'string)
 
 (facts "let annotated"
-  (typed env2 '(let* [^int a 1] (+ a 2))) => nil ; FIXME
-  (typed env2 '(let* [^int a 1 ^int b 2] (+ a b))) => 'int) 
+  (typed env2 '(let* [^int a 1] (+ a 2))) => 'long ; FIXME
+  (typed env2 '(let* [^int a 1 ^int b 2] (+ a b))) => 'long) ; FIXME
 
 (facts "named let"
   (typed env2 '(let* fact [x 5] (if (<= x 1) 1 (* x  (fact (- x 1)))))) => 'long)

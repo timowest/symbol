@@ -109,11 +109,16 @@
 (defne defo  ; (def name expr)
   [env form new-env]
   ([_ ['def ?name ?expr] _]
-    (fresh [env2 type]
-           (typeso env [?expr] [type] env2)
-           (conso [?name type] env2 new-env)))
+    (fresh [env2 type env3]
+           (conso [?name type] env env2)
+           (typeso env2 [?expr] [type] env3)
+           (conso [form type] env3 new-env)))
   ([_ ['def ?name] _]
-    (annotatedo env ?name new-env)))
+    (fresh [env2 type]
+           (annotatedo env ?name env2)
+           (membero [?name type] env2)
+           (conso [form type] env2 new-env))))
+  
                                
 (def ^:private literal-types
   {Long      'long
@@ -140,10 +145,10 @@
            (annotatedo form type)
            (conso [form type] env new-env)))
   ([form type]
-  (fn [a]
-    (let [gf (walk a form)]
-      (if-let [t (-> gf meta :tag)]
-        (unify a [type] [(expand-type t)]))))))
+    (fn [a]
+      (let [gf (walk a form)]
+        (if-let [t (-> gf meta :tag)]
+          (unify a [type] [(expand-type t)]))))))
 
 (defn literalo
   ([env form new-env]
@@ -151,12 +156,10 @@
            (literalo form type)
            (conso [form type] env new-env)))
   ([form type]
-  (fn [a]
-    (let [gf (walk a form)]
-      (if-let [t (literal-types (.getClass gf))]
-        (unify a [type] [t]))))))
-
-; TODO env args types new-env
+    (fn [a]
+      (let [gf (walk a form)]
+        (if-let [t (literal-types (.getClass gf))]
+          (unify a [type] [t]))))))
 
 (defne typeso
   [env args types new-env]
