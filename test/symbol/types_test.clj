@@ -40,18 +40,18 @@
   (typed '(if true (let* [x 15 z "s"] z))) => 'string)
 
 (facts "fn"
-  (typed env '(fn [a b] (+ a b))) => '(fn [long long] long)
-  (typed env '(fn [a] (substr a 1))) => '(fn [string] string)
-  (typed env '(fn [a] (fn [b] (+ a b)))) => '(fn [long] (fn [long] long)))
+  (typed env '(fn* [a b] (+ a b))) => '(fn [long long] long)
+  (typed env '(fn* [a] (substr a 1))) => '(fn [string] string)
+  (typed env '(fn* [a] (fn* [b] (+ a b)))) => '(fn [long] (fn [long] long)))
 
 (facts "fn annotated"
-  (typed env '(fn [^int a] a)) => '(fn [int] int))
+  (typed env '(fn* [^int a] a)) => '(fn [int] int))
 
 (facts "fn generic"
-  (typed env2 '(fn [a] a)) => '(fn [_.0] _.0)
-  (typed env2 '(fn [a b] (+ a b))) => '(fn [_.0 _.0] _.0)
-  (typed env2 '(fn [a] (+ a 1))) => '(fn [long] long)
-  (typed env2 '(fn [a] (+ a 1.0))) => '(fn [double] double))
+  (typed env2 '(fn* [a] a)) => '(fn [_.0] _.0)
+  (typed env2 '(fn* [a b] (+ a b))) => '(fn [_.0 _.0] _.0)
+  (typed env2 '(fn* [a] (+ a 1))) => '(fn [long] long)
+  (typed env2 '(fn* [a] (+ a 1.0))) => '(fn [double] double))
   
 (facts "let"
   (typed '(let* [a 1 b "x"] a)) => 'long
@@ -80,14 +80,19 @@
   (typed '{+ (fn [long long] long)} '(+ 1 2)) => 'long)
 
 (facts "def"
-  (typed env2 '(def fact (fn [x] (if (<= x 1) 1 (* x  (fact (- x 1))))))) => '(fn [long] long)
+  (typed env2 '(def fact (fn* [x] (if (<= x 1) 1 (* x  (fact (- x 1))))))) => '(fn [long] long)
   (typed '(def a 1)) => 'long
-  (typed '(def b (fn [] 1))) => '(fn [] long))
+  (typed '(def b (fn* [] 1))) => '(fn [] long))
 
 (facts "def annotated"
   (typed '(def ^int a)) => 'int
   (typed '(def + ^{:tag (fn [A A] A)} 'native)) => '(fn [_.0 _.0] _.0)
   (typed '(def cos ^{:tag (fn [double] double)} 'native)) => '(fn [double] double))
+
+(facts "do"
+  (typed '(do 1 2 true "abc")) => 'string
+  (typed '(do "abc" 1)) => 'long
+  (typed '(do true)) => 'boolean)         
 
 (facts "constants"
    (typed 1) => 'long

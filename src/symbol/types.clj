@@ -44,7 +44,7 @@
 
 (defne fno ; (fn args body)
   [env form new-env]
-  ([_ ['fn ?args . ?stmts] [[form ['fn ?argst ?type]] . ?env3]]
+  ([_ ['fn* ?args . ?stmts] [[form ['fn ?argst ?type]] . ?env3]]
     (fresh [env1 env2 stmtst]
            (ftypeso env ?args ?argst env2)
            (typeso env2 ?stmts stmtst ?env3)
@@ -113,6 +113,13 @@
     (annotatedo env ?name ?env2)
     (membero [?name ?type] ?env2)))
   
+(defne doo ; (do exprs*)
+  [env form new-env]
+  ([_ ['do . ?exprs] [[form ?type] . ?env2]]
+    (fresh [types]
+           (typeso env ?exprs types ?env2)
+           (lasto types ?type))))           
+
                                
 (def ^:private literal-types
   {Long      'long
@@ -168,11 +175,12 @@
 (defnu typedo
   [env form new-env]
   ([_ ['if . _] _] (ifo env form new-env))
-  ([_ ['fn . _] _] (fno env form new-env))
+  ([_ ['fn* . _] _] (fno env form new-env))
   ([_ ['let* . _] _] (leto env form new-env))
   ([_ [?dot . _] _] (== ?dot '.) (dot env form new-env))
   ([_ ['new . _] _] (newo env form new-env))
   ([_ ['def . _] _] (defo env form new-env))
+  ([_ ['do . _] _] (doo env form new-env))
   ([_ [?fn . _] _] (applyo env form new-env))    
   ([_ _ _] (conda ((fresh [type]
                          (membero [form type] env) 
