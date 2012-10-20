@@ -25,7 +25,7 @@
     (-     (fn [A A] A))
     (*     (fn [A A] A))
     (/     (fn [A A] A))))
-  
+
 (defne ifo ; (if c t e) (if c t)
   [env form new-env]
    ([_ ['if ?c ?t ?e] [[form ?type] . ?env2]]
@@ -78,46 +78,40 @@
 
 (defne applyo ; (f args*)
   [env form new-env]
-  ([_ [?f . ?args] _]
-    (fresh [types type env2]
-           (membero [?f ['fn types type]] env)
-           (typeso env ?args types env2)
-           (conso [form type] env2 new-env))))
+  ([_ [?f . ?args] [[form ?type] . ?env2]]
+    (fresh [types]
+           (membero [?f ['fn types ?type]] env)
+           (typeso env ?args types ?env2))))
     
 (defne dot ; (. obj member args*)
   [env form new-env]
-  ([_ [_ ?obj ?member . ?args] _]
-    (fresh [env2 members membert argst env3 type]
+  ([_ [_ ?obj ?member . ?args] [[form ?type] . ?env3]]
+    (fresh [env2 members membert argst]
            (typedo env ?obj env2)
            (membero [?obj ['object members]] env2)
            (membero [?member membert] members)
-           (typeso env2 ?args argst env3)
-           (matcha [membert type]
-                   ([['fn argst type] type]) 
-                   ([type type]))
-           (conso [form type] env3 new-env))))
+           (typeso env2 ?args argst ?env3)
+           (matcha [membert ?type]
+                   ([['fn argst ?type] ?type]) 
+                   ([?type ?type])))))
                    
 (defne newo ; (new Class args*)
   [env form new-env]
-  ([_ ['new ?class . ?args] _]
-    (fresh [members argst env2]
-           (typeso env ?args argst env2)
-           (membero [?class ['class members]] env)
-           (membero [:new argst] members)
-           (conso [form ['object members]] env2 new-env))))
+  ([_ ['new ?class . ?args] [[form ['object ?members]] . ?env2]]
+    (fresh [argst]
+           (typeso env ?args argst ?env2)
+           (membero [?class ['class ?members]] env)
+           (membero [:new argst] ?members))))
 
 (defne defo  ; (def name expr)
   [env form new-env]
-  ([_ ['def ?name ?expr] _]
-    (fresh [env2 type env3]
-           (conso [?name type] env env2)
-           (typeso env2 [?expr] [type] env3)
-           (conso [form type] env3 new-env)))
-  ([_ ['def ?name] _]
-    (fresh [env2 type]
-           (annotatedo env ?name env2)
-           (membero [?name type] env2)
-           (conso [form type] env2 new-env))))
+  ([_ ['def ?name ?expr] [[form ?type] . ?env3]]
+    (fresh [env2]
+           (conso [?name ?type] env env2)
+           (typeso env2 [?expr] [?type] ?env3)))
+  ([_ ['def ?name] [[form ?type] . ?env2]]
+    (annotatedo env ?name ?env2)
+    (membero [?name ?type] ?env2)))
   
                                
 (def ^:private literal-types

@@ -14,7 +14,7 @@
            substr (fn [string long] string)})
 
 (def any (logic/lvar))
-(def env2 {'<= (list 'fn [any any] boolean)
+(def env2 {'<= (list 'fn [any any] 'boolean)
            '* (list 'fn [any any] any)
            '+ (list 'fn [any any] any)
            '- (list 'fn [any any] any)})
@@ -33,6 +33,7 @@
   (list 'object (second (env4 clazz))))
 
 (facts "if"
+  (typed env2 '(if (<= 1 3) 2 5)) => 'long
   (typed '(if true 1)) => 'long
   (typed '(if true 1 2)) => 'long
   (typed '(if true (let* [b 1] b))) => 'long
