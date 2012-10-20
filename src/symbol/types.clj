@@ -175,12 +175,19 @@
                   ((annotatedo env form new-env))
                   ((literalo env form new-env))))) 
 
+(defn to-env
+  [env]
+  (for [[k v] (seq env)]
+      [k (expand-type v)]))    
+
 (defn typeof
-  [env form]
-  (first (run* [type]
-               (fresh [env2]
-                      (typedo env form env2)
-                      (membero [form type] env2)))))
+  ([form]
+    (typeof [] form))
+  ([env form]
+    (first (run* [type]
+                 (fresh [env2]
+                        (typedo env form env2)
+                        (membero [form type] env2))))))
   
 
 

@@ -22,3 +22,5 @@
             (and (seq? f) (= (first f) 'let*)) (let-names f)
             :else f))
     form))
+
+; if fn . new def set! block apply return goto label

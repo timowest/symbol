@@ -1,105 +1,103 @@
 (ns symbol.types-test
-  (:require [clojure.core.logic :as logic])
+  (:require [clojure.core.logic :as logic]
+            [clojure.walk :as walk])
   (:use symbol.types 
         midje.sweet))
 
-(defn typed
-  ([env form]
-    (typeof (seq env) form))
-  ([form]
-    (typeof [] form))) 
+; TODO make this the base environment
+(def env (to-env  '((set!  (fn [A A] void))
+                    (pset! (fn [(pointer A) A] void))
+                    (pset! (fn [(pointer A) long A] void))
+                    (pref  (fn [(pointer A long)] A))
+                    (<     (fn [A A] boolean))
+                    (>     (fn [A A] boolean))
+                    (<=    (fn [A A] boolean))
+                    (>=    (fn [A A] boolean))
+                    (+     (fn [A A] A))
+                    (-     (fn [A A] A))
+                    (*     (fn [A A] A))
+                    (/     (fn [A A] A))
+                    
+                    (substr (fn [string long] string)))))
 
-(def env '{+ (fn [long long] long)
-           - (fn [long long] long)
-           substr (fn [string long] string)})
-
-(def any (logic/lvar))
-(def env2 {'<= (list 'fn [any any] 'boolean)
-           '* (list 'fn [any any] any)
-           '+ (list 'fn [any any] any)
-           '- (list 'fn [any any] any)})
-
-(def env3 '{person (object ((name string) 
+(def env2 (to-env '{person (object ((name string) 
                             (age long)
-                            (olderThan (fn [long] boolean))))})
+                            (olderThan (fn [long] boolean))))}))
 
-(def env4 '{Person (class ((name string) 
+(def env3 (to-env '{Person (class ((name string) 
                            (age long)
                            (:new [string])
-                           (:new [string long])))})
-
-(defn object
-  [clazz]
-  (list 'object (second (env4 clazz))))
+                           (:new [string long])))}))
 
 (facts "if"
-  (typed env2 '(if (<= 1 3) 2 5)) => 'long
-  (typed '(if true 1)) => 'long
-  (typed '(if true 1 2)) => 'long
-  (typed '(if true (let* [b 1] b))) => 'long
-  (typed '(if true (let* [x 15 z "s"] z))) => 'string)
+  (typeof env '(if (<= 1 3) 2 5)) => 'long
+  (typeof '(if true 1)) => 'long
+  (typeof '(if true 1 2)) => 'long
+  (typeof '(if true (let* [b 1] b))) => 'long
+  (typeof '(if true (let* [x 15 z "s"] z))) => 'string)
 
 (facts "fn"
-  (typed env '(fn* [a b] (+ a b))) => '(fn [long long] long)
-  (typed env '(fn* [a] (substr a 1))) => '(fn [string] string)
-  (typed env '(fn* [a] (fn* [b] (+ a b)))) => '(fn [long] (fn [long] long)))
+  (typeof env '(fn* [a b] (+ a b))) => '(fn [_.0 _.0] _.0)
+  (typeof env '(fn* [a] (substr a 1))) => '(fn [string] string)
+  (typeof env '(fn* [a] (fn* [b] (+ a b)))) => '(fn [_.0] (fn [_.0] _.0)))
 
 (facts "fn annotated"
-  (typed env '(fn* [^int a] a)) => '(fn [int] int))
+  (typeof env '(fn* [^int a] a)) => '(fn [int] int))
 
 (facts "fn generic"
-  (typed env2 '(fn* [a] a)) => '(fn [_.0] _.0)
-  (typed env2 '(fn* [a b] (+ a b))) => '(fn [_.0 _.0] _.0)
-  (typed env2 '(fn* [a] (+ a 1))) => '(fn [long] long)
-  (typed env2 '(fn* [a] (+ a 1.0))) => '(fn [double] double))
+  (typeof env '(fn* [a] a)) => '(fn [_.0] _.0)
+  (typeof env '(fn* [a b] (+ a b))) => '(fn [_.0 _.0] _.0)
+  (typeof env '(fn* [a] (+ a 1))) => '(fn [long] long)
+  (typeof env '(fn* [a] (+ a 1.0))) => '(fn [double] double))
   
 (facts "let"
-  (typed '(let* [a 1 b "x"] a)) => 'long
-  (typed '(let* [a 1 b "x"] b)) => 'string)
+  (typeof '(let* [a 1 b "x"] a)) => 'long
+  (typeof '(let* [a 1 b "x"] b)) => 'string)
 
 (facts "let annotated"
-  (typed env2 '(let* [^int a 1] (+ a 2))) => 'long ; FIXME
-  (typed env2 '(let* [^int a 1 ^int b 2] (+ a b))) => 'long) ; FIXME
+  (typeof env '(let* [^int a 1] (+ a 2))) => 'long ; FIXME
+  (typeof env '(let* [^int a 1 ^int b 2] (+ a b))) => 'long) ; FIXME
 
 (facts "named let"
-  (typed env2 '(let* fact [x 5] (if (<= x 1) 1 (* x  (fact (- x 1)))))) => 'long)
+  (typeof env '(let* fact [x 5] (if (<= x 1) 1 (* x  (fact (- x 1)))))) => 'long)
 
 (facts "dot"
-  (typed env3 '(. person name)) => 'string
-  (typed env3 '(. person age)) => 'long
-  (typed env3 '(. person olderThan 10)) => 'boolean)
+  (typeof env2 '(. person name)) => 'string
+  (typeof env2 '(. person age)) => 'long
+  (typeof env2 '(. person olderThan 10)) => 'boolean)
 
 (facts "new"
-  (typed env4 '(new Person 1)) => nil
-  (typed env4 '(new Person)) => nil
-  (typed env4 '(new Person "a")) => (object 'Person)
-  (typed env4 '(new Person "a" 1)) => (object 'Person))
+  (let [person-object (list 'object (-> env3 first second second))]
+    (typeof env3 '(new Person 1)) => nil
+    (typeof env3 '(new Person)) => nil
+    (typeof env3 '(new Person "a")) => person-object
+    (typeof env3 '(new Person "a" 1)) => person-object))
 
 (facts "apply"
-  (typed '{a (fn [long] long)} '(a 1)) => 'long
-  (typed '{+ (fn [long long] long)} '(+ 1 2)) => 'long)
+  (typeof '((a (fn [long] long))) '(a 1)) => 'long
+  (typeof '((+ (fn [long long] long))) '(+ 1 2)) => 'long)
 
 (facts "def"
-  (typed env2 '(def fact (fn* [x] (if (<= x 1) 1 (* x  (fact (- x 1))))))) => '(fn [long] long)
-  (typed '(def a 1)) => 'long
-  (typed '(def b (fn* [] 1))) => '(fn [] long))
+  (typeof env '(def fact (fn* [x] (if (<= x 1) 1 (* x  (fact (- x 1))))))) => '(fn [long] long)
+  (typeof '(def a 1)) => 'long
+  (typeof '(def b (fn* [] 1))) => '(fn [] long))
 
 (facts "def annotated"
-  (typed '(def ^int a)) => 'int
-  (typed '(def + ^{:tag (fn [A A] A)} 'native)) => '(fn [_.0 _.0] _.0)
-  (typed '(def cos ^{:tag (fn [double] double)} 'native)) => '(fn [double] double))
+  (typeof '(def ^int a)) => 'int
+  (typeof '(def + ^{:tag (fn [A A] A)} 'native)) => '(fn [_.0 _.0] _.0)
+  (typeof '(def cos ^{:tag (fn [double] double)} 'native)) => '(fn [double] double))
 
 (facts "do"
-  (typed '(do 1 2 true "abc")) => 'string
-  (typed '(do "abc" 1)) => 'long
-  (typed '(do true)) => 'boolean)         
+  (typeof '(do 1 2 true "abc")) => 'string
+  (typeof '(do "abc" 1)) => 'long
+  (typeof '(do true)) => 'boolean)         
 
 (facts "constants"
-   (typed 1) => 'long
-   (typed "s") => 'string
-   (typed \s) => 'char
-   (typed 1.2) => 'double
-   (typed 1/2) => 'ratio)
+  (typeof 1) => 'long
+  (typeof "s") => 'string
+  (typeof \s) => 'char
+  (typeof 1.2) => 'double
+  (typeof 1/2) => 'ratio)
     
   
       
