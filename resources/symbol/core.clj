@@ -14,9 +14,15 @@
   [& decl] 
   (cons 'let* decl))
 
+; TODO remove
 (defmacro loop 
   [& decl] 
   (cons 'loop* decl))
+
+(defmacro fn
+  [&form &env & decl]
+  (.withMeta ^clojure.lang.IObj (cons 'fn* decl) 
+    (.meta ^clojure.lang.IMeta &form)))
 
 (defmacro defn
   [name args & body]

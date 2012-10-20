@@ -1,4 +1,11 @@
 (ns symbol.emission)
 
-; lift let* forms
+; C++ emission
 
+; if fn* let* . new def do
+; set! pset! pref 
+; < > <= >= + - * /
+
+(defn emit 
+  [env form]
+  form)
