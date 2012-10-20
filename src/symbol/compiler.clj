@@ -6,8 +6,6 @@
             [clojure.pprint :as pprint]
             [clojure.zip :as zip]))
 
-(def specials '#{if def fn let* loop* recur . reify})
-
 (defn load-file [f]
   "load of the forms of the given resource and return them as a vector"
   (let [res (or (io/resource f) (io/as-url (io/as-file f)))]
@@ -41,6 +39,7 @@
             (zip/replace loc (f (zip/node loc)))
             loc))))))
 
+; TODO improve
 (defn expand-macros [namespace macros forms]
   (let [macro-names (map second macros)]     
     (create-ns namespace)
@@ -61,6 +60,7 @@
       ;(remove-ns namespace)
       expanded)))
 
+; TODO improve
 (defn get-contents
   ([file]
     (get-contents {} file))
@@ -74,14 +74,6 @@
        :macros   macros        
        :expanded (expand-macros namespace (concat (:macros parent) macros) other)})))
 
-; read 
-; macroexpand
-; analyze (resolve names etc) 
-; infer types
-; emit
-
-; types as metadata {:tag type}
-
 (defn compile-files [& files]
   (let [core (get-contents "symbol/core.clj")]
     (doseq [file files]
@@ -92,10 +84,3 @@
           (println))))))
 
        ; TODO remove namespaces after run 
-
-; :gen for generic signature on top level function
-; :tag for type signature
-; :line for line number in original source
-       
-       
-  

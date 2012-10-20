@@ -5,26 +5,13 @@
 
 (declare typedo typeso annotatedo)
 
+(def specials '#{if fn* let* . new def do})
+
 (defn lasto
   "A relation where l is a collection, such that a is the last of l"
   [l a]
   (fresh [begin d]
     (appendo begin [a] l)))
-
-; TODO convert uppercase letters to lvars
-(def ^:private env 
-  '((set!  (fn [A A] void))
-    (pset! (fn [(pointer A) A] void))
-    (pset! (fn [(pointer A) long A] void))
-    (pref  (fn [(pointer A long)] A))
-    (<     (fn [A A] boolean))
-    (>     (fn [A A] boolean))
-    (<=    (fn [A A] boolean))
-    (>=    (fn [A A] boolean))
-    (+     (fn [A A] A))
-    (-     (fn [A A] A))
-    (*     (fn [A A] A))
-    (/     (fn [A A] A))))
 
 (defne ifo ; (if c t e) (if c t)
   [env form new-env]
