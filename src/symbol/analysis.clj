@@ -15,6 +15,7 @@
     (walk/postwalk-replace mapped form)))
  
 (defn unique-names
+  "Replaces local names in fn* and let* forms with unique ones"
   [form]
   (walk/postwalk
     (fn [f]
