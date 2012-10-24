@@ -36,30 +36,30 @@
   (typeof '(if true (let* [b 1] b))) => 'long
   (typeof '(if true (let* [x 15 z "s"] z))) => 'string)
 
-(facts "fn"
+(facts "fn*"
   (typeof env '(fn* [a b] (+ a b))) => '(fn [_.0 _.0] _.0)
   (typeof env '(fn* [a] (substr a 1))) => '(fn [string] string)
   (typeof env '(fn* [a] (fn* [b] (+ a b)))) => '(fn [_.0] (fn [_.0] _.0)))
 
-(facts "fn annotated"
+(facts "fn* annotated"
   (typeof env '(fn* [^int a] a)) => '(fn [int] int))
 
-(facts "fn generic"
+(facts "fn* generic"
   (typeof env '(fn* [a] a)) => '(fn [_.0] _.0)
   (typeof env '(fn* [a b] (+ a b))) => '(fn [_.0 _.0] _.0)
   (typeof env '(fn* [a] (+ a 1))) => '(fn [long] long)
   (typeof env '(fn* [a] (+ a 1.0))) => '(fn [double] double))
   
-(facts "let"
+(facts "let*"
   (typeof '(let* [a 1 b "x"] a)) => 'long
   (typeof '(let* [a 1 b "x"] b)) => 'string)
 
-(facts "let annotated"
+(facts "let* annotated"
   (typeof env '(let* [^int a 1] (+ a 2))) => 'long ; FIXME
   (typeof env '(let* [^int a 1 ^int b 2] (+ a b))) => 'long) ; FIXME
 
-(facts "named let"
-  (typeof env '(let* fact [x 5] (if (<= x 1) 1 (* x  (fact (- x 1)))))) => 'long)
+(facts "loop*"
+  (typeof env '(loop* fact [x 5] (if (<= x 1) 1 (* x  (recur fact (- x 1)))))) => 'long)
 
 (facts "dot"
   (typeof env2 '(. person name)) => 'string

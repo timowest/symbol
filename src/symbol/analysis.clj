@@ -9,55 +9,72 @@
   
 (defn let-names
   [form]
-  (let [bindings (nth form (if (symbol? (second form)) 2 1))
+  (let [bindings (second form)
         args (map first (partition 2 bindings))
         mapped (zipmap args (repeatedly gensym))]
     (walk/postwalk-replace mapped form)))
  
+(defn loop-names
+  [form]
+  (let [bindings (nth form 2)
+        args (map first (partition 2 bindings))
+        mapped (zipmap args (repeatedly gensym))]
+    (walk/postwalk-replace mapped form)))
+
+(defn form?
+  [form s]
+  (and (seq? form) (= (first form) s)))
+
 (defn unique-names
   "Replaces local names in fn* and let* forms with unique ones"
   [form]
   (walk/postwalk
     (fn [f]
-      (cond (and (seq? f) (= (first f) 'fn*)) (fn-names f)
-            (and (seq? f) (= (first f) 'let*)) (let-names f)
+      (cond (form? f 'fn*) (fn-names f)
+            (form? f 'let*) (let-names f)
+            (form? f 'loop*) (loop-names f)
+            :else f))
+    form))
+
+(defn expand-recur
+  [form s]
+  (->> (walk/postwalk
+        (fn [f]
+          (if (form? f 'recur)
+            (concat ['recur* s] (rest f))
+            f))
+        form)
+    rest
+    (concat ['loop* s])))
+
+(defn expand-loop
+  "Add symbols to recur and loops."
+  [form]
+  (walk/postwalk
+    (fn [f]
+      (cond (form? f 'loop*) (expand-recur f (gensym))
             :else f))
     form))
 
 ; if fn* let* . new def do
 
-(defn as-stmt
-  [form]
-  (with-meta form (assoc (meta form) :stmt true)))  
+(defmulti simple first)
 
-(defn stmt?
+(defn complex? 
   [form]
-  (and (seq? form) (-> form meta :stmt)))
+  ('#{if let* do} (first form)))
 
-(defn analyze-form
-  [form]
-  (let [f (first form)
-        stmt (cond (= f 'if) (some stmt? (rest form))
-                   (= f 'fn*) false
-                   (= f 'let*) true
-                   (= f '.) (some stmt? (rest form))
-                   (= f 'new) (some stmt? (drop 2 form))
-                   (= f 'def) (some stmt? (rest form))
-                   (= f 'do) (if (= (count form) 2) 
-                               (stmt? second)
-                               true)                               
-                   :else (some stmt? (rest form)))]
-    (if stmt
-      (as-stmt form)
-      form)))
+(defmethod simple 'if
+  [form])
 
-(defn analyze
-  "Associates form with :stmt true metadata if it needs to be expressed 
-   vi a stmt."
+(defmethod simple :default
+  [form])
+
+(defn simplify
   [form]
-  (walk/postwalk 
+  (walk/postwalk
     (fn [f]
-      (if (list? f) 
-        (analyze-form f)
-        f))        
+      (if (list? f)
+        (simple f)
+        f))
     form))

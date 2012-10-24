@@ -14,7 +14,6 @@
   [& decl] 
   (cons 'let* decl))
 
-; TODO remove
 (defmacro loop 
   [& decl] 
   (cons 'loop* decl))
@@ -179,7 +178,6 @@
            ~@body
            (recur (unchecked-inc ~i)))))))
 
-; TODO support named let
 (defmacro let
   "binding => binding-form init-expr
 

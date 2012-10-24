@@ -47,15 +47,25 @@
            (bindingso env3 ?rest ?restt new-env)))
   ([?e [] [] ?e]))
 
-(defne leto ; (let* bindings body*)
+(defne loopo ; (loop* name bindings body*)
   [env form new-env]
-  ([_ ['let* ?name ?bindings . ?stmts] _] ; named let
+  ([_ ['loop* ?name ?bindings . ?stmts] _] 
     (fresh [types env2 env3 env4 stmtst type]
            (bindingso env ?bindings types env2)
            (conso [?name ['fn types type]] env2 env3)
            (typeso env3 ?stmts stmtst env4)
            (lasto stmtst type)
-           (conso [form type] env4 new-env)))
+           (conso [form type] env4 new-env))))
+
+(defne recuro ; (recur f args*)
+  [env form new-env]
+  ([_ ['recur ?f . ?args] [[form ?type] . ?env2]]
+    (fresh [types]
+           (membero [?f ['fn types ?type]] env)
+           (typeso env ?args types ?env2))))
+
+(defne leto ; (let* bindings body*)
+  [env form new-env]
   ([_ ['let* ?bindings . ?stmts] _] ; normal let
     (fresh [types env2 stmtst env3 type]
            (bindingso env ?bindings types env2)
@@ -164,6 +174,8 @@
   ([_ ['if . _] _] (ifo env form new-env))
   ([_ ['fn* . _] _] (fno env form new-env))
   ([_ ['let* . _] _] (leto env form new-env))
+  ([_ ['loop* . _] _] (loopo env form new-env))
+  ([_ ['recur . _] _] (recuro env form new-env))
   ([_ [?dot . _] _] (== ?dot '.) (dot env form new-env))
   ([_ ['new . _] _] (newo env form new-env))
   ([_ ['def . _] _] (defo env form new-env))
