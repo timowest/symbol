@@ -1,6 +1,8 @@
 (ns symbol.analysis
   (:require [clojure.walk :as walk]))
 
+; (-> form unique-names expand-recur simplify)
+
 (defn fn-names
   [form]
   (let [args (nth form (if (symbol? (second form)) 2 1))
@@ -68,7 +70,7 @@
   (let [forms (filter seq? args)
         mapped (zipmap forms (repeatedly gensym))
         walked (walk/postwalk-replace mapped form)
-        bindings (vector (mapcat (juxt second first) mapped))]
+        bindings (vec (mapcat (juxt mapped identity) forms))]
     `(let* ~bindings ~walked)))
 
 (defmulti simple first)
@@ -76,7 +78,8 @@
 (defmethod simple 'if
   [[_ c & r :as form]]
   (if (complex? c)
-    `(let* [c# ~c] (if c# ~@r))
+    (let [s (gensym)] 
+      `(let* [~s ~c] (if ~s ~@r)))
     form))
 
 (defmethod simple 'fn* 
