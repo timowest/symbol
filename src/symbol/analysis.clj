@@ -56,20 +56,70 @@
             :else f))
     form))
 
-; if fn* let* . new def do
-
-(defmulti simple first)
+; if fn* let* loop* . new def do
 
 (defn complex? 
   [form]
-  ('#{if let* do} (first form)))
+  (and (seq? form)
+       ('#{if let* loop* do} (first form))))
+
+(defn wrap
+  [form args]
+  (let [forms (filter seq? args)
+        mapped (zipmap forms (repeatedly gensym))
+        walked (walk/postwalk-replace mapped form)
+        bindings (vector (mapcat (juxt second first) mapped))]
+    `(let* ~bindings ~walked)))
+
+(defmulti simple first)
 
 (defmethod simple 'if
-  [form])
+  [[_ c & r :as form]]
+  (if (complex? c)
+    `(let* [c# ~c] (if c# ~@r))
+    form))
 
-(defmethod simple :default
-  [form])
+(defmethod simple 'fn* 
+  [form]
+  form)
 
+(defmethod simple 'let*
+  [[_ bindings & body :as form]]
+  (if (and (= (count body) 1)
+           (form? (first body) 'let*)) 
+    (let [[_ bindings2 & body] (first body)
+          bindings (vec (concat bindings bindings2))]
+      `(let* ~bindings ~@body))
+    form))
+
+(defmethod simple 'loop*
+  [form]
+  form)
+
+(defmethod simple 'new ; (new Class args*)
+  [[new clazz & args :as form]]
+   (if (some complex? args)
+     (wrap form args)
+     form))
+
+(defmethod simple '. ; (. obj member args*)
+  [[_ obj member & args :as form]]
+  (if (some complex? args)
+    (wrap form args)
+    form))  
+
+(defmethod simple 'do
+  [[_ f & r :as form]]
+  (if (seq r) 
+    form
+    f))
+
+(defmethod simple :default ; apply
+  [[_ & args :as form]]
+  (if (some complex? args)
+    (wrap form args)
+    form))
+      
 (defn simplify
   [form]
   (walk/postwalk
