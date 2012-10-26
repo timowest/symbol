@@ -1,9 +1,9 @@
 (ns symbol.compiler
   (:refer-clojure :exclude [load-file])
-  (:use [clojure.walk :only [macroexpand-all]])
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [clojure.pprint :as pprint]
+            [clojure.walk :as walk]
             [clojure.zip :as zip]))
 
 (defn load-file [f]
@@ -29,58 +29,52 @@
 
 (def is-macro? (is-form? 'defmacro))
 
-(defn morph-form [tree pred f]
-  (loop [loc (zip/seq-zip tree)]
-    (if (zip/end? loc)
-      (zip/root loc)
-      (recur
-        (zip/next
-          (if (pred (zip/node loc))
-            (zip/replace loc (f (zip/node loc)))
-            loc))))))
+(defn to-fn
+  [[_ name args & body :as macro]]
+  [name (eval `(fn ~args ~@body))])
 
-; TODO improve
-(defn expand-macros [namespace macros forms]
-  (let [macro-names (map second macros)]     
-    (create-ns namespace)
-    (binding [*ns* (the-ns namespace)]
-      (refer 'clojure.core :exclude (concat macro-names ['defn]))
-      (if (not= namespace 'symbol.core)
-        (require 'symbol.core))      
-      (use 'clojure.contrib.macro-utils)
-      (doseq [m macros]
-        (eval m)))
+(defn expand-form
+  [macros form]
+  (if-let [f (macros (first form))]
+    (let [ex (f form)]
+      (cond (identical? ex form) form
+            (seq? ex) (expand-form macros ex)
+            :else form))))
 
-    (let [expanded (for [form forms] 
-            (morph-form form
-                        (apply is-form? macro-names)
-                        (fn [f]
-                          (binding [*ns* (the-ns namespace)]
-                            (macroexpand-all f)))))]
-      ;(remove-ns namespace)
-      expanded)))
+(defn expand-all
+  [macros form]
+  (walk/prewalk 
+    (fn [x] (if (seq? x) (expand-form macros x) x)) 
+    form))
 
-; TODO improve
+(defn expand-forms
+  [ns macros forms]
+  (reduce
+    (fn [acc form]
+      (let [ex (expand-all (merge macros (:macros acc)) form)]
+        (if (is-macro? ex) 
+          (update-in acc [:macros] assoc (to-fn ex))
+          (update-in acc [:forms] conj ex))))                 
+    {:ns ns :macros {} :forms []}
+    forms))
+
+(def core-forms
+  (expand-forms 'symbol.core {} (load-file "symbol/core.clj")))
+
+; TODO take map of namespace content mappings as argument
+; TODO use also macros from imported namespaces
 (defn get-contents
-  ([file]
-    (get-contents {} file))
-  ([parent file]
-    (let [forms (load-file file)
-          macros (filter is-macro? forms)
-          namespace (->> forms (filter (is-form? 'ns)) first second)
-          other (remove is-macro? forms)]
-      {:ns       namespace
-       :forms    forms
-       :macros   macros        
-       :expanded (expand-macros namespace (concat (:macros parent) macros) other)})))
+  [file]
+  (let [forms (load-file file)
+        namespace (->> forms (filter (is-form? 'ns)) first second)]
+    (expand-forms namespace (:macros core-forms) forms)))
 
-(defn compile-files [& files]
+; FIXME
+(comment (defn compile-files [& files]
   (let [core (get-contents "symbol/core.clj")]
     (doseq [file files]
       (let [{:keys [ns forms macros expanded]} (get-contents core file)]
         (doseq [form expanded]
           (println (meta form))
           (pprint/pprint form)
-          (println))))))
-
-       ; TODO remove namespaces after run 
+          (println)))))))

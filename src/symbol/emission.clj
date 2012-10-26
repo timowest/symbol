@@ -2,7 +2,7 @@
 
 ; C++ emission
 
-; if fn* let* . new def do
+; if fn* let* loop* recur* . new def do 
 ; set! pset! pref 
 ; < > <= >= + - * /
 
