@@ -3,7 +3,10 @@
             [clojure.string :as string]
             [clojure.pprint :as pprint]
             [clojure.walk :as walk]
-            [clojure.zip :as zip]))
+            [clojure.zip :as zip]
+            [symbol.analysis :as analysis]
+            [symbol.types :as types]
+            [symbol.emission :as emission]))
 
 (defn- maybe-destructured
   [params body]
@@ -98,12 +101,32 @@
         namespace (->> forms (filter (is-form? 'ns)) first second)]
     (expand-forms namespace (:macros core-forms) forms)))
 
-; FIXME
-(comment (defn compile-files [& files]
-  (let [core (get-contents "symbol/core.clj")]
-    (doseq [file files]
-      (let [{:keys [ns forms macros expanded]} (get-contents core file)]
-        (doseq [form expanded]
-          (println (meta form))
-          (pprint/pprint form)
-          (println)))))))
+(def core-env (types/to-env  
+  '((set!  (fn [A A] void))
+    (pset! (fn [(pointer A) A] void))
+    (pset! (fn [(pointer A) long A] void))
+    (pref  (fn [(pointer A long)] A))
+    (not   (fn [boolean] boolean))
+    (<     (fn [A A] boolean))
+    (>     (fn [A A] boolean))
+    (<=    (fn [A A] boolean))
+    (>=    (fn [A A] boolean))
+    (+     (fn [A A] A))
+    (-     (fn [A A] A))
+    (*     (fn [A A] A))
+    (/     (fn [A A] A)))))
+
+; TODO
+(defn compile-files 
+  [& files]
+  (doseq [file files]
+    (let [{:keys [ns forms macros]} (get-contents files)
+          normalized (map analysis/convert forms)]
+      (loop [forms normalized env core-env]
+        (let [form (first forms)
+              [nenv type] (types/type-and-env env form)]
+          (emission/emit nil form)
+          (if (rest forms)
+            (recur (rest forms) 
+                   (cons [form type] env))))))))
+          

@@ -192,6 +192,13 @@
   (for [[k v] (seq env)]
       [k (expand-type v)]))    
 
+(defn type-and-env
+  [env form]
+  (first (run* [env2 type]
+               (fresh [env2]
+                      (typedo env form env2)
+                      (membero [form type] env2)))))
+
 (defn typeof
   ([form]
     (typeof [] form))

@@ -1,7 +1,9 @@
 (ns symbol.analysis
   (:require [clojure.walk :as walk]))
 
-; (-> form unique-names expand-recur simplify)
+(declare unique-names expand-recur simplify)
+
+(def convert (comp simplify expand-recur unique-names))
 
 (defn fn-names
   [form]
