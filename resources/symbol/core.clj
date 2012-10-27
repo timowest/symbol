@@ -19,13 +19,13 @@
   (cons 'loop* decl))
 
 (defmacro fn
-  [&form &env & decl]
+  [& decl]
   (.withMeta ^clojure.lang.IObj (cons 'fn* decl) 
     (.meta ^clojure.lang.IMeta &form)))
 
 (defmacro defn
   [name args & body]
-  `(def ~name (fn* ~args ~@body)))
+  `(def ~name (fn ~args ~@body)))
 
 (defmacro when
   "Evaluates test. If logical true, evaluates body in an implicit do."
@@ -38,13 +38,6 @@
   {:added "1.0"}
   [test & body]
     (list 'if test nil (cons 'do body)))
-
-(comment (defn not
-  "Returns true if x is logical false, false otherwise."
-  {:tag Boolean
-   :added "1.0"
-   :static true}
-  [x] (if x false true)))
 
 (defmacro cond
   "Takes a set of test/expr pairs. It evaluates each test one at a
@@ -59,7 +52,7 @@
                 (second clauses)
                 (throw (IllegalArgumentException.
                          "cond requires an even number of forms")))
-            (cons 'symbol.core/cond (next (next clauses))))))
+            (cons 'cond (next (next clauses))))))
 
 (defmacro if-not
   "Evaluates test. If logical false, evaluates and returns then expr, 
@@ -123,7 +116,7 @@
                   (str (first ~'&form) " requires " ~(second pairs) " in " ~'*ns* ":" (:line (meta ~'&form))))))
      ~(let [more (nnext pairs)]
         (when more
-          (list* `symbol.core/assert-args more)))))
+          (list* 'assert-args more)))))
 
 (defmacro if-let
   "bindings => binding-form test
@@ -190,6 +183,67 @@
      (vector? bindings) "a vector for its binding"
      (even? (count bindings)) "an even number of forms in binding vector")
   `(let* ~(destructure bindings) ~@body))
+
+;redefine fn with destructuring and pre/post conditions
+(defmacro fn
+  "params => positional-params* , or positional-params* & next-param
+  positional-param => binding-form
+  next-param => binding-form
+  name => symbol
+
+  Defines a function"
+  [& sigs]
+    (let [name (if (symbol? (first sigs)) (first sigs) nil)
+          sigs (if name (next sigs) sigs)
+          sigs (if (vector? (first sigs)) 
+                 (list sigs) 
+                 (if (seq? (first sigs))
+                   sigs
+                   ;; Assume single arity syntax
+                   (throw (IllegalArgumentException. 
+                            (if (seq sigs)
+                              (str "Parameter declaration " 
+                                   (first sigs)
+                                   " should be a vector")
+                              (str "Parameter declaration missing"))))))
+          psig (fn* [sig]
+                 ;; Ensure correct type before destructuring sig
+                 (when (not (seq? sig))
+                   (throw (IllegalArgumentException.
+                            (str "Invalid signature " sig
+                                 " should be a list"))))
+                 (let [[params & body] sig
+                       _ (when (not (vector? params))
+                           (throw (IllegalArgumentException. 
+                                    (if (seq? (first sigs))
+                                      (str "Parameter declaration " params
+                                           " should be a vector")
+                                      (str "Invalid signature " sig
+                                           " should be a list")))))
+                       conds (when (and (next body) (map? (first body))) 
+                                           (first body))
+                       body (if conds (next body) body)
+                       conds (or conds (meta params))
+                       pre (:pre conds)
+                       post (:post conds)                       
+                       body (if post
+                              `((let [~'% ~(if (< 1 (count body)) 
+                                            `(do ~@body) 
+                                            (first body))]
+                                 ~@(map (fn* [c] `(assert ~c)) post)
+                                 ~'%))
+                              body)
+                       body (if pre
+                              (concat (map (fn* [c] `(assert ~c)) pre) 
+                                      body)
+                              body)]
+                   (maybe-destructured params body)))
+          new-sigs (map psig sigs)]
+      (with-meta
+        (if name
+          (list* 'fn* name new-sigs)
+          (cons 'fn* new-sigs))
+        (meta &form))))
 
 (defmacro loop
   "Evaluates the exprs in a lexical context in which the symbols in
