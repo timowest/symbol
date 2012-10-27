@@ -31,7 +31,7 @@
 
 (defne fno ; (fn args body)
   [env form new-env]
-  ([_ ['fn* ?args . ?stmts] [[form ['fn ?argst ?type]] . ?env3]]
+  ([_ ['fn* [?args . ?stmts]] [[form ['fn ?argst ?type]] . ?env3]]
     (fresh [env1 env2 stmtst]
            (ftypeso env ?args ?argst env2)
            (typeso env2 ?stmts stmtst ?env3)
@@ -157,7 +157,7 @@
     (fn [a]
       (let [gf (walk a form)]
         (if-let [t (literal-types (.getClass gf))]
-          (unify a [type] [t]))))))
+          (unify a [type] [t])))))) 
 
 (defne typeso
   [env args types new-env]

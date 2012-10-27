@@ -37,7 +37,7 @@
   "Evaluates test. If logical false, evaluates body in an implicit do."
   {:added "1.0"}
   [test & body]
-    (list 'if test nil (cons 'do body)))
+    (list 'if (list 'not test) (cons 'do body)))
 
 (defmacro cond
   "Takes a set of test/expr pairs. It evaluates each test one at a
@@ -47,12 +47,16 @@
   {:added "1.0"}
   [& clauses]
     (when clauses
-      (list 'if (first clauses)
-            (if (next clauses)
+      (let [c (first clauses)
+            t (if (next clauses)
                 (second clauses)
                 (throw (IllegalArgumentException.
                          "cond requires an even number of forms")))
-            (cons 'cond (next (next clauses))))))
+            e (if-let [r (next (next clauses))]
+                (cons 'cond r))]
+        (cond (= c :else) t
+              e (list 'if c t e)
+              :else (list 'if c t)))))
 
 (defmacro if-not
   "Evaluates test. If logical false, evaluates and returns then expr, 

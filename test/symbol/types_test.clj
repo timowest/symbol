@@ -9,6 +9,7 @@
                     (pset! (fn [(pointer A) A] void))
                     (pset! (fn [(pointer A) long A] void))
                     (pref  (fn [(pointer A long)] A))
+                    (not   (fn [boolean] boolean))
                     (<     (fn [A A] boolean))
                     (>     (fn [A A] boolean))
                     (<=    (fn [A A] boolean))
@@ -37,18 +38,18 @@
   (typeof '(if true (let* [x 15 z "s"] z))) => 'string)
 
 (facts "fn*"
-  (typeof env '(fn* [a b] (+ a b))) => '(fn [_.0 _.0] _.0)
-  (typeof env '(fn* [a] (substr a 1))) => '(fn [string] string)
-  (typeof env '(fn* [a] (fn* [b] (+ a b)))) => '(fn [_.0] (fn [_.0] _.0)))
+  (typeof env '(fn* ([a b] (+ a b)))) => '(fn [_.0 _.0] _.0)
+  (typeof env '(fn* ([a] (substr a 1)))) => '(fn [string] string)
+  (typeof env '(fn* ([a] (fn* ([b] (+ a b)))))) => '(fn [_.0] (fn [_.0] _.0)))
 
 (facts "fn* annotated"
-  (typeof env '(fn* [^int a] a)) => '(fn [int] int))
+  (typeof env '(fn* ([^int a] a))) => '(fn [int] int))
 
 (facts "fn* generic"
-  (typeof env '(fn* [a] a)) => '(fn [_.0] _.0)
-  (typeof env '(fn* [a b] (+ a b))) => '(fn [_.0 _.0] _.0)
-  (typeof env '(fn* [a] (+ a 1))) => '(fn [long] long)
-  (typeof env '(fn* [a] (+ a 1.0))) => '(fn [double] double))
+  (typeof env '(fn* ([a] a))) => '(fn [_.0] _.0)
+  (typeof env '(fn* ([a b] (+ a b)))) => '(fn [_.0 _.0] _.0)
+  (typeof env '(fn* ([a] (+ a 1)))) => '(fn [long] long)
+  (typeof env '(fn* ([a] (+ a 1.0)))) => '(fn [double] double))
   
 (facts "let*"
   (typeof '(let* [a 1 b "x"] a)) => 'long
@@ -78,9 +79,9 @@
   (typeof '((+ (fn [long long] long))) '(+ 1 2)) => 'long)
 
 (facts "def"
-  (typeof env '(def fact (fn* [x] (if (<= x 1) 1 (* x  (fact (- x 1))))))) => '(fn [long] long)
+  (typeof env '(def fact (fn* ([x] (if (<= x 1) 1 (* x  (fact (- x 1)))))))) => '(fn [long] long)
   (typeof '(def a 1)) => 'long
-  (typeof '(def b (fn* [] 1))) => '(fn [] long))
+  (typeof '(def b (fn* ([] 1)))) => '(fn [] long))
 
 (facts "def annotated"
   (typeof '(def ^int a)) => 'int
