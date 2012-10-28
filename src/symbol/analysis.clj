@@ -5,25 +5,27 @@
 
 (def convert (comp simplify expand-recur unique-names))
 
+(defn replace-names
+  [form names]
+  (let [mapped (zipmap names (repeatedly gensym))]
+    (walk/postwalk-replace mapped form)))
+
 (defn fn-names
   [form]
-  (let [args (nth form (if (symbol? (second form)) 2 1))
-        mapped (zipmap args (repeatedly gensym))]
-    (walk/postwalk-replace mapped form)))
+  (let [args (nth form (if (symbol? (second form)) 2 1))]
+    (replace-names form args)))
   
 (defn let-names
   [form]
   (let [bindings (second form)
-        args (map first (partition 2 bindings))
-        mapped (zipmap args (repeatedly gensym))]
-    (walk/postwalk-replace mapped form)))
+        args (map first (partition 2 bindings))]
+    (replace-names form args)))
  
 (defn loop-names
   [form]
   (let [bindings (nth form 2)
-        args (map first (partition 2 bindings))
-        mapped (zipmap args (repeatedly gensym))]
-    (walk/postwalk-replace mapped form)))
+        args (map first (partition 2 bindings))]
+    (replace-names form args)))
 
 ; TODO move to util
 (defn form?
