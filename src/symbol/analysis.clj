@@ -25,6 +25,7 @@
         mapped (zipmap args (repeatedly gensym))]
     (walk/postwalk-replace mapped form)))
 
+; TODO move to util
 (defn form?
   [form s]
   (and (seq? form) (= (first form) s)))
