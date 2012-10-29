@@ -1,18 +1,26 @@
 (ns symbol.analysis
-  (:require [clojure.walk :as walk]))
+  (:require [clojure.walk :as walk])
+  (:use symbol.util))
 
 (declare unique-names expand-recur simplify)
 
-(def convert (comp simplify expand-recur unique-names))
+(defn postwalk
+  [form pred f]
+  (walk/postwalk
+    (fn [arg]
+      (if (pred arg)
+        (f arg)
+        arg))
+    form))
 
-(defn replace-names
+(defn- replace-names
   [form names]
   (let [mapped (zipmap names (repeatedly gensym))]
     (walk/postwalk-replace mapped form)))
 
 (defn fn-names
   [form]
-  (let [args (nth form (if (symbol? (second form)) 2 1))]
+  (let [args (first (nth form (if (symbol? (second form)) 2 1)))]
     (replace-names form args)))
   
 (defn let-names
@@ -27,11 +35,6 @@
         args (map first (partition 2 bindings))]
     (replace-names form args)))
 
-; TODO move to util
-(defn form?
-  [form s]
-  (and (seq? form) (= (first form) s)))
-
 (defn unique-names
   "Replaces local names in fn* and let* forms with unique ones"
   [form]
@@ -45,30 +48,20 @@
 
 (defn expand-recur
   [form s]
-  (->> (walk/postwalk
-        (fn [f]
-          (if (form? f 'recur)
-            (concat ['recur* s] (rest f))
-            f))
-        form)
+  (->> (postwalk form 
+                 #(form? % 'recur) 
+                 #(concat ['recur* s] (rest %))) 
     rest
     (concat ['loop* s])))
 
 (defn expand-loop
   "Add symbols to recur and loops."
   [form]
-  (walk/postwalk
-    (fn [f]
-      (cond (form? f 'loop*) (expand-recur f (gensym))
-            :else f))
-    form))
+  (postwalk form 
+            #(form? % 'loop*) 
+            #(expand-recur % (gensym))))
 
 ; if fn* let* loop* . new def do
-
-(defn complex? 
-  [form]
-  (and (seq? form)
-       ('#{if let* loop* do} (first form))))
 
 (defn wrap
   [form args]
@@ -130,9 +123,6 @@
       
 (defn simplify
   [form]
-  (walk/postwalk
-    (fn [f]
-      (if (list? f)
-        (simple f)
-        f))
-    form))
+  (postwalk form list? simple))
+
+(def convert (comp simplify unique-names expand-loop))

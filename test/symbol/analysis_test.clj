@@ -13,9 +13,9 @@
     (provided (gensym) => 'x))
     
   (fact "fn* args"
-    (unique-names '(fn* named [a b c] (+ a b c))) => '(fn* named [x x x] (+ x x x))
+    (unique-names '(fn* named ([a b c] (+ a b c)))) => '(fn* named ([x x x] (+ x x x)))
     (provided (gensym) => 'x)
-    (unique-names '(fn* [a b c] (+ a b c))) => '(fn* [x x x] (+ x x x))
+    (unique-names '(fn* ([a b c] (+ a b c)))) => '(fn* ([x x x] (+ x x x)))
     (provided (gensym) => 'x)))
 
 (facts "expand"  
@@ -53,4 +53,5 @@
     (simplify '(f (let* [a 1] a) 2 3)) => '(let* [x (let* [a 1] a)] (f x 2 3))
     (provided (gensym) => 'x)))
   
+; TODO tests for convert
   

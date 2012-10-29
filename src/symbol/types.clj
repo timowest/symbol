@@ -1,7 +1,8 @@
 (ns symbol.types
   (:refer-clojure :exclude [== reify inc type])
   (:require [clojure.walk :as walk])
-  (:use [clojure.core.logic]))
+  (:use clojure.core.logic
+        symbol.util))
 
 (declare typedo typeso annotatedo)
 
@@ -117,16 +118,6 @@
            (typeso env ?exprs types ?env2)
            (lasto types ?type))))           
 
-                               
-(def ^:private literal-types
-  {Long      'long
-   Double    'double
-   String    'string
-   Character 'char
-   Boolean   'boolean
-   clojure.lang.Ratio     'ratio})
-   
-
 (defn expand-type
   [type]
   (if (seq? type)
@@ -192,21 +183,24 @@
   (for [[k v] (seq env)]
       [k (expand-type v)]))    
 
+(defn new-env
+  [env form]
+  (first (run* [q] (typedo env form q))))
+
 (defn type-and-env
   [env form]
-  (first (run* [env2 type]
-               (fresh [env2]
-                      (typedo env form env2)
-                      (membero [form type] env2)))))
+  (->> (all
+         (typedo env form env2)
+         (membero [form type] env2))
+    (run* [type env2])
+    first))
 
 (defn typeof
   ([form]
     (typeof [] form))
   ([env form]
-    (first (run* [type]
-                 (fresh [env2]
-                        (typedo env form env2)
-                        (membero [form type] env2))))))
-  
-
-
+    (->> (fresh [env2]
+                (typedo env form env2)
+                (membero [form type] env2))
+      (run* [type])
+      first)))
