@@ -72,7 +72,8 @@
   ; when-let
   
   (fact "dotimes"
-    (cpp '(dotimes [i 5] (println i))) => 'x)
+    (cpp '(dotimes [i 5] (println i))) 
+    => "int64_t _a = 5;\nint64_t _b = 0;\n_c:\nif ((_b < _a)) {\nprintln(_b);\ngoto _c;\n\n}\n;\n")
   
   (fact "fn generic"
     (cpp '(fn [x] x)) =>  "[](A _a){\nreturn _a;\n}")

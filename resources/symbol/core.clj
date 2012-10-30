@@ -20,8 +20,8 @@
 
 (defmacro fn
   [& decl]
-  (.withMeta ^clojure.lang.IObj (cons 'fn* decl) 
-    (.meta ^clojure.lang.IMeta &form)))
+  (with-meta (cons 'fn* decl) 
+    (meta &form)))
 
 (defmacro defn
   [name args & body]

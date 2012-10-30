@@ -64,14 +64,28 @@
         f  (eval (expand-all macros ex))]
     (fn [form] (normalize (apply f (concat [form nil] (rest form)))))))
 
+(defn expand-dot
+  [[m obj & args]]
+  (let [member (symbol (.substring (str m) 1))] 
+    (concat (list '. obj member) args)))
+  
+(defn expand-new
+  [[cl & args]]
+  (let [s (str cl)
+        clazz (symbol (.substring s 0 (dec (.length s))))]
+    (concat (list 'new clazz) args)))
+
 (defn expand-form
   [macros form]
-  (if-let [f (macros (first form))]
-    (let [ex (f form)]
-      (cond (identical? ex form) form
-            (seq? ex) (expand-form macros ex)
-            :else ex))
-    form))
+  (let [fst (first form)]
+    (cond (.startsWith (str fst) ".") (expand-dot form)
+          (.endsWith (str fst) ".") (expand-new form) 
+          :else (if-let [f (macros fst)]
+                  (let [ex (f form)]
+                    (cond (identical? ex form) form
+                          (seq? ex) (expand-form macros ex)
+                          :else ex))
+                  form))))
 
 (defn expand-all
   [macros form]
