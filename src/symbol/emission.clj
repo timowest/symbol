@@ -7,6 +7,8 @@
 ; set! pset! pref 
 ; < > <= >= + - * /
 
+(declare type->string)
+
 (def cpp-types
   '{string  string
     boolean boolean
@@ -18,6 +20,10 @@
     ushort uint16_t
     uint   uint32_t
     ulong  uint64_t})
+
+(def generics 
+  (zipmap (map #(symbol (str "_." %)) (range 0 26))
+          (map str "ABCDEFGHIJKLMNOPQRSTUVWXYZ")))
 
 (defn get-type
   [env form]
@@ -42,11 +48,20 @@
       (format "if (%s) {\n%s\n} else {\n%s\n}" ce te ee)
       (format "if (%s) {\n%s\n}" ce te))))     
 
+(defn fn-type->string
+  [env [_ arg-types rtype]]
+  (let [t->s #(type->string env %)
+        rt (t->s rtype)
+        args (string/join ", " (map t->s arg-types))]
+    (format "std::function<%s(%s)>" rt args)))            
+
 (defn type->string
-  [env type]  
-  (cond (symbol? type) (cpp-types type)
-        ; TODO
-        :else 'unknown))
+  [env t]  
+  (cond (cpp-types t) (cpp-types t)
+        (generics t) (generics t)
+        (symbol? t) (str t)
+        (form? (seq t) 'fn) (fn-type->string env t) 
+        :else (-> t type str)))
 
 (defn args->string
   [env args types]
@@ -63,10 +78,13 @@
 
 (defn stmts
   [env target body]
-  (let [start (map #(emit env nil %) (butlast body))
-        end (emit env target (last body))]
-    (str (string/join (map stmt start)) 
-         (stmt end))))
+  (if (seq body)
+    (let [start (map #(emit env nil %) (butlast body))
+          end (emit env target (last body))]
+      (str (string/join (map stmt start)) 
+           (stmt end)))
+    ""))
+  
 
 (defmethod emit 'fn* ; (fn* (args body)
   [env target form]
@@ -126,7 +144,7 @@
   [env target form]
   (let [[_ name value] form
         type (get-type env name)]
-    (str (type->string env type) name (emit env nil value)))) 
+    (stmt (type->string env type) name "=" (emit env nil value)))) 
 
 (defmethod emit 'do
   [env target form]

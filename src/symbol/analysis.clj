@@ -123,6 +123,6 @@
       
 (defn simplify
   [form]
-  (postwalk form list? simple))
+  (postwalk form seq? simple))
 
 (def convert (comp simplify unique-names expand-loop))

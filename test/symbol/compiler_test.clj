@@ -11,33 +11,44 @@
   (expand-all (:macros core-forms) form))
 
 (facts "expand"
+       
   (fact "let"
     (expand '(let [a 1 b 2] (+ a b))) => '(let* [a 1 b 2] (+ a b)))
+  
   (fact "defn"
     (expand '(defn identity [a] a)) => '(def identity (fn* ([a] a))))
+  
   (fact "when"
     (expand '(when a (println "hello") (println "world"))) 
           => '(if a (do (println "hello") (println "world"))))
+  
   (fact "when-not"
     (expand '(when-not a (println "hello") (println "world"))) 
           => '(if (not a) (do (println "hello") (println "world"))))
+  
   (fact "cond"
     (expand '(cond a 1 b 2 c 3)) =>  '(if a 1 (if b 2 (if c 3))))
+  
   (fact "if-not"
     (expand '(if-not a b c)) => '(if (not a) b c))
   ; and
   ; or
+  
   (fact "->"
     (expand '(-> a (b 1) c)) => '(c (b a 1)))
-  (facts "->>"
+  
+  (fact "->>"
      (expand '(->> a (b 1) c)) => '(c (b 1 a)))
   ; if-let
   ; when-let
-  (facts "dotimes"
+  
+  (fact "dotimes"
     (expand '(dotimes [i 5] (println i))) => anything)
-  (facts "fn"
+  
+  (fact "fn"
     (expand '(fn [x] x)) => '(fn* ([x] x)))
-  (facts "loop"
+  
+  (fact "loop"
     (expand '(loop [x 4] x)) => '(loop* [x 4] x)))
 
 (def env (types/to-env  '((set!  (fn [A A] void))

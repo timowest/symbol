@@ -1,5 +1,6 @@
 (ns symbol.emission-test
-  (:require [symbol.analysis :as analysis]
+  (:require [clojure.string :as string] 
+            [symbol.analysis :as analysis]
             [symbol.compiler :as compiler]
             [symbol.types :as types])
   (:use symbol.emission        
@@ -20,39 +21,57 @@
   [form]
   (let [expanded  (expand form)
         converted (analysis/convert expanded)
-        env (types/new-env core-env converted)]
-    (emit env nil converted)))  
-
+        env (types/new-env core-env converted)
+        emitted (emit env nil converted)]
+    (reduce 
+      (fn [s [k v]] (string/replace s k v))
+      emitted
+      (zipmap
+        (re-seq #"G__\d{5}" emitted)
+        (list "_a" "_b" "_c" "_d" "_e")))))
+   
 (facts "emit"
   (fact "let"
     (cpp '(let [a 1 b 2] (+ a b))) 
-    => "int64_t G__13980 = 1;\nint64_t G__13981 = 2;\n(G__13521 + G__13522);\n")
+    => "int64_t _a = 1;\nint64_t _b = 2;\n(_c + _d);\n")
+  
   (fact "defn"
-    (cpp '(defn identity [a] a)) => '(def identity (fn* ([a] a))))
+    (cpp '(defn identity [a] a)) 
+    => "std::function<A(A)> identity = [](A _b){\nreturn _b;\n}\n")
+  
   (fact "when"
     (cpp '(when a (println "hello") (println "world"))) 
     => "if (a) {\nprintln(\"hello\");\nprintln(\"world\");\n\n}")
+  
   (fact "when-not"
     (cpp '(when-not a (println "hello") (println "world"))) 
     => "if (!a) {\nprintln(\"hello\");\nprintln(\"world\");\n\n}")
+  
   (fact "cond"
     (cpp '(cond a 1 b 2 c 3)) 
     => "if (a) {\n1\n} else {\nif (b) {\n2\n} else {\nif (c) {\n3\n}\n}\n}")
+  
   (fact "if-not"
     (cpp '(if-not a b c)) => "if (!a) {\nb\n} else {\nc\n}")
   ; and
   ; or
+  
   (fact "->"
     (cpp '(-> a (b 1) c)) => "c(b(a, 1))")
+  
   (fact "->>"
      (cpp '(->> a (b 1) c)) => "c(b(1, a))")
   ; if-let
   ; when-let
+  
   (fact "dotimes"
     (cpp '(dotimes [i 5] (println i))) => 'x)
+  
   (fact "fn generic"
-    (cpp '(fn [x] x)) => '(fn* ([x] x)))
+    (cpp '(fn [x] x)) => "[](A _b){\nreturn _b;\n}")
+  
   (fact "fn typed"
-    (cpp '(fn [a] (+ a 1))) => '(fn* ([a] (+ a 1))))
+    (cpp '(fn [a] (+ a 1))) => "[](int64_t _b){\nreturn (_b + 1);\n}")
+  
   (fact "loop"
     (cpp '(loop [x 4] x)) => '(loop* [x 4] x)))

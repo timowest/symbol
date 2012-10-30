@@ -173,7 +173,7 @@
        (loop [~i 0]
          (when (< ~i n#)
            ~@body
-           (recur (unchecked-inc ~i)))))))
+           (recur (inc ~i)))))))
 
 (defmacro let
   "binding => binding-form init-expr
