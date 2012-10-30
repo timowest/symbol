@@ -60,7 +60,7 @@
 
 (defne recuro ; (recur f args*)
   [env form new-env]
-  ([_ ['recur ?f . ?args] [[form ?type] . ?env2]]
+  ([_ ['recur* ?f . ?args] [[form ?type] . ?env2]]
     (fresh [types]
            (membero [?f ['fn types ?type]] env)
            (typeso env ?args types ?env2))))
@@ -166,7 +166,7 @@
   ([_ ['fn* . _] _] (fno env form new-env))
   ([_ ['let* . _] _] (leto env form new-env))
   ([_ ['loop* . _] _] (loopo env form new-env))
-  ([_ ['recur . _] _] (recuro env form new-env))
+  ([_ ['recur* . _] _] (recuro env form new-env))
   ([_ [?dot . _] _] (== ?dot '.) (dot env form new-env))
   ([_ ['new . _] _] (newo env form new-env))
   ([_ ['def . _] _] (defo env form new-env))

@@ -71,10 +71,10 @@
                
 (defn stmt 
   [& args]
-  (let [combined (string/join " " args)]
-    (if (.endsWith combined "}")
-      (str combined "\n")
-      (str combined ";\n"))))
+  (let [s (string/join " " args)] 
+    (if (.endsWith s "}")
+      (str s "\n")
+      (str s ";\n"))))
 
 (defn stmts
   [env target body]
@@ -108,13 +108,12 @@
       
 (defn assignment
   [env [name value]]
-  (let [type (type->string env (get-type env name))
-        v (gensym)]
+  (let [type (type->string env (get-type env name))]
     (if (complex? value)
       (str 
-        (stmt type v)
-        (stmt (emit env v value)))
-      (stmt type v "=" (emit env nil value)))))    
+        (stmt type name)
+        (stmt (emit env name value)))
+      (stmt type name "=" (emit env nil value)))))    
 
 (defmethod emit 'let*
   [env target form]
@@ -124,13 +123,20 @@
       (string/join (map #(assignment env %) bind-pairs))
       (stmts env target body))))
         
-(defmethod emit 'loop* ; TODO
+(defmethod emit 'loop* 
   [env target form]
-  (string/join " " (map str form)))
+  (let [[_ name bindings & body] form
+        bind-pairs (partition 2 bindings)]
+    (str
+      (string/join (map #(assignment env %) bind-pairs))
+      (str name ":\n") 
+      (stmts env target body))))
 
-(defmethod emit 'recur* ; TODO
+(defmethod emit 'recur* 
   [env target form]
-  (string/join " " (map str form)))
+  (let [[_ name & args] form]
+    ; TODO bindings
+    (str "goto " name)))
 
 (defmethod emit '. ; TODO
   [env target form]
@@ -192,5 +198,5 @@
       (if target
         (stmt target "=" val)
         val))
-    (if target (stmt target "=" val) form)))
+    (if target (stmt target "=" form) form)))
   

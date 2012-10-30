@@ -75,9 +75,8 @@
   ([] true)
   ([x] x)
   ([x & next]
-   `(let [and# ~x]
-      (if and# (and ~@next) and#))))
-
+   `(if ~x (and ~@next))))
+   
 (defmacro or
   "Evaluates exprs one at a time, from left to right. If a form
   returns a logical true value, or returns that value and doesn't
@@ -169,7 +168,7 @@
      (= 2 (count bindings)) "exactly 2 forms in binding vector")
   (let [i (first bindings)
         n (second bindings)]
-    `(let [n# (long ~n)]
+    `(let [n# ~n]
        (loop [~i 0]
          (when (< ~i n#)
            ~@body

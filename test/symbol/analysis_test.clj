@@ -23,7 +23,7 @@
   (fact "recur"
     (expand-recur '(loop* [i 0] (when (< i 5) (println i) (recur (inc i))))  'x)
     => '(loop* x [i 0] (when (< i 5) (println i) (recur* x (inc i)))))
-
+  
   (fact "loop"
     (expand-loop '(loop* [i 0] (when (< i 5) (println i) (recur (inc i)))))
     => '(loop* x [i 0] (when (< i 5) (println i) (recur* x (inc i))))

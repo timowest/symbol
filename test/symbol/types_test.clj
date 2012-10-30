@@ -19,6 +19,9 @@
                     (*     (fn [A A] A))
                     (/     (fn [A A] A))
                     
+                    (inc   (fn [long] long))
+                    (println (fn [A] void))
+                    
                     (substr (fn [string long] string)))))
 
 (def env2 (to-env '{person (object ((name string) 
@@ -36,6 +39,9 @@
   (typeof '(if true 1 2)) => 'long
   (typeof '(if true (let* [b 1] b))) => 'long
   (typeof '(if true (let* [x 15 z "s"] z))) => 'string)
+
+(facts "and"
+  (typeof '(let* [x(< 3 4)] (if x (< -1.0 1.0) x))) => nil) ; FIXME
 
 (facts "fn*"
   (typeof env '(fn* ([a b] (+ a b)))) => '(fn [_.0 _.0] _.0)
@@ -60,7 +66,14 @@
   (typeof env '(let* [^int a 1 ^int b 2] (+ a b))) => 'long) ; FIXME
 
 (facts "loop*"
-  (typeof env '(loop* fact [x 5] (if (<= x 1) 1 (* x  (recur fact (- x 1)))))) => 'long)
+  (typeof env '(loop* fact [x 5] (if (<= x 1) 1 (* x  (recur* fact (- x 1)))))) => 'long)
+
+(facts "dotimes"
+  (typeof env '(loop* x [b 0]
+                 (if (< b 5)
+                   (do (println b) (recur* x (inc b))))))
+  => '_.0) ; FIXME
+  
 
 (facts "dot"
   (typeof env2 '(. person name)) => 'string
