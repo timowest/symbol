@@ -63,7 +63,7 @@
   
   (fact "cond"
     (cpp '(cond a 1 b 2 c 3)) 
-    => "if (a) {\n1\n} else {\nif (b) {\n2\n} else {\nif (c) {\n3\n}\n}\n}")
+    => "if (a) {\n1\n} else if (b) {\n2\n} else if (c) {\n3\n}")
   
   (fact "if-not"
     (cpp '(if-not a b c)) => "if (!a) {\nb\n} else {\nc\n}")
@@ -75,7 +75,7 @@
   (fact "or"
     (cpp '(or (< 3 4) (< -1.0 1.0))) => "if ((3 < 4)) {\ntrue\n} else {\n(-1.0 < 1.0)\n}"
     (cpp '(or (< 0 1) (< 1 2) (< 2 3))) 
-    => "if ((0 < 1)) {\ntrue\n} else {\nif ((1 < 2)) {\ntrue\n} else {\n(2 < 3)\n}\n}")
+    => "if ((0 < 1)) {\ntrue\n} else if ((1 < 2)) {\ntrue\n} else {\n(2 < 3)\n}")
 
   (fact "if and"
     (cpp '(if (and (< 3 4) (< 0 1)) (println 5)))

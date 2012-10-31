@@ -44,9 +44,9 @@
         ce (emit env nil c)
         te (emit env target t)
         ee (if e (emit env target e))]
-    (if ee
-      (format "if (%s) {\n%s\n} else {\n%s\n}" ce te ee)
-      (format "if (%s) {\n%s\n}" ce te))))     
+    (cond (form? e 'if) (format "if (%s) {\n%s\n} else %s" ce te ee)
+          ee           (format "if (%s) {\n%s\n} else {\n%s\n}" ce te ee)
+          :else        (format "if (%s) {\n%s\n}" ce te))))     
 
 (defn fn-type->string
   [env [_ arg-types rtype]]
