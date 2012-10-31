@@ -75,7 +75,7 @@
   ([] true)
   ([x] x)
   ([x & next]
-   `(if ~x (and ~@next))))
+    `(if ~x (and ~@next))))
    
 (defmacro or
   "Evaluates exprs one at a time, from left to right. If a form
@@ -86,8 +86,7 @@
   ([] nil)
   ([x] x)
   ([x & next]
-      `(let [or# ~x]
-         (if or# or# (or ~@next)))))
+    `(if ~x true (or ~@next))))
 
 (defmacro ->
   "Threads the expr through the forms. Inserts x as the

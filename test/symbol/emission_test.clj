@@ -9,11 +9,23 @@
 (def core-env (types/to-env  
   '((nil   void)
     (set!  (fn [A A] void))
+    (pset! (fn [(pointer A) A] void))
+    (pset! (fn [(pointer A) long A] void))
+    (pref  (fn [(pointer A long)] A))
     (not   (fn [boolean] boolean))
-    (println (fn [A] void))
-    (inc   (fn [long] long))
+    (=     (fn [A A] boolean))
     (<     (fn [A A] boolean))
-    (+     (fn [A A] A)))))
+    (>     (fn [A A] boolean))
+    (<=    (fn [A A] boolean))
+    (>=    (fn [A A] boolean))
+    (+     (fn [A A] A))
+    (-     (fn [A A] A))
+    (*     (fn [A A] A))
+    (/     (fn [A A] A))
+    
+    (println (fn [A] void))
+    (inc   (fn [long] long)
+    (dec   (fn [long] long))))))
   
 (defn expand
   [form]
@@ -59,8 +71,19 @@
   (fact "and"
     (cpp '(and (< 3 4) (< -1.0 1.0))) => "if ((3 < 4)) {\n(-1.0 < 1.0)\n}"
     (cpp '(and (< 0 1) (< 1 2) (< 2 3))) => "if ((0 < 1)) {\nif ((1 < 2)) {\n(2 < 3)\n}\n}")
+  
+  (fact "or"
+    (cpp '(or (< 3 4) (< -1.0 1.0))) => "if ((3 < 4)) {\ntrue\n} else {\n(-1.0 < 1.0)\n}"
+    (cpp '(or (< 0 1) (< 1 2) (< 2 3))) 
+    => "if ((0 < 1)) {\ntrue\n} else {\nif ((1 < 2)) {\ntrue\n} else {\n(2 < 3)\n}\n}")
 
-  ; or
+  (fact "if and"
+    (cpp '(if (and (< 3 4) (< 0 1)) (println 5)))
+    => "boolean _a;\nif ((3 < 4)) {\n_a = (0 < 1);\n}\nif (_a) {\nprintln(5)\n}")
+  
+  (fact "if or"
+    (cpp '(if (or (< 3 4) (< 0 1)) (println 5)))
+    => "boolean _a;\nif ((3 < 4)) {\ntrue\n} else {\n_a = (0 < 1);\n}\nif (_a) {\nprintln(5)\n}")
   
   (fact "->"
     (cpp '(-> a (b 1) c)) => "c(b(a, 1))")
