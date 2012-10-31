@@ -17,7 +17,12 @@
 (defne ifo ; (if c t e) (if c t)
   [env form new-env]
    ([_ ['if ?c ?t ?e] [[form ?type] . ?env2]]
-     (typeso env [?c ?t ?e] ['boolean ?type ?type] ?env2))
+     (fresh [type1 type2]
+       (typeso env [?c ?t ?e] ['boolean type1 type2] ?env2)
+       (matcha [type1 type2] ; allows one to be void typed
+         ([?type ?type])
+         ([?type 'void])
+         (['void ?type]))))
    ([_ ['if ?c ?t] [[form ?type] . ?env2]]
      (typeso env [?c ?t] ['boolean ?type] ?env2)))
 
@@ -31,11 +36,17 @@
   ([?e [] [] ?e]))
 
 (defne fno ; (fn args body)
-  [env form new-env]
+  [env form new-env]  
   ([_ ['fn* [?args . ?exprs]] [[form ['fn ?argst ?type]] . ?env3]]
     (fresh [env1 env2 exprst]
            (ftypeso env ?args ?argst env2)
            (typeso env2 ?exprs exprst ?env3)
+           (lasto exprst ?type)))
+  ([_ ['fn* ?name [?args . ?exprs]] [[form ['fn ?argst ?type]] . ?env4]]
+    (fresh [env1 env2 env3 exprst]
+           (ftypeso env ?args ?argst env2)
+           (conso [?name ['fn ?argst ?type]] env2 env3)
+           (typeso env3 ?exprs exprst ?env4)
            (lasto exprst ?type))))
 
 ; XXX ignores annotated keys
@@ -60,9 +71,9 @@
 
 (defne recuro ; (recur f args*)
   [env form new-env]
-  ([_ ['recur* ?f . ?args] [[form ?type] . ?env2]]
-    (fresh [types]
-           (membero [?f ['fn types ?type]] env)
+  ([_ ['recur* ?f . ?args] [[form 'void] . ?env2]]
+    (fresh [type types]
+           (membero [?f ['fn types type]] env)
            (typeso env ?args types ?env2))))
 
 (defne leto ; (let* bindings body*)

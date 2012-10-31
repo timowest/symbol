@@ -121,6 +121,7 @@
     (pset! (fn [(pointer A) long A] void))
     (pref  (fn [(pointer A long)] A))
     (not   (fn [boolean] boolean))
+    (=     (fn [A A] boolean))
     (<     (fn [A A] boolean))
     (>     (fn [A A] boolean))
     (<=    (fn [A A] boolean))

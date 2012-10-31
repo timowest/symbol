@@ -12,13 +12,15 @@
                     (not   (fn [boolean] boolean))
                     (<     (fn [A A] boolean))
                     (>     (fn [A A] boolean))
+                    (=     (fn [A A] boolean))
                     (<=    (fn [A A] boolean))
                     (>=    (fn [A A] boolean))
                     (+     (fn [A A] A))
                     (-     (fn [A A] A))
                     (*     (fn [A A] A))
                     (/     (fn [A A] A))
-                    
+                                        
+                    (dec   (fn [long] long))
                     (inc   (fn [long] long))
                     (println (fn [A] void))
                     
@@ -65,16 +67,22 @@
   (typeof env '(let* [^int a 1] (+ a 2))) => 'long ; FIXME
   (typeof env '(let* [^int a 1 ^int b 2] (+ a b))) => 'long) ; FIXME
 
-(facts "loop*"
-  (typeof env '(loop* fact [x 5] (if (<= x 1) 1 (* x  (recur* fact (- x 1)))))) => 'long)
+(facts "factorial"
+  (typeof env '(fn* fact([x]
+                  (if (<= x 1) 1 (* x (fact (- x 1)))))))
+  => '(fn [long] long))
+
+(facts "factorial optimized"
+  (typeof env '(fn* ([x]
+                  (loop* xx [n x f 1]
+                    (if (= n 1) f (recur* xx (dec n) (* f n)))))))
+  => '(fn [long] long))
 
 (facts "dotimes"
   (typeof env '(loop* x [b 0]
-                 (if (< b 5)
-                   (do (println b) (recur* x (inc b))))))
-  => '_.0) ; FIXME
+                 (if (< b 5) (do (println b) (recur* x (inc b))))))
+  => 'void)
   
-
 (facts "dot"
   (typeof env2 '(. person name)) => 'string
   (typeof env2 '(. person age)) => 'long
