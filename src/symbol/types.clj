@@ -173,6 +173,7 @@
 ; TODO special handling of sets, maps and vectors?
 (defnu typedo
   [env form new-env]
+  ([_ nil _] (== env new-env))
   ([_ ['if . _] _] (ifo env form new-env))
   ([_ ['fn* . _] _] (fno env form new-env))
   ([_ ['let* . _] _] (leto env form new-env))

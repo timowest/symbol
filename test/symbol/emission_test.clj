@@ -7,7 +7,8 @@
         midje.sweet))
 
 (def core-env (types/to-env  
-  '((set!  (fn [A A] void))
+  '((nil   void)
+    (set!  (fn [A A] void))
     (not   (fn [boolean] boolean))
     (println (fn [A] void))
     (inc   (fn [long] long))
@@ -67,9 +68,12 @@
   (fact "->>"
      (cpp '(->> a (b 1) c)) => "c(b(1, a))")
   
-  ; if-let
+  ;(fact "if-let"
+  ;   (cpp '(if-let [a (< 1 2)] (println a))) => 'x)
   
-  ; when-let
+  (fact "when-let"
+     (cpp '(when-let [a (< 1 2)] (println a))) 
+     => "boolean _a = (1 < 2);\nif (_a) {\nboolean _b = _a;\nprintln(_b);\n\n}\n")
   
   (fact "dotimes"
     (cpp '(dotimes [i 5] (println i))) 

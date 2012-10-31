@@ -5,7 +5,8 @@
         midje.sweet))
 
 ; TODO make this the base environment
-(def env (to-env  '((set!  (fn [A A] void))
+(def env (to-env  '((nil   void)
+                    (set!  (fn [A A] void))
                     (pset! (fn [(pointer A) A] void))
                     (pset! (fn [(pointer A) long A] void))
                     (pref  (fn [(pointer A long)] A))
@@ -34,6 +35,9 @@
                            (age long)
                            (:new [string])
                            (:new [string long])))}))
+
+(facts "nil"
+  (typeof env nil) => 'void)
 
 (facts "if"
   (typeof env '(if (<= 1 3) 2 5)) => 'long

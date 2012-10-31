@@ -116,7 +116,8 @@
     (expand-forms namespace (:macros core-forms) forms)))
 
 (def core-env (types/to-env  
-  '((set!  (fn [A A] void))
+  '((nil   void)
+    (set!  (fn [A A] void))
     (pset! (fn [(pointer A) A] void))
     (pset! (fn [(pointer A) long A] void))
     (pref  (fn [(pointer A long)] A))
