@@ -32,11 +32,11 @@
 
 (defne fno ; (fn args body)
   [env form new-env]
-  ([_ ['fn* [?args . ?stmts]] [[form ['fn ?argst ?type]] . ?env3]]
-    (fresh [env1 env2 stmtst]
+  ([_ ['fn* [?args . ?exprs]] [[form ['fn ?argst ?type]] . ?env3]]
+    (fresh [env1 env2 exprst]
            (ftypeso env ?args ?argst env2)
-           (typeso env2 ?stmts stmtst ?env3)
-           (lasto stmtst ?type))))
+           (typeso env2 ?exprs exprst ?env3)
+           (lasto exprst ?type))))
 
 ; XXX ignores annotated keys
 (defne bindingso
@@ -50,12 +50,12 @@
 
 (defne loopo ; (loop* name bindings body*)
   [env form new-env]
-  ([_ ['loop* ?name ?bindings . ?stmts] _] 
-    (fresh [types env2 env3 env4 stmtst type]
+  ([_ ['loop* ?name ?bindings . ?exprs] _] 
+    (fresh [types env2 env3 env4 exprst type]
            (bindingso env ?bindings types env2)
            (conso [?name ['fn types type]] env2 env3)
-           (typeso env3 ?stmts stmtst env4)
-           (lasto stmtst type)
+           (typeso env3 ?exprs exprst env4)
+           (lasto exprst type)
            (conso [form type] env4 new-env))))
 
 (defne recuro ; (recur f args*)
@@ -67,11 +67,11 @@
 
 (defne leto ; (let* bindings body*)
   [env form new-env]
-  ([_ ['let* ?bindings . ?stmts] _] ; normal let
-    (fresh [types env2 stmtst env3 type]
+  ([_ ['let* ?bindings . ?exprs] _] ; normal let
+    (fresh [types env2 exprst env3 type]
            (bindingso env ?bindings types env2)
-           (typeso env2 ?stmts stmtst env3)
-           (lasto stmtst type)
+           (typeso env2 ?exprs exprst env3)
+           (lasto exprst type)
            (conso [form type] env3 new-env))))
 
 (defne applyo ; (f args*)
