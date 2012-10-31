@@ -35,19 +35,19 @@
 (facts "emit"
   (fact "let"
     (cpp '(let [a 1 b 2] (+ a b))) 
-    =>  "int64_t _a = 1;\nint64_t _b = 2;\n(_a + _b);\n")
+    =>  "int64_t _a = 1;\nint64_t _b = 2;\n(_a + _b);")
   
   (fact "defn"
     (cpp '(defn identity [a] a)) 
-    => "std::function<A(A)> identity = [](A _a){\nreturn _a;\n}\n")
+    => "std::function<A(A)> identity = [](A _a){\nreturn _a;\n}")
   
   (fact "when"
     (cpp '(when a (println "hello") (println "world"))) 
-    => "if (a) {\nprintln(\"hello\");\nprintln(\"world\");\n\n}")
+    => "if (a) {\nprintln(\"hello\");\nprintln(\"world\");\n}")
   
   (fact "when-not"
     (cpp '(when-not a (println "hello") (println "world"))) 
-    => "if (!a) {\nprintln(\"hello\");\nprintln(\"world\");\n\n}")
+    => "if (!a) {\nprintln(\"hello\");\nprintln(\"world\");\n}")
   
   (fact "cond"
     (cpp '(cond a 1 b 2 c 3)) 
@@ -73,11 +73,11 @@
   
   (fact "when-let"
      (cpp '(when-let [a (< 1 2)] (println a))) 
-     => "boolean _a = (1 < 2);\nif (_a) {\nboolean _b = _a;\nprintln(_b);\n\n}\n")
+     => "boolean _a = (1 < 2);\nif (_a) {\nboolean _b = _a;\nprintln(_b);\n}")
   
   (fact "dotimes"
     (cpp '(dotimes [i 5] (println i))) 
-    => "int64_t _a = 5;\nint64_t _b = 0;\n_c:\nif ((_b < _a)) {\nprintln(_b);\ngoto _c;\n\n}\n;\n")
+    => "int64_t _a = 5;\nint64_t _b = 0;\n_c:\nif ((_b < _a)) {\nprintln(_b);\ngoto _c;\n}")
   
   (fact "fn generic"
     (cpp '(fn [x] x)) =>  "[](A _a){\nreturn _a;\n}")
@@ -86,4 +86,4 @@
     (cpp '(fn [a] (+ a 1))) =>  "[](int64_t _a){\nreturn (_a + 1);\n}")
   
   (fact "loop"
-    (cpp '(loop [x 4] x)) => "int64_t _a = 4;\n_b:\n_a;\n"))
+    (cpp '(loop [x 4] x)) => "int64_t _a = 4;\n_b:\n_a;"))

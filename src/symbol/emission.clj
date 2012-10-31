@@ -72,19 +72,18 @@
 (defn stmt 
   [& args]
   (let [s (string/join " " args)] 
-    (if (.endsWith s "}")
-      (str s "\n")
-      (str s ";\n"))))
+    (if (.endsWith s "}") s (str s ";"))))
+
+(defn lines 
+  [& l]
+  (string/join "\n" (keep identity (flatten l))))
 
 (defn stmts
   [env target body]
-  (if (seq body)
+  (when (seq body)
     (let [start (map #(emit env nil %) (butlast body))
           end (emit env target (last body))]
-      (str (string/join (map stmt start)) 
-           (stmt end)))
-    ""))
-  
+      (lines (map stmt (concat start [end]))))))  
 
 (defmethod emit 'fn* ; (fn* (args body)
   [env target form]
@@ -94,23 +93,24 @@
         return (if (= rtype 'void) nil (gensym))
         l (last body)]
     (if return 
-      (str "[](" args-str "){\n"           
+      (lines (str "[](" args-str "){")           
            (stmts env nil (butlast body))
            (if (complex? l)
-             (str 
+             (lines
                (stmt (type->string env rtype) return)
                (stmt (emit env return l))
                (stmt "return" return))
              (stmt "return" (emit env nil l)))                      
            "}")
-      (str "[](" args-str "){\n"
-           (stmts env nil body) "}"))))
+      (lines "[](" args-str "){"
+             (stmts env nil body) 
+             "}"))))
       
 (defn assignment
   [env [name value]]
   (let [type (type->string env (get-type env name))]
     (if (complex? value)
-      (str 
+      (lines
         (stmt type name)
         (stmt (emit env name value)))
       (stmt type name "=" (emit env nil value)))))    
@@ -119,17 +119,17 @@
   [env target form]
   (let [[_ bindings & body] form
         bind-pairs (partition 2 bindings)]
-    (str 
-      (string/join (map #(assignment env %) bind-pairs))
+    (lines 
+      (map #(assignment env %) bind-pairs)
       (stmts env target body))))
         
 (defmethod emit 'loop* 
   [env target form]
   (let [[_ name bindings & body] form
         bind-pairs (partition 2 bindings)]
-    (str
-      (string/join (map #(assignment env %) bind-pairs))
-      (str name ":\n") 
+    (lines
+      (map #(assignment env %) bind-pairs)
+      (str name ":") 
       (stmts env target body))))
 
 (defmethod emit 'recur* 
