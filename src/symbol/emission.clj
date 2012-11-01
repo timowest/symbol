@@ -93,26 +93,30 @@
           end (emit env target (last body))]
       (lines (map stmt (concat start [end]))))))  
 
+(defn fn-body
+  [env target body rtype]
+  (let [l (last body)
+        return (if (= rtype 'void) nil (gensym))]
+    (if return
+      (lines
+        (stmts env nil (butlast body))
+        (if (complex? l)
+          (lines
+            (stmt (type->string env rtype) return)
+            (stmt (emit env return l))
+            (stmt "return" return))
+          (stmt "return" (emit env nil l))))
+      (stmts env nil body))))  
+
 (defmethod emit 'fn* ; (fn* (args body)
   [env target form]
   (let [[_ argtypes rtype] (get-type env form)
         [args & body] (second form)
-        args-str (args->string env args argtypes)
-        return (if (= rtype 'void) nil (gensym))
-        l (last body)]
-    (if return 
-      (lines (str "[](" args-str "){")           
-           (stmts env nil (butlast body))
-           (if (complex? l)
-             (lines
-               (stmt (type->string env rtype) return)
-               (stmt (emit env return l))
-               (stmt "return" return))
-             (stmt "return" (emit env nil l)))                      
-           "}")
-      (lines "[](" args-str "){"
-             (stmts env nil body) 
-             "}"))))
+        args-str (args->string env args argtypes)]
+    (lines 
+      (str "[](" args-str "){")
+      (fn-body env target body rtype)
+      "}")))
       
 (defn assignment
   [env [name value]]
@@ -154,11 +158,26 @@
   [env target form]
   (string/join " " (map str form)))
 
+(defn fn-generics
+  [type]
+  (if-let [types (->> type flatten distinct (keep generics) seq)]
+    (str "template <class " (string/join ", class " types)  ">")))
+
 (defmethod emit 'def
   [env target form]
   (let [[_ name value] form
         type (get-type env name)]
-    (stmt (type->string env type) name "=" (emit env nil value)))) 
+    (if (form? value 'fn*)
+      (let [[_ arg-types rtype] type
+            rtypes (type->string env rtype)
+            [args & body] (second value)
+            args-str (args->string env args arg-types)]
+        (lines
+          (fn-generics type)
+          (format "%s %s(%s) {" rtypes name args-str)
+          (fn-body env target body rtype)
+          "}"))        
+      (stmt (type->string env type) name "=" (emit env nil value))))) 
 
 (defmethod emit 'do
   [env target form]

@@ -57,9 +57,16 @@
     (cpp '(let [a 1 b 2] (+ a b))) 
     =>  "int64_t _a = 1;\nint64_t _b = 2;\n(_a + _b);")
   
-  (fact "defn"
+  (fact "def"
+    (cpp '(def a 123.0)) => "double a = 123.0;") 
+  
+  (fact "defn (non-generic)"
+    (cpp '(defn inc2 [a] (+ a 1))) 
+    => "int64_t inc2(int64_t _a) {\nreturn (_a + 1);\n}")
+  
+  (fact "defn (generic)"
     (cpp '(defn identity [a] a)) 
-    => "std::function<A(A)> identity = [](A _a){\nreturn _a;\n}")
+    => "template <class A>\nA identity(A _a) {\nreturn _a;\n}")
   
   (fact "when"
     (cpp '(when a (println "hello") (println "world"))) 
