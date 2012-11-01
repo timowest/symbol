@@ -11,10 +11,6 @@
             [clojure.pprint :as pprint])
   (:use symbol.util))
 
-; if fn* let* loop* recur* . new def do 
-; set! pset! pref 
-; < > <= >= + - * /
-
 (declare type->string)
 
 (def cpp-types
@@ -210,8 +206,9 @@
   (str form))
 
 (def math-ops 
-  (into {} (for [k '#{+ - * / < > <= >= != ==}]
-             [k (str " " k " ")])))
+  (let [base (into {} (for [k '#{+ - * / < > <= >= !=}]
+                        [k (str " " k " ")]))]
+    (merge base '{= " == "})))
 
 (def unary-ops '{not "!" + "+" - "-"}) 
 

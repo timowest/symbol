@@ -117,8 +117,6 @@
 (def core-forms
   (expand-forms 'symbol.core {} (load-forms "symbol/core.clj")))
 
-; TODO take map of namespace content mappings as argument
-; TODO use also macros from imported namespaces
 (defn get-contents
   [file]
   (let [forms (load-forms file)

@@ -15,10 +15,8 @@
 (defn postwalk
   [form pred f]
   (walk/postwalk
-    (fn [arg]
-      (if (pred arg)
-        (f arg)
-        arg))
+    (fn [arg] 
+      (if (pred arg) (f arg) arg))
     form))
 
 (defn- replace-names

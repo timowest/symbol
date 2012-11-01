@@ -108,6 +108,9 @@
     (cpp '(new Entity 3 (+ 1 2))) => "new Entity(3, (1 + 2))"
     (cpp '(Entity. 3 (+ 1 2))) => "new Entity(3, (1 + 2))")
   
+  (fact "eq"
+    (cpp '(= 1 2)) => "(1 == 2)")
+   
   (fact "->"
     (cpp '(-> a (b 1) c)) => "c(b(a, 1))")
   
