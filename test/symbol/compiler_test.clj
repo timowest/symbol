@@ -14,6 +14,15 @@
 (facts "normalize"
   (normalize 'clojure.core/let*) => 'let*)
 
+(facts "expand forms"
+  (fact "normal"
+    (:forms (expand-forms 'test {} '((println 1) (println 2) (println 3))))
+    => '[(println 1) (println 2) (println 3)])
+  
+  (fact "with do"
+    (:forms (expand-forms 'test {} '((do (println 1) (println 2) (println 3)))))
+    => '[(println 1) (println 2) (println 3)]))
+  
 (defn expand
   [form]
   (expand-all (:macros core-forms) form))

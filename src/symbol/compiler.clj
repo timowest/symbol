@@ -7,6 +7,7 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns symbol.compiler
+  (:use [symbol.util])
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [clojure.pprint :as pprint]
@@ -102,16 +103,17 @@
     form))
 
 (defn expand-forms
-  [ns macros forms]
-  (reduce
-    (fn [acc form]      
-      (let [ex (expand-all (merge macros (:macros acc)) form)]
-        (if (is-macro? ex) 
-          (update-in acc [:macros] assoc (second ex) (to-fn (:macros acc) ex))
-          (update-in acc [:forms] conj ex))))                 
-    {:ns ns :macros {} :forms []}
-    forms))
-
+  [ns m f]
+  (loop* [in f macros {} forms []]
+    (if (seq in)
+      (let [ex (expand-all (merge m macros) (first in))]
+        (cond (form? ex 'do) (recur (mapcat rest [ex in]) macros forms)
+              (is-macro? ex) (recur (rest in) 
+                                     (assoc macros (second ex) (to-fn macros ex))
+                                     forms)
+              :else (recur (rest in) macros (conj forms ex))))
+      {:ns ns :macros macros :forms forms})))
+                
 (def core-forms
   (expand-forms 'symbol.core {} (load-forms "symbol/core.clj")))
 
