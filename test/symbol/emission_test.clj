@@ -38,7 +38,7 @@
 (defn expand
   [form]
   (compiler/expand-all (:macros compiler/core-forms) form))
-
+                 
 (defn cpp
   [form]
   (let [expanded  (expand form)
@@ -51,6 +51,10 @@
       (zipmap
         (distinct (re-seq #"G__\d+" emitted))
         (list "_a" "_b" "_c" "_d" "_e")))))
+
+(defn cpp-pprint
+  [form]
+  (print (format-cpp (cpp form))))
    
 (facts "emit"
   (fact "let"
@@ -126,6 +130,9 @@
   
   (fact "fn typed"
     (cpp '(fn [a] (+ a 1))) =>  "[](int64_t _a){\nreturn (_a + 1);\n}")
+  
+  (fact "fn"
+    (cpp '(fn [a] (if (< a 2) (println 2)))) =>  "[](int64_t _a){\nif ((_a < 2)) {\nprintln(2)\n}\n}")
   
   (fact "loop"
     (cpp '(loop [x 4] x)) => "int64_t _a = 4;\n_b:\n_a;"))

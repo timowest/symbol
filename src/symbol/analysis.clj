@@ -125,7 +125,7 @@
 
 (defmethod simple :default ; apply
   [[_ & args :as form]]
-  (if (some complex? args)
+  (if (and (seq form) (symbol? (first form)) (some complex? args))
     (wrap form args)
     form))
       

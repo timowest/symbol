@@ -228,4 +228,22 @@
         (stmt target "=" val)
         val))
     (if target (stmt target "=" form) form)))
+
+(defn- block-in 
+  [indent] 
+  (str indent "    "))
+
+(defn- block-out 
+  [indent] 
+  (.substring indent 0 (- (.length indent) 4)))
+
+(defn format-cpp
+  [s]
+  (loop [acc [] lines (string/split-lines s) indent ""]
+    (if (seq lines)
+      (let [[f & r] lines
+            new-indent (if (.startsWith f "}") (block-out indent) indent)
+            out-indent (if (.endsWith f "{") (block-in new-indent) new-indent)]
+        (recur (conj acc (str new-indent f)) r out-indent))
+      (string/join "\n" acc))))
   
