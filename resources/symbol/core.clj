@@ -6,9 +6,7 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns symbol.core
-  (:refer-clojure :exclude [let loop when when-not not cond if-not and or -> ->> if-let
-                            when-let dotimes let loop]))
+(ns symbol.core)
 
 (defmacro let
   [& decl] 

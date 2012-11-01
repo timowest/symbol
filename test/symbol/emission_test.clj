@@ -14,26 +14,12 @@
   (:use symbol.emission        
         midje.sweet))
 
-(def core-env (types/to-env  
-  '((nil   void)
-    (set!  (fn [A A] void))
-    (pset! (fn [(pointer A) A] void))
-    (pset! (fn [(pointer A) long A] void))
-    (pref  (fn [(pointer A long)] A))
-    (not   (fn [boolean] boolean))
-    (=     (fn [A A] boolean))
-    (<     (fn [A A] boolean))
-    (>     (fn [A A] boolean))
-    (<=    (fn [A A] boolean))
-    (>=    (fn [A A] boolean))
-    (+     (fn [A A] A))
-    (-     (fn [A A] A))
-    (*     (fn [A A] A))
-    (/     (fn [A A] A))
-    
-    (println (fn [A] void))
-    (inc   (fn [long] long)
-    (dec   (fn [long] long))))))
+(def core-env 
+  (concat 
+    compiler/core-env
+    (types/to-env  '((println (fn [A] void))
+                     (inc   (fn [long] long)
+                     (dec   (fn [long] long)))))))
   
 (defn expand
   [form]
