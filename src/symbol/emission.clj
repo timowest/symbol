@@ -154,9 +154,11 @@
   [env target form]
   (string/join " " (map str form)))
 
-(defmethod emit 'new ; TODO 
+(defmethod emit 'new  
   [env target form]
-  (string/join " " (map str form)))
+  (let [[_ clazz & args] form
+        args (map #(emit env nil %) args)]
+    (format "new %s(%s)" clazz (string/join ", " args))))
 
 (defn fn-generics
   [type]

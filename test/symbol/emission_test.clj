@@ -100,6 +100,10 @@
     (cpp '(if (or (< 3 4) (< 0 1)) (println 5)))
     => "boolean _a;\nif ((3 < 4)) {\ntrue\n} else {\n_a = (0 < 1);\n}\nif (_a) {\nprintln(5)\n}")
   
+   (fact "new"
+    (cpp '(new Entity 3 (+ 1 2))) => "new Entity(3, (1 + 2))"
+    (cpp '(Entity. 3 (+ 1 2))) => "new Entity(3, (1 + 2))")
+  
   (fact "->"
     (cpp '(-> a (b 1) c)) => "c(b(a, 1))")
   
