@@ -95,10 +95,11 @@
 
 (defne applyo ; (f args*)
   [env form new-env]
-  ([_ [?f . ?args] [[form ?type] . ?env2]]
-    (fresh [types]
-           (membero [?f ['fn types ?type]] env)
-           (typeso env ?args types ?env2))))
+  ([_ [?f . ?args] [[form ?type] . ?env3]]
+    (fresh [env2 types]
+           (typedo env ?f env2) 
+           (membero [?f ['fn types ?type]] env2)
+           (typeso env2 ?args types ?env3))))
     
 (defne dot ; (. obj member args*)
   [env form new-env]

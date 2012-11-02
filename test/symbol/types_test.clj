@@ -71,6 +71,9 @@
   (typeof env '(fn* ([a] (+ a 1)))) => '(fn [long] long)
   (typeof env '(fn* ([a] (+ a 1.0)))) => '(fn [double] double))
   
+(facts "inline fn"
+  (typeof env '((fn* ([a] (+ a 1))) 1)) => 'long)
+
 (facts "let*"
   (typeof '(let* [a 1 b "x"] a)) => 'long
   (typeof '(let* [a 1 b "x"] b)) => 'string)

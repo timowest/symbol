@@ -42,12 +42,30 @@
 
 (defmulti emit emit-selector)
 
+(defn stmt 
+  [& args]
+  (let [s (string/join " " args)] 
+    (cond (.endsWith s "}") s
+          (.endsWith s ";") s
+          :else (str s ";"))))
+
+(defn lines 
+  [& l]
+  (string/join "\n" (keep identity (flatten l))))
+
+(defn stmts
+  [env target body]
+  (when (seq body)
+    (let [start (map #(emit env nil %) (butlast body))
+          end (emit env target (last body))]
+      (lines (map stmt (concat start [end]))))))  
+
 (defmethod emit 'if 
   [env target form]
   (let [[_ c t e] form  
         ce (emit env nil c)
-        te (emit env target t)
-        ee (if e (emit env target e))]
+        te (stmt (emit env target t))
+        ee (if e (stmt (emit env target e)))]
     (cond (form? e 'if) (format "if (%s) {\n%s\n} else %s" ce te ee)
           ee           (format "if (%s) {\n%s\n} else {\n%s\n}" ce te ee)
           :else        (format "if (%s) {\n%s\n}" ce te))))     
@@ -72,22 +90,6 @@
   (->> (for [[arg type] (zipmap args types)]
          (str (type->string env type) " " arg))
     (string/join ", ")))
-               
-(defn stmt 
-  [& args]
-  (let [s (string/join " " args)] 
-    (if (.endsWith s "}") s (str s ";"))))
-
-(defn lines 
-  [& l]
-  (string/join "\n" (keep identity (flatten l))))
-
-(defn stmts
-  [env target body]
-  (when (seq body)
-    (let [start (map #(emit env nil %) (butlast body))
-          end (emit env target (last body))]
-      (lines (map stmt (concat start [end]))))))  
 
 (defn fn-body
   [env target body rtype]
@@ -108,9 +110,10 @@
   [env target form]
   (let [[_ argtypes rtype] (get-type env form)
         [args & body] (second form)
-        args-str (args->string env args argtypes)]
+        args-str (args->string env args argtypes)
+        to-target (if target (str (emit env nil target) " = ") "")]
     (lines 
-      (str "[](" args-str "){")
+      (str to-target "[](" args-str "){")
       (fn-body env target body rtype)
       "}")))
       
@@ -174,8 +177,8 @@
           (fn-generics type)
           (format "%s %s(%s) {" rtypes name args-str)
           (fn-body env target body rtype)
-          "}"))        
-      (stmt (type->string env type) name "=" (emit env nil value))))) 
+          "}"))
+      (assignment env [name value])))) 
 
 (defmethod emit 'do
   [env target form]
@@ -187,7 +190,7 @@
 
 (defmethod emit 'string
   [env target form]
-  (str "\"" form "\""))
+  (str "\"" form "\"")) ; TODO property escaping
 
 (defmethod emit 'char
   [env target form]
@@ -220,11 +223,11 @@
           unary (= 1 (count r))
           val (cond (and unary (unary-ops f)) (str (unary-ops f) (first r))             
                     (math-ops f) (str "(" (string/join (math-ops f) r) ")")
-                    :else (str f "(" (string/join ", " r) ")"))]
+                    :else (str (emit env nil f) "(" (string/join ", " r) ")"))]
       (if target
-        (stmt target "=" val)
+        (str target " = " val)
         val))
-    (if target (stmt target "=" form) form)))
+    (if target (str target " = " form) form)))
 
 (defn- block-in 
   [indent] 
