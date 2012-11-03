@@ -145,9 +145,12 @@
 
 (defmethod emit 'recur* 
   [env target form]
-  (let [[_ name & args] form]
-    ; TODO bindings
-    (str "goto " name)))
+  (let [[_ name & args] form
+        [_ names types rtype] (get-type env name)
+        bind-pairs (zipmap names args)]
+    (lines 
+      (for [[k v] bind-pairs] (emit env k v))
+      (stmt "goto" name))))
 
 (defmethod emit '. ; TODO
   [env target form]

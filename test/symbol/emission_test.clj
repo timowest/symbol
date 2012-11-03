@@ -112,7 +112,9 @@
   
   (fact "dotimes"
     (cpp '(dotimes [i 5] (println i))) 
-    => "int64_t _a = 5;\nint64_t _b = 0;\n_c:\nif ((_b < _a)) {\nprintln(_b);\ngoto _c;\n}")
+    => (str "int64_t _a = 5;\nint64_t _b = 0;\n"
+            "_c:\n"
+            "if ((_b < _a)) {\nprintln(_b);\n_b = inc(_b)\ngoto _c;\n}"))
   
   (fact "fn generic"
     (cpp '(fn [x] x)) =>  "[](A _a){\nreturn _a;\n}")
@@ -121,7 +123,8 @@
     (cpp '(fn [a] (+ a 1))) =>  "[](int64_t _a){\nreturn (_a + 1);\n}")
   
   (fact "fn"
-    (cpp '(fn [a] (if (< a 2) (println 2)))) =>  "[](int64_t _a){\nif ((_a < 2)) {\nprintln(2);\n}\n}")
+    (cpp '(fn [a] (if (< a 2) (println 2)))) 
+    =>  "[](int64_t _a){\nif ((_a < 2)) {\nprintln(2);\n}\n}")
   
   (fact "loop"
     (cpp '(loop [x 4] x)) => "int64_t _a = 4;\n_b:\n_a;"))

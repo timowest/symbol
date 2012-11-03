@@ -67,12 +67,19 @@
            (bindingso env3 ?rest ?restt new-env)))
   ([?e [] [] ?e]))
 
+(defne argso
+  [bindings args]
+  ([[?k ?v . ?rest] [?k . ?resta]]
+    (argso ?rest ?resta))
+  ([[] []]))                   
+
 (defne loopo ; (loop* name bindings body*)
   [env form new-env]
   ([_ ['loop* ?name ?bindings . ?exprs] _] 
-    (fresh [types env2 env3 env4 exprst type]
+    (fresh [types env2 env3 env4 exprst type args]
            (bindingso env ?bindings types env2)
-           (conso [?name ['fn types type]] env2 env3)
+           (argso ?bindings args)
+           (conso [?name ['loop args types type]] env2 env3)
            (typeso env3 ?exprs exprst env4)
            (lasto exprst type)
            (conso [form type] env4 new-env))))
@@ -80,8 +87,8 @@
 (defne recuro ; (recur f args*)
   [env form new-env]
   ([_ ['recur* ?f . ?args] [[form 'void] . ?env2]]
-    (fresh [type types]
-           (membero [?f ['fn types type]] env)
+    (fresh [type args types]
+           (membero [?f ['loop args types type]] env)
            (typeso env ?args types ?env2))))
 
 (defne leto ; (let* bindings body*)
@@ -145,7 +152,7 @@
       (zipmap '(A B C D E F G H) (repeatedly lvar))
       type)
     type))
-        
+                 
 ; TODO this should probably first check if symbol can be resolved via the env
 ;      and if not, take the symbol as such
 (defn annotatedo 
