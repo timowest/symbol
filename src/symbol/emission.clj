@@ -189,27 +189,42 @@
 
 (defmethod emit 'long
   [env target form]
-  (str form))
+  (if target
+    (str target " = " form)
+    (str form)))
 
 (defmethod emit 'string
   [env target form]
-  (str "\"" form "\"")) ; TODO property escaping
+  (let [escaped (str "\"" form "\"")]  ; TODO property escaping
+    (if target
+      (str target " = " escaped)
+      escaped))) 
 
 (defmethod emit 'char
   [env target form]
-  (str "'" form "'"))
+  (let [literal (str "'" form "'")]
+    (if target
+      (str target " = " literal)
+      literal)))
 
 (defmethod emit 'boolean
   [env target form]
-  (str form))
+  (if target
+    (str target " = " form)
+    form))
 
 (defmethod emit 'ratio
   [env target form]
-  (str (double form)))
+  (let [literal (double form)]
+    (if target
+      (str target " = " literal)
+      literal)))
 
 (defmethod emit 'symbol
   [env target form]
-  (str form))
+  (if target
+    (str target " = " form)
+    form))
 
 (def math-ops 
   (let [base (into {} (for [k '#{+ - * / < > <= >= !=}]
@@ -230,7 +245,9 @@
       (if target
         (str target " = " val)
         val))
-    (if target (str target " = " form) form)))
+    (if target 
+      (str target " = " form) 
+      form)))
 
 (defn- block-in 
   [indent] 

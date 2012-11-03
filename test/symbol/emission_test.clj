@@ -18,8 +18,8 @@
   (concat 
     compiler/core-env
     (types/to-env  '((println (fn [A] void))
-                     (inc   (fn [long] long)
-                     (dec   (fn [long] long)))))))
+                     (inc   (fn [long] long))
+                     (dec   (fn [long] long))))))
   
 (defn expand
   [form]
@@ -88,7 +88,13 @@
   
   (fact "if or"
     (cpp '(if (or (< 3 4) (< 0 1)) (println 5)))
-    => "boolean _a;\nif ((3 < 4)) {\ntrue;\n} else {\n_a = (0 < 1);\n}\nif (_a) {\nprintln(5);\n}")
+    =>  "boolean _a;\nif ((3 < 4)) {\n_a = true;\n} else {\n_a = (0 < 1);\n}\nif (_a) {\nprintln(5);\n}")
+  
+   (fact "if"
+    (cpp '((if (< 0 1) inc dec) 5)) 
+    => (str "std::function<int64_t(int64_t)> a__4219__auto__;\n"
+            "if ((0 < 1)) {\na__4219__auto__ = inc;\n} else {\na__4219__auto__ = dec;\n}\n"
+            "a__4219__auto__(5);"))
   
    (fact "new"
     (cpp '(new Entity 3 (+ 1 2))) => "new Entity(3, (1 + 2))"

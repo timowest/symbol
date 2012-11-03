@@ -54,8 +54,12 @@
   (typeof '(if true (let* [b 1] b))) => 'long
   (typeof '(if true (let* [x 15 z "s"] z))) => 'string)
 
+(facts "inline if"
+  (typeof env '((if (< 0 1) inc dec) 5)) => 'long
+  (typeof env '(let* [a (if (< 0 1) inc dec)] (a 5))) => 'long)
+
 (facts "and"
-  (typeof '(let* [x(< 3 4)] (if x (< -1.0 1.0) x))) => nil) ; FIXME
+  (typeof '(let* [x (< 3 4)] (if x (< -1.0 1.0) x))) => nil) ; FIXME
 
 (facts "fn*"
   (typeof env '(fn* ([a b] (+ a b)))) => '(fn [_.0 _.0] _.0)
@@ -79,8 +83,8 @@
   (typeof '(let* [a 1 b "x"] b)) => 'string)
 
 (facts "let* annotated"
-  (typeof env '(let* [^int a 1] (+ a 2))) => 'long ; FIXME
-  (typeof env '(let* [^int a 1 ^int b 2] (+ a b))) => 'long) ; FIXME
+  (typeof env '(let* [^int a 1] (+ a 2))) => nil ; FIXME
+  (typeof env '(let* [^int a 1 ^int b 2] (+ a b))) => 'int)
 
 (facts "factorial"
   (typeof env '(fn* fact([x]

@@ -57,13 +57,13 @@
            (typeso env3 ?exprs exprst ?env4)
            (lasto exprst ?type))))
 
-; XXX ignores annotated keys
 (defne bindingso
   [env bindings types new-env]
   ([_ [?k ?v . ?rest] [?vt . ?restt] _]
     (fresh [env2 env3]
            (typeso env [?v] [?vt] env2)
-           (conso [?k ?vt] env2 env3)
+           (conda ((annotatedo env2 ?k env3)) 
+                  ((conso [?k ?vt] env2 env3)))
            (bindingso env3 ?rest ?restt new-env)))
   ([?e [] [] ?e]))
 

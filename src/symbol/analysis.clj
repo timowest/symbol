@@ -121,11 +121,11 @@
     form
     f))
 
-(defmethod simple :default ; apply
+(defmethod simple :default 
   [[_ & args :as form]]
-  (if (and (seq form) (symbol? (first form)) (some complex? args))
-    (wrap form args)
-    form))
+  (cond (complex? _) (simplify `(let* [a# ~_] (a# ~@args)))
+        (and (symbol? _) (some complex? args)) (wrap form args)
+        :else form))
       
 (defn simplify
   [form]
