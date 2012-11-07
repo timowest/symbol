@@ -29,6 +29,9 @@
 
 (facts "expand"
        
+  (facts "ns"
+    (expand '(ns symbol.test (use symbol.string))) => '(do (ns* symbol.test) (use symbol.string)))
+       
   (fact "let"
     (expand '(let [a 1 b 2] (+ a b))) => '(let* [a 1 b 2] (+ a b)))
   

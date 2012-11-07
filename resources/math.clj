@@ -1,10 +1,5 @@
 (ns math)
 
-(defmacro deft
-  [name argtypes rtype]
-  (let [type (list 'fn argtypes rtype)]
-    (list 'def (with-meta name {:tag type :external true}) nil)))
-               
 (deft cos [double] double)
 (deft cos [float] float)
 (deft cos [quad] quad)

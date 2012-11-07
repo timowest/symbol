@@ -17,6 +17,28 @@
             [symbol.types :as types]
             [symbol.emission :as emission]))
 
+(defn- sigs
+ [fdecl]
+   (let [asig 
+         (fn [fdecl]
+           (let [arglist (first fdecl)
+                 ;elide implicit macro args
+                 arglist (if (clojure.lang.Util/equals '&form (first arglist)) 
+                           (clojure.lang.RT/subvec arglist 2 (clojure.lang.RT/count arglist))
+                           arglist)
+                 body (next fdecl)]
+             (if (map? (first body))
+               (if (next body)
+                 (with-meta arglist (conj (if (meta arglist) (meta arglist) {}) (first body)))
+                 arglist)
+               arglist)))]
+     (if (seq? (first fdecl))
+       (loop [ret [] fdecls fdecl]
+         (if fdecls
+           (recur (conj ret (asig (first fdecls))) (next fdecls))
+           (seq ret)))
+       (list (asig fdecl)))))
+
 (defn- maybe-destructured
   [params body]
   (if (every? symbol? params)
@@ -59,10 +81,12 @@
 
 (declare expand-all)
 
+(def internal-ns #{"symbol.compiler" "clojure.core"})
+
 (defn normalize
   [form]
   (walk/postwalk
-    (fn [x] (if (and (symbol? x) (= (.getNamespace x) "clojure.core"))
+    (fn [x] (if (and (symbol? x) (internal-ns (.getNamespace x)))
               (symbol (name x))
               x))
     form))

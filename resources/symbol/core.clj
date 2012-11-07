@@ -21,9 +21,39 @@
   (with-meta (cons 'fn* decl) 
     (meta &form)))
 
-(defmacro defn
-  [name args & body]
-  `(def ~name (fn ~args ~@body)))
+(defmacro defn 
+  [name & fdecl]
+  ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
+  (if (instance? clojure.lang.Symbol name)
+    nil
+    (throw (IllegalArgumentException. "First argument to defn must be a symbol")))
+  (let [m (if (string? (first fdecl))
+            {:doc (first fdecl)}
+            {})
+        fdecl (if (string? (first fdecl))
+                (next fdecl)
+                fdecl)
+        m (if (map? (first fdecl))
+            (conj m (first fdecl))
+            m)
+        fdecl (if (map? (first fdecl))
+                (next fdecl)
+                fdecl)
+        fdecl (if (vector? (first fdecl))
+                (list fdecl)
+                fdecl)
+        m (if (map? (last fdecl))
+            (conj m (last fdecl))
+            m)
+        fdecl (if (map? (last fdecl))
+                (butlast fdecl)
+                fdecl)
+        m (conj {:arglists (list 'quote (sigs fdecl))} m)
+        m (conj (if (meta name) (meta name) {}) m)]
+    (list 'def (with-meta name m)
+          ;;todo - restore propagation of fn name
+          ;;must figure out how to convey primitive hints to self calls first
+          (cons `fn fdecl) )))
 
 (defmacro when
   "Evaluates test. If logical true, evaluates body in an implicit do."
@@ -85,6 +115,24 @@
   ([x] x)
   ([x & next]
     `(if ~x true (or ~@next))))
+
+(defmacro ..
+  "form => fieldName-symbol or (instanceMethodName-symbol args*)
+
+  Expands into a member access (.) of the first member on the first
+  argument, followed by the next member on the result, etc. For
+  instance:
+
+  (.. System (getProperties) (get \"os.name\"))
+
+  expands to:
+
+  (. (. System (getProperties)) (get \"os.name\"))
+
+  but is easier to write, read, and understand."
+  {:added "1.0"}
+  ([x form] `(. ~x ~form))
+  ([x form & more] `(.. (. ~x ~form) ~@more)))
 
 (defmacro ->
   "Threads the expr through the forms. Inserts x as the
@@ -269,3 +317,14 @@
              (loop* ~(vec (interleave gs gs))
                (let ~(vec (interleave bs gs))
                  ~@body)))))))
+
+; EXPERIMENTAL
+(defmacro deft
+  [name argtypes rtype]
+  (let [type (list 'fn argtypes rtype)]
+    (list 'def (with-meta name {:tag type :external true}) nil)))
+
+; EXPERIMENTAL
+(defmacro ns
+  [name & forms]
+  `(do (ns* ~name) ~@forms))
