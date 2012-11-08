@@ -36,6 +36,8 @@
           
 ; TODO cache includes, maybe via memoize
 
+; TODO ReferenceType, ArrayType
+; TODO normalize type names
 (defn include
   [local-path]
   (if-let [f (get-file default-paths local-path)]
@@ -56,7 +58,9 @@
           types (merge types pointers)
           functions (for [function (xml-> xml :Function)]
                       (list (xml1-> function (attr :name))
-                            (map types (xml-> function :Argument (attr :type)))))]
+                            (list 'fn
+                                  (map types (xml-> function :Argument (attr :type)))
+                                  (types (xml1-> function (attr :returns))))))]
       (remove #(.startsWith (first %) "__") functions))))
 
 (defn include-pp
