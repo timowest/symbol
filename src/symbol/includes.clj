@@ -17,7 +17,7 @@
 ; TODO make this independent of the gcc version
 (def default-paths
   ["/usr/local/include"
-   "/usr/include/c++/4.6.3"
+   "/usr/include/c++/4.6"
    "/usr/include"])
 
 (defn get-file
@@ -33,10 +33,41 @@
   [local-path]
   (if-let [f (get-file default-paths local-path)]
     (slurp f)))
+
+(def cpp-types
+  '{"char" char
+    "unsigned char" uchar
+    "short int" short
+    "unsigned short int" ushort
+    "short" short
+    "unsigned short" ushort
+    "int" int
+    "unsigned int" uint
+    "long int" long
+    "unsigned long int" ulong
+    "long" long
+    "unsigned long" ulong
+    "bool" boolean
+    "float" float
+    "unsigned float" ufloat
+    "double" double
+    "unsigned double" double
+    "long double" ldouble
+    "unsigned long double" uldouble})
           
 ; TODO cache includes, maybe via memoize
 
-; TODO ReferenceType, ArrayType
+(defn xml-get
+  [xml type k v]
+  (into {} (for [entry (xml-> xml type)]
+    [(xml1-> entry (attr k))
+     (xml1-> entry (attr v))])))
+
+(defn mapv
+  [f m]
+  (into {} (for [[k v] m] [k (f v)])))
+             
+; TODO ReferenceType, ArrayType, Struct
 ; TODO normalize type names
 (defn include
   [local-path]
@@ -46,15 +77,13 @@
           out  (sh "gccxml" (.getAbsolutePath f) (str "-fxml=" (.getAbsolutePath temp)))
           xml  (get-xml temp)
           ; TODO improve type handling, maybe via reduce or loop
-          fundamentals  (into {} (for [type (xml-> xml :FundamentalType)]
-                                   [(xml1-> type (attr :id)) (xml1-> type (attr :name))]))
-          cvqualified (into {} (for [type (xml-> xml :CvQualifiedType)]
-                                   [(xml1-> type (attr :id)) 
-                                    (fundamentals (xml1-> type (attr :type)))]))          
+          fundamentals (->> (xml-get xml :FundamentalType :id :name)
+                         (mapv cpp-types))
+          cvqualified (->> (xml-get xml :CvQualifiedType :id :type)
+                        (mapv fundamentals))                    
           types (merge fundamentals cvqualified)
-          pointers (into {} (for [type (xml-> xml :PointerType)]
-                              [(xml1-> type (attr :id)) 
-                               (list 'pointer (types (xml1-> type (attr :type))))]))
+          pointers (->> (xml-get xml :PointerType :id :type)
+                    (mapv #(list 'pointer (types %))))          
           types (merge types pointers)
           functions (for [function (xml-> xml :Function)]
                       (list (xml1-> function (attr :name))

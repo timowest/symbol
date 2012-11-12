@@ -1,0 +1,34 @@
+;   Copyright (c) Timo Westkämper. All rights reserved.
+;   The use and distribution terms for this software are covered by the
+;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;   which can be found in the file epl-v10.html at the root of this distribution.
+;   By using this software in any fashion, you are agreeing to be bound by
+;   the terms of this license.
+;   You must not remove this notice, or any other, from this software.
+
+(ns symbol.includes-test
+  (:use symbol.includes        
+        midje.sweet))  
+
+(defn get-type
+  [env form]
+  (let [matches (for [[f t] env :when (= f form)] t)]
+    (first matches)))
+
+(def math (include "math.h"))
+
+(facts "math"
+  (get-type math "sin") => ' (fn (double) double)
+  (get-type math "sinf") => '(fn (float) float)
+  (get-type math "frexp") => '(fn (double (pointer int)) double))
+
+(def cmath (include "cmath"))
+
+(facts "cmath"
+  (get-type cmath "sin") => ' (fn (double) double)
+  (get-type cmath "sinf") => '(fn (float) float)
+  (get-type cmath "frexp") => '(fn (double (pointer int)) double))
+
+(def stdio (include "stdio.h"))
+
+; TODO more tests
