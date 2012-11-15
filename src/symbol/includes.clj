@@ -64,13 +64,24 @@
                   [v (xml1-> entry (attr v))]))
        :cat type)])))
 
-(defn mapv
-  [f m]
-  (into {} (for [[k v] m] [k (f v)])))
+(defn to-arg
+  [arg]
+  {:name (xml1-> arg (attr :name))
+   :type (xml1-> arg (attr :type))})                
 
-(declare typedef)
+(defn with-args
+  [xml content]
+  (into {} (for [[id entry] content]
+             (let [args (xml-> xml (attr= :id id) :Argument)]
+               [id 
+                (assoc entry :args (map to-arg args))]))))
 
-; TODO defmulti
+(declare typedef fulldef)
+
+(defn argtypes
+  [all args]
+  (map #(typedef all (:type %)) args)) 
+
 (def typedefs
   {:ArrayType (fn [all t] (list 'array (typedef all (:type t)) (:size t)))
    :CvQualifiedType (fn [all t] (typedef all (:type t)))
@@ -80,28 +91,44 @@
    :Typedef (fn [all t] (typedef all (:type t)))
    :Union (fn [all t] (cons 'union
                             (map #(typedef all %)
-                                 (.split (:members t) " "))))
-   :Constructor (fn [all t] nil) ;TODO
-   :Destructor (fn [all t] nil) ;TODO
-   :OperatorMethod (fn [all t] (list (:name t) 
-                                     (list 'fn [] (typedef all (:returns t)))))
-   :FunctionType (fn [all t] (list 'fn (typedef all (:returns t))))                               
-   :Field (fn [all t] (list (:name t) (typedef all (:type t))))
-   :Struct (fn [all t] (if (:members t) 
-                         (let [members (map #(typedef all %) 
-                                            (.split (:members t) " "))]
-                           (list 'struct (:name t) members))
-                         (list 'struct (:name t))))})
-                             
+                                 (.split (:members t) " "))))   
+   :FunctionType (fn [all t] (list 'fn
+                                   (argtypes all (:args t))
+                                   (typedef all (:returns t))))                                 
+   :Struct (fn [all t] (symbol (:name t)))})
+
+; TODO Destructor, Constructor
+(def fulldefs 
+  (merge 
+    typedefs
+    {:Constructor (fn [all t] nil) ;TODO
+     :Destructor (fn [all t] nil) ;TODO
+     :OperatorMethod (fn [all t] (list (symbol (:name t)) 
+                                       (list 'fn 
+                                             (argtypes all (:args t))
+                                             (typedef all (:returns t)))))
+     :Field (fn [all t] (list (:name t) (typedef all (:type t))))
+     :Struct (fn [all t](if (:members t) 
+                          (let [members (map #(fulldef all %) 
+                                             (.split (:members t) " "))]
+                            (list 'struct (:name t) members))
+                          (list 'struct (:name t))))}))
+             
 (defn typedef
+  ([types functions id]
+    (let [type (types id)
+          f (functions (:cat type))]
+      (if f 
+        (f types type)
+        (throw (IllegalStateException. (str "No function for " id))))))
+  ([types id]
+    (typedef types typedefs id)))
+
+(defn fulldef
   [types id]
-  (let [type (types id)
-        f (typedefs (:cat type))]
-    (if f
-      (f types type)
-      (throw (IllegalStateException. (str "No function for " id))))))
+  (typedef types fulldefs id))
    
-; TODO Destructor, OperatorMethod, Constructor
+; TODO export variables, typdefs, structs, enumerations, classes and functions
 (defn include
   [local-path]
   (if-let [f (get-file default-paths local-path)]
@@ -117,13 +144,16 @@
                   (xml-get xml :ReferenceType :id :type)
                   (xml-get xml :Typedef :id :name :type)
                   (xml-get xml :Union :id :members)
-                  (xml-get xml :Constructor :id :name) ; TODO args
+                  (with-args xml
+                    (xml-get xml :Constructor :id :name))
                   (xml-get xml :Destructor :id)
-                  (xml-get xml :OperatorMethod :id :name :returns) ; TODO args                  
-                  (xml-get xml :FunctionType :id :returns) ; TODO args
+                  (with-args xml
+                    (xml-get xml :OperatorMethod :id :name :returns))
+                  (with-args xml                  
+                    (xml-get xml :FunctionType :id :returns))
                   (xml-get xml :Field :id :name :type)
                   (xml-get xml :Struct :id :name :members))
-          typedefs (into {} (map (fn [id] [id (typedef types id)]) 
+          typedefs (into {} (map (fn [id] [id (fulldef types id)]) 
                                  (keys types)))                            
           variables (for [[id v] (xml-get xml :Variable :id :name :type)]
                       (list (:name v) (typedefs (:type v))))                                    
@@ -140,7 +170,7 @@
 
 (defn include-pp
   [local-path]
-  (doseq [function (include local-path)]
-    (println function)))
+  (doseq [entry (include local-path)]
+    (println entry)))
           
       

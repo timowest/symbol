@@ -31,4 +31,7 @@
 
 (def stdio (include "stdio.h"))
 
-; TODO more tests
+(facts "stdio"
+  (get-type stdio "getc") => '(fn ((pointer _IO_FILE)) int)
+  (get-type stdio "gets") => '(fn ((pointer char)) (pointer char))
+  (get-type stdio "getw") => '(fn ((pointer _IO_FILE)) int))       
