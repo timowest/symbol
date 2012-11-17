@@ -97,12 +97,11 @@
                                    (typedef all (:returns t))))                                 
    :Struct (fn [all t] (symbol (:name t)))})
 
-; TODO Destructor, Constructor
 (def fulldefs 
   (merge 
     typedefs
-    {:Constructor (fn [all t] nil) ;TODO
-     :Destructor (fn [all t] nil) ;TODO
+    {:Constructor (fn [all t] (list :new (argtypes all (:args t))))
+     :Destructor (fn [all t] (list))
      :OperatorMethod (fn [all t] (list (symbol (:name t)) 
                                        (list 'fn 
                                              (argtypes all (:args t))
@@ -127,8 +126,28 @@
 (defn fulldef
   [types id]
   (typedef types fulldefs id))
-   
-; TODO export variables, typdefs, structs, enumerations, classes and functions
+
+(defn get-types
+  [xml]
+  (merge 
+    (xml-get xml :ArrayType :id :type :size)
+    (xml-get xml :CvQualifiedType :id :type)
+    (xml-get xml :FundamentalType :id :name)                  
+    (xml-get xml :PointerType :id :type)
+    (xml-get xml :ReferenceType :id :type)
+    (xml-get xml :Typedef :id :name :type)
+    (xml-get xml :Union :id :members)
+    (with-args xml
+      (xml-get xml :Constructor :id :name))
+    (xml-get xml :Destructor :id)
+    (with-args xml
+      (xml-get xml :OperatorMethod :id :name :returns))
+    (with-args xml                  
+      (xml-get xml :FunctionType :id :returns))
+    (xml-get xml :Field :id :name :type)
+    (xml-get xml :Struct :id :name :members)))
+
+; TODO export typedefs, enumerations and classes 
 (defn include
   [local-path]
   (if-let [f (get-file default-paths local-path)]
@@ -136,35 +155,21 @@
                  (.deleteOnExit))
           out  (sh "gccxml" (.getAbsolutePath f) (str "-fxml=" (.getAbsolutePath temp)))
           xml  (get-xml temp)          
-          types (merge 
-                  (xml-get xml :ArrayType :id :type :size)
-                  (xml-get xml :CvQualifiedType :id :type)
-                  (xml-get xml :FundamentalType :id :name)                  
-                  (xml-get xml :PointerType :id :type)
-                  (xml-get xml :ReferenceType :id :type)
-                  (xml-get xml :Typedef :id :name :type)
-                  (xml-get xml :Union :id :members)
-                  (with-args xml
-                    (xml-get xml :Constructor :id :name))
-                  (xml-get xml :Destructor :id)
-                  (with-args xml
-                    (xml-get xml :OperatorMethod :id :name :returns))
-                  (with-args xml                  
-                    (xml-get xml :FunctionType :id :returns))
-                  (xml-get xml :Field :id :name :type)
-                  (xml-get xml :Struct :id :name :members))
+          types (get-types xml)
           typedefs (into {} (map (fn [id] [id (fulldef types id)]) 
-                                 (keys types)))                            
+                                 (keys types)))               
+          structs    (for [[_ v] typedefs 
+                           :when (and (seq? v) (= (first v) 'struct))]
+                      (list (second v) v))                           
           variables (for [[id v] (xml-get xml :Variable :id :name :type)]
                       (list (:name v) (typedefs (:type v))))                                    
           functions (for [function (xml-> xml :Function)]
                       (list (xml1-> function (attr :name))
                             (list 'fn
                                   (map typedefs (xml-> function :Argument (attr :type)))
-                                  (typedefs (xml1-> function (attr :returns))))))]
-      (concat
-        variables
-        (remove #(.startsWith (first %) "__") functions)))))
+                                  (typedefs (xml1-> function (attr :returns))))))
+          functions (remove #(.startsWith (first %) "__") functions)]
+      (concat variables structs functions))))
 
 ;(def include (memoize include*))
 

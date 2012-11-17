@@ -111,9 +111,10 @@
 (defne dot ; (. obj member args*)
   [env form new-env]
   ([_ [_ ?obj ?member . ?args] [[form ?type] . ?env3]]
-    (fresh [env2 members membert argst]
+    (fresh [env2 clazz members membert argst]
            (typedo env ?obj env2)
-           (membero [?obj ['object members]] env2)
+           (membero [?obj ['pointer clazz]] env2)
+           (membero [clazz ['class clazz members]] env)
            (membero [?member membert] members)
            (typeso env2 ?args argst ?env3)
            (matcha [membert ?type]
@@ -122,11 +123,11 @@
                    
 (defne newo ; (new Class args*)
   [env form new-env]
-  ([_ ['new ?class . ?args] [[form ['object ?members]] . ?env2]]
-    (fresh [argst]
+  ([_ ['new ?class . ?args] [[form ['pointer ?class]] . ?env2]]
+    (fresh [argst members]
            (typeso env ?args argst ?env2)
-           (membero [?class ['class ?members]] env)
-           (membero [:new argst] ?members))))
+           (membero [?class ['class ?class members]] env)
+           (membero [:new argst] members))))
 
 (defne defo  ; (def name expr)
   [env form new-env]

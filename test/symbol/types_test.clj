@@ -35,15 +35,14 @@
                     
                     (substr (fn [string long] string)))))
 
-(def env2 (to-env '{person (object ((name string) 
+(def env2 (to-env '{person (pointer Person)                    
+                    Person (class 
+                            Person 
+                           ((name string) 
                             (age long)
-                            (olderThan (fn [long] boolean))))}))
-
-(def env3 (to-env '{Person (class ((name string) 
-                           (age long)
-                           (:new [string])
-                           (:new [string long])))}))
-
+                            (olderThan (fn [long] boolean))
+                            (:new [string])
+                            (:new [string long])))}))
 (facts "nil"
   (typeof env nil) => 'void)
 
@@ -108,11 +107,10 @@
   (typeof env2 '(. person olderThan 10)) => 'boolean)
 
 (facts "new"
-  (let [person-object (list 'object (-> env3 first second second))]
-    (typeof env3 '(new Person 1)) => nil
-    (typeof env3 '(new Person)) => nil
-    (typeof env3 '(new Person "a")) => person-object
-    (typeof env3 '(new Person "a" 1)) => person-object))
+  (typeof env2 '(new Person 1)) => nil
+  (typeof env2 '(new Person)) => nil
+  (typeof env2 '(new Person "a")) => '(pointer Person)
+  (typeof env2 '(new Person "a" 1)) => '(pointer Person))
 
 (facts "apply"
   (typeof '((a (fn [long] long))) '(a 1)) => 'long
