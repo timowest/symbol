@@ -16,20 +16,22 @@
     (first matches)))
 
 (def math (include "math.h"))
+(def cmath (include "cmath"))
+(def stdio (include "stdio.h"))
+
+(doseq [[name type](concat math cmath stdio)]
+  (if (not type)
+    (throw (IllegalStateException. (str "No type for " name)))))
 
 (facts "math"
   (get-type math "sin") => ' (fn (double) double)
   (get-type math "sinf") => '(fn (float) float)
   (get-type math "frexp") => '(fn (double (pointer int)) double))
 
-(def cmath (include "cmath"))
-
 (facts "cmath"
   (get-type cmath "sin") => ' (fn (double) double)
   (get-type cmath "sinf") => '(fn (float) float)
   (get-type cmath "frexp") => '(fn (double (pointer int)) double))
-
-(def stdio (include "stdio.h"))
 
 (facts "stdio"
   (get-type stdio "getc") => '(fn ((pointer _IO_FILE)) int)

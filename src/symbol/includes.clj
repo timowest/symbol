@@ -94,7 +94,9 @@
                                  (.split (:members t) " "))))   
    :FunctionType (fn [all t] (list 'fn
                                    (argtypes all (:args t))
-                                   (typedef all (:returns t))))                                 
+                                   (typedef all (:returns t))))            
+   :Enumeration (fn [all t] 'int)
+   :EnumValue (fn [all t] 'int)
    :Struct (fn [all t] (symbol (:name t)))})
 
 (def fulldefs 
@@ -106,7 +108,7 @@
                                        (list 'fn 
                                              (argtypes all (:args t))
                                              (typedef all (:returns t)))))
-     :Field (fn [all t] (list (:name t) (typedef all (:type t))))
+     :Field (fn [all t] (list (:name t) (typedef all (:type t))))     
      :Struct (fn [all t](if (:members t) 
                           (let [members (map #(fulldef all %) 
                                              (.split (:members t) " "))]
@@ -130,6 +132,7 @@
 (defn get-types
   [xml]
   (merge 
+    (xml-get xml :Enumeration :id :name)
     (xml-get xml :ArrayType :id :type :size)
     (xml-get xml :CvQualifiedType :id :type)
     (xml-get xml :FundamentalType :id :name)                  
@@ -147,7 +150,7 @@
     (xml-get xml :Field :id :name :type)
     (xml-get xml :Struct :id :name :members)))
 
-; TODO export typedefs, enumerations and classes 
+; TODO export typedefs and classes 
 (defn include
   [local-path]
   (if-let [f (get-file default-paths local-path)]
@@ -162,14 +165,18 @@
                            :when (and (seq? v) (= (first v) 'struct))]
                       (list (second v) v))                           
           variables (for [[id v] (xml-get xml :Variable :id :name :type)]
-                      (list (:name v) (typedefs (:type v))))                                    
+                      (list (:name v) (typedefs (:type v))))             
+          enumerations (for [enum (xml-get xml :Enumeration :id :name)]
+                         (list (:name enum) 'int))
+          enumvalues (for [enumvalue (xml-get xml :EnumValue :id name)]
+                       (list (:name enumvalue) 'int))
           functions (for [function (xml-> xml :Function)]
                       (list (xml1-> function (attr :name))
                             (list 'fn
                                   (map typedefs (xml-> function :Argument (attr :type)))
                                   (typedefs (xml1-> function (attr :returns))))))
           functions (remove #(.startsWith (first %) "__") functions)]
-      (concat variables structs functions))))
+      (concat structs enumerations enumvalues variables functions))))
 
 ;(def include (memoize include*))
 
