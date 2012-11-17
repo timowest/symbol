@@ -59,10 +59,11 @@
   [xml type k & vs]
   (into {} (for [entry (xml-> xml type)]
     [(xml1-> entry (attr k))
-     (assoc
+     (merge
        (into {} (for [v vs]
                   [v (xml1-> entry (attr v))]))
-       :cat type)])))
+       {k (xml1-> entry (attr k)) 
+        :cat type})])))
 
 (defn to-arg
   [arg]
@@ -88,15 +89,13 @@
    :FundamentalType (fn [all t] (cpp-types (:name t)))
    :PointerType (fn [all t] (list 'pointer (typedef all (:type t))))
    :ReferenceType (fn [all t] (list 'reference (typedef all (:type t))))
-   :Typedef (fn [all t] (typedef all (:type t)))
-   :Union (fn [all t] (cons 'union
-                            (map #(typedef all %)
-                                 (.split (:members t) " "))))   
+   :Typedef (fn [all t] (typedef all (:type t)))      
    :FunctionType (fn [all t] (list 'fn
                                    (argtypes all (:args t))
                                    (typedef all (:returns t))))            
    :Enumeration (fn [all t] 'int)
    :EnumValue (fn [all t] 'int)
+   :Union (fn [all t] (symbol (:id t)))
    :Struct (fn [all t] (symbol (:name t)))})
 
 (def fulldefs 
@@ -108,7 +107,10 @@
                                        (list 'fn 
                                              (argtypes all (:args t))
                                              (typedef all (:returns t)))))
-     :Field (fn [all t] (list (:name t) (typedef all (:type t))))     
+     :Field (fn [all t] (list (:name t) (typedef all (:type t))))
+     :Union (fn [all t] (list 'struct (symbol (:id t))
+                            (map #(fulldef all %)
+                                 (.split (:members t) " "))))          
      :Struct (fn [all t](if (:members t) 
                           (let [members (map #(fulldef all %) 
                                              (.split (:members t) " "))]
