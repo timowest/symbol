@@ -132,8 +132,10 @@
   (typeof '(do true)) => 'boolean)         
 
 (facts "include"
-  (typeof '(do (include "math.h") 
-               (sin 2.0))) => 'double)
+  (typeof '(do (include "math.h") (sin 2.0))) => 'double)
+
+(facts "arrays"
+  (typeof '(array long 5)) => '(pointer long))
 
 (facts "constants"
   (typeof 1) => 'long

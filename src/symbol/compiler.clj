@@ -149,7 +149,7 @@
 
 (def core-env (types/to-env  
   '((nil   void)
-    (set!  (fn [A A] void))
+    (set!  (fn [A A] void)) 
     (pset! (fn [(pointer A) A] void))
     (pset! (fn [(pointer A) long A] void))
     (pref  (fn [(pointer A long)] A))

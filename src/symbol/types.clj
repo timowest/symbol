@@ -164,6 +164,10 @@
            (includeo env new-form reste)
            (appendo content reste ?nenv)))
   ([?e ['include] ?e]))   
+
+(defne arrayo
+  [env form new-env]
+  ([_ ['array ?type ?dimensions] [[form ['pointer ?type]] . env]]))
      
 (defn expand-type
   [type]
@@ -221,6 +225,7 @@
   ([_ ['do . _] _] (doo env form new-env))
   ([_ [?fn . _] _] (applyo env form new-env))
   ([_ ['include . _] _] (includeo env form new-env))
+  ([_ ['array . _] _] (arrayo env form new-env))
   ([_ _ _] (conda ((fresh [type]
                          (membero [form type] env) 
                          (== env new-env)))
