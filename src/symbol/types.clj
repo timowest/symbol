@@ -8,7 +8,8 @@
 
 (ns symbol.types
   (:refer-clojure :exclude [== reify inc type])
-  (:require [clojure.walk :as walk])
+  (:require [clojure.walk :as walk]
+            [symbol.includes :as includes])
   (:use clojure.core.logic
         symbol.util))
 
@@ -146,6 +147,24 @@
            (typeso env ?exprs types ?env2)
            (lasto types ?type))))           
 
+(defn include*
+  [i result]
+  (fn [a]
+    (let [gi (walk a i)
+          content (includes/include gi)]
+      (when content
+        (unify a [result] [content])))))    
+
+(defne includeo
+  [env form new-env]
+  ([_ ['include ?f . ?rest] [[form 'include] . ?nenv]]
+    (fresh [content new-form reste]
+           (include* ?f content)
+           (conso 'include ?rest new-form)
+           (includeo env new-form reste)
+           (appendo content reste ?nenv)))
+  ([?e ['include] ?e]))   
+     
 (defn expand-type
   [type]
   (if (seq? type)
@@ -200,7 +219,8 @@
   ([_ ['new . _] _] (newo env form new-env))
   ([_ ['def . _] _] (defo env form new-env))
   ([_ ['do . _] _] (doo env form new-env))
-  ([_ [?fn . _] _] (applyo env form new-env))    
+  ([_ [?fn . _] _] (applyo env form new-env))
+  ([_ ['include . _] _] (includeo env form new-env))
   ([_ _ _] (conda ((fresh [type]
                          (membero [form type] env) 
                          (== env new-env)))

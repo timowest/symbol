@@ -164,7 +164,6 @@
     (*     (fn [A A] A))
     (/     (fn [A A] A)))))
 
-; TODO
 (defn compile-files 
   [& files]
   (doseq [file files]
@@ -172,9 +171,8 @@
           normalized (map analysis/convert forms)]
       (loop [forms normalized env core-env]
         (let [form (first forms)
-              [nenv type] (types/type-and-env env form)]
-          (emission/emit nil form)
+              nenv (types/new-env env form)]
+          (emission/emit nenv nil form)
           (if (rest forms)
-            (recur (rest forms) 
-                   (cons [form type] env))))))))
+            (recur (rest forms) nenv)))))))
           

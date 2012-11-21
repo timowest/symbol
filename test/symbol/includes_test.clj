@@ -24,16 +24,16 @@
     (throw (IllegalStateException. (str "No type for " name)))))
 
 (facts "math"
-  (get-type math "sin") => ' (fn (double) double)
-  (get-type math "sinf") => '(fn (float) float)
-  (get-type math "frexp") => '(fn (double (pointer int)) double))
+  (get-type math 'sin) => ' (fn (double) double)
+  (get-type math 'sinf) => '(fn (float) float)
+  (get-type math 'frexp) => '(fn (double (pointer int)) double))
 
 (facts "cmath"
-  (get-type cmath "sin") => ' (fn (double) double)
-  (get-type cmath "sinf") => '(fn (float) float)
-  (get-type cmath "frexp") => '(fn (double (pointer int)) double))
+  (get-type cmath 'sin) => ' (fn (double) double)
+  (get-type cmath 'sinf) => '(fn (float) float)
+  (get-type cmath 'frexp) => '(fn (double (pointer int)) double))
 
 (facts "stdio"
-  (get-type stdio "getc") => '(fn ((pointer _IO_FILE)) int)
-  (get-type stdio "gets") => '(fn ((pointer char)) (pointer char))
-  (get-type stdio "getw") => '(fn ((pointer _IO_FILE)) int))       
+  (get-type stdio 'getc) => '(fn ((pointer _IO_FILE)) int)
+  (get-type stdio 'gets) => '(fn ((pointer char)) (pointer char))
+  (get-type stdio 'getw) => '(fn ((pointer _IO_FILE)) int))       

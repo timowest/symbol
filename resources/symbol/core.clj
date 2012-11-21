@@ -319,12 +319,6 @@
                  ~@body)))))))
 
 ; EXPERIMENTAL
-(defmacro deft
-  [name argtypes rtype]
-  (let [type (list 'fn argtypes rtype)]
-    (list 'def (with-meta name {:tag type :external true}) nil)))
-
-; EXPERIMENTAL
 (defmacro ns
   [name & forms]
   `(do (ns* ~name) ~@forms))

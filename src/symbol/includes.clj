@@ -67,7 +67,7 @@
 
 (defn to-arg
   [arg]
-  {:name (xml1-> arg (attr :name))
+  {:name (symbol (xml1-> arg (attr :name)))
    :type (xml1-> arg (attr :type))})                
 
 (defn with-args
@@ -107,15 +107,15 @@
                                        (list 'fn 
                                              (argtypes all (:args t))
                                              (typedef all (:returns t)))))
-     :Field (fn [all t] (list (:name t) (typedef all (:type t))))
+     :Field (fn [all t] (list (symbol (:name t)) (typedef all (:type t))))
      :Union (fn [all t] (list 'struct (symbol (:id t))
                             (map #(fulldef all %)
                                  (.split (:members t) " "))))          
      :Struct (fn [all t](if (:members t) 
                           (let [members (map #(fulldef all %) 
                                              (.split (:members t) " "))]
-                            (list 'struct (:name t) members))
-                          (list 'struct (:name t))))}))
+                            (list 'struct (symbol (:name t)) members))
+                          (list 'struct (symbol (:name t)))))}))
              
 (defn typedef
   ([types functions id]
@@ -167,17 +167,16 @@
                            :when (and (seq? v) (= (first v) 'struct))]
                       (list (second v) v))                           
           variables (for [[id v] (xml-get xml :Variable :id :name :type)]
-                      (list (:name v) (typedefs (:type v))))             
+                      (list (symbol (:name v)) (typedefs (:type v))))             
           enumerations (for [enum (xml-get xml :Enumeration :id :name)]
                          (list (:name enum) 'int))
           enumvalues (for [enumvalue (xml-get xml :EnumValue :id name)]
-                       (list (:name enumvalue) 'int))
+                       (list (symbol (:name enumvalue)) 'int))
           functions (for [function (xml-> xml :Function)]
-                      (list (xml1-> function (attr :name))
+                      (list (symbol (xml1-> function (attr :name)))
                             (list 'fn
                                   (map typedefs (xml-> function :Argument (attr :type)))
-                                  (typedefs (xml1-> function (attr :returns))))))
-          functions (remove #(.startsWith (first %) "__") functions)]
+                                  (typedefs (xml1-> function (attr :returns))))))]
       (concat structs enumerations enumvalues variables functions))))
 
 ;(def include (memoize include*))

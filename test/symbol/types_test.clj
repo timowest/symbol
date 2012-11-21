@@ -131,6 +131,10 @@
   (typeof '(do "abc" 1)) => 'long
   (typeof '(do true)) => 'boolean)         
 
+(facts "include"
+  (typeof '(do (include "math.h") 
+               (sin 2.0))) => 'double)
+
 (facts "constants"
   (typeof 1) => 'long
   (typeof "s") => 'string
