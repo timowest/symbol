@@ -16,7 +16,8 @@
 
 ; TODO make this independent of the gcc version
 (def default-paths
-  ["/usr/local/include"
+  [""
+   "/usr/local/include"
    "/usr/include/c++/4.6"
    "/usr/include"])
 
@@ -96,7 +97,8 @@
    :Enumeration (fn [all t] 'int)
    :EnumValue (fn [all t] 'int)
    :Union (fn [all t] (symbol (:id t)))
-   :Struct (fn [all t] (symbol (:name t)))})
+   :Class (fn [all t] (symbol (:name t)))
+   :Struct (fn [all t] (symbol (or (:name t) (:id t))))})
 
 (def fulldefs 
   (merge 
@@ -110,12 +112,18 @@
      :Field (fn [all t] (list (symbol (:name t)) (typedef all (:type t))))
      :Union (fn [all t] (list 'struct (symbol (:id t))
                             (map #(fulldef all %)
-                                 (.split (:members t) " "))))          
-     :Struct (fn [all t](if (:members t) 
+                                 (.split (:members t) " "))))
+     :Class (fn [all t](if (:members t) 
                           (let [members (map #(fulldef all %) 
                                              (.split (:members t) " "))]
-                            (list 'struct (symbol (:name t)) members))
-                          (list 'struct (symbol (:name t)))))}))
+                            (list 'class (symbol (:name t)) members))
+                          (list 'class (symbol (:name t)))))
+     :Struct (fn [all t] (let [name (or (:name t) (:id t))]
+                           (if (:members t)
+                             (list 'struct (symbol name)
+                                   (map #(fulldef all %) 
+                                             (.split (:members t) " ")))
+                             (list 'struct (symbol name)))))}))
              
 (defn typedef
   ([types functions id]
@@ -150,6 +158,7 @@
     (with-args xml                  
       (xml-get xml :FunctionType :id :returns))
     (xml-get xml :Field :id :name :type)
+    (xml-get xml :Class :id :name :members)
     (xml-get xml :Struct :id :name :members)))
 
 ; TODO export typedefs and classes 
@@ -163,9 +172,12 @@
           types (get-types xml)
           typedefs (into {} (map (fn [id] [id (fulldef types id)]) 
                                  (keys types)))               
+          classes    (for [[_ v] typedefs 
+                           :when (and (seq? v) (= (first v) 'class))]
+                      (list (second v) v))
           structs    (for [[_ v] typedefs 
                            :when (and (seq? v) (= (first v) 'struct))]
-                      (list (second v) v))                           
+                      (list (second v) v))                    
           variables (for [[id v] (xml-get xml :Variable :id :name :type)]
                       (list (symbol (:name v)) (typedefs (:type v))))             
           enumerations (for [enum (xml-get xml :Enumeration :id :name)]
@@ -177,7 +189,7 @@
                             (list 'fn
                                   (map typedefs (xml-> function :Argument (attr :type)))
                                   (typedefs (xml1-> function (attr :returns))))))]
-      (concat structs enumerations enumvalues variables functions))))
+      (concat classes structs enumerations enumvalues variables functions))))
 
 ;(def include (memoize include*))
 

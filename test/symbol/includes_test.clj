@@ -18,6 +18,7 @@
 (def math (include "math.h"))
 (def cmath (include "cmath"))
 (def stdio (include "stdio.h"))
+(def iostream (include "iostream"))
 
 (doseq [[name type](concat math cmath stdio)]
   (if (not type)
