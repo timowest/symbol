@@ -35,6 +35,13 @@
   (get-type cmath 'frexp) => '(fn (double (pointer int)) double))
 
 (facts "stdio"
-  (get-type stdio 'getc) => '(fn ((pointer _IO_FILE)) int)
+  (get-type stdio 'getc) => '(fn ((pointer FILE)) int)
   (get-type stdio 'gets) => '(fn ((pointer char)) (pointer char))
-  (get-type stdio 'getw) => '(fn ((pointer _IO_FILE)) int))       
+  (get-type stdio 'getw) => '(fn ((pointer FILE)) int))      
+
+(facts "iostream"   
+  (get-type iostream 'cin) => 'istream
+  (get-type iostream 'cout) => 'ostream
+  (get-type iostream 'cerr) => 'ostream
+  (get-type iostream 'istream) => '(typedef istream (basic_istream char (std/char_traits char)))
+  (get-type iostream 'ostream) => '(typedef ostream (basic_ostream char (std/char_traits char))))

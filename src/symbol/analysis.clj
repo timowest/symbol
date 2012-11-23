@@ -67,8 +67,6 @@
             #(form? % 'loop*) 
             #(expand-recur % (gensym))))
 
-; if fn* let* loop* . new def do
-
 (defn wrap
   [form args]
   (let [forms (filter seq? args)

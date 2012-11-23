@@ -11,6 +11,7 @@
   (:use [clojure.data.zip.xml :only (attr attr= text xml-> xml1->)] 
         [clojure.java.shell :only [sh]])
   (:require [clojure.data.zip :as zf]
+            [clojure.string :as str]
             [clojure.xml :as xml]
             [clojure.zip :as zip]))
 
@@ -59,12 +60,11 @@
 (defn xml-get
   [xml type k & vs]
   (into {} (for [entry (xml-> xml type)]
-    [(xml1-> entry (attr k))
-     (merge
-       (into {} (for [v vs]
-                  [v (xml1-> entry (attr v))]))
-       {k (xml1-> entry (attr k)) 
-        :cat type})])))
+             (let [key (xml1-> entry (attr k))]
+               [key
+                (merge (into {} (for [v vs]
+                             [v (xml1-> entry (attr v))]))
+                       {k key :cat type})]))))
 
 (defn to-arg
   [arg]
@@ -78,52 +78,64 @@
                [id 
                 (assoc entry :args (map to-arg args))]))))
 
-(declare typedef fulldef)
+(declare shortdef fulldef)
 
 (defn argtypes
   [all args]
-  (map #(typedef all (:type %)) args)) 
+  (map #(shortdef all (:type %)) args)) 
 
-(def typedefs
-  {:ArrayType (fn [all t] (list 'array (typedef all (:type t)) (:size t)))
-   :CvQualifiedType (fn [all t] (typedef all (:type t)))
+(defn convert-name
+  [name]
+  (-> name    
+    (str/replace #"," " ") ; replaces commas
+    (str/replace #"::" "/") ; replace delmiters
+    (str/replace #"([\w/]+)<([\w/]+)" "($1 $2") ; replace <
+    (str/replace #"\s*>" ")") ; replace >
+    (read-string)))
+
+(def shortdefs
+  {:ArrayType (fn [all t] (list 'array (shortdef all (:type t)) (:size t)))
+   :CvQualifiedType (fn [all t] (shortdef all (:type t)))
    :FundamentalType (fn [all t] (cpp-types (:name t)))
-   :PointerType (fn [all t] (list 'pointer (typedef all (:type t))))
-   :ReferenceType (fn [all t] (list 'reference (typedef all (:type t))))
-   :Typedef (fn [all t] (typedef all (:type t)))      
+   :PointerType (fn [all t] (list 'pointer (shortdef all (:type t))))
+   :ReferenceType (fn [all t] (list 'reference (shortdef all (:type t))))
+   :Typedef (fn [all t] (symbol (:name t)))      
    :FunctionType (fn [all t] (list 'fn
                                    (argtypes all (:args t))
-                                   (typedef all (:returns t))))            
+                                   (shortdef all (:returns t))))            
    :Enumeration (fn [all t] 'int)
    :EnumValue (fn [all t] 'int)
    :Union (fn [all t] (symbol (:id t)))
-   :Class (fn [all t] (symbol (:name t)))
-   :Struct (fn [all t] (symbol (or (:name t) (:id t))))})
-
+   :Class (fn [all t] (convert-name (:name t)))
+   :Struct (fn [all t] (convert-name (or (:name t) (:id t))))})
+    
 (def fulldefs 
   (merge 
-    typedefs
+    shortdefs
     {:Constructor (fn [all t] (list :new (argtypes all (:args t))))
      :Destructor (fn [all t] (list))
      :OperatorMethod (fn [all t] (list (symbol (:name t)) 
                                        (list 'fn 
                                              (argtypes all (:args t))
-                                             (typedef all (:returns t)))))
-     :Field (fn [all t] (list (symbol (:name t)) (typedef all (:type t))))
+                                             (shortdef all (:returns t)))))
+     :Field (fn [all t] (list (symbol (:name t)) (shortdef all (:type t))))
      :Union (fn [all t] (list 'struct (symbol (:id t))
                             (map #(fulldef all %)
                                  (.split (:members t) " "))))
-     :Class (fn [all t](if (:members t) 
-                          (let [members (map #(fulldef all %) 
-                                             (.split (:members t) " "))]
-                            (list 'class (symbol (:name t)) members))
-                          (list 'class (symbol (:name t)))))
-     :Struct (fn [all t] (let [name (or (:name t) (:id t))]
+     :Typedef (fn [all t] (list 'typedef (symbol (:name t))
+                                (shortdef all (:type t))))
+     :Class (fn [all t] (let [name (convert-name (:name t))]
+                          (if (:members t) 
+                            (let [members (map #(fulldef all %) 
+                                               (.split (:members t) " "))]
+                              (list 'class name members))
+                            (list 'class name))))     
+     :Struct (fn [all t] (let [name (convert-name (or (:name t) (:id t)))]
                            (if (:members t)
-                             (list 'struct (symbol name)
+                             (list 'struct name
                                    (map #(fulldef all %) 
                                              (.split (:members t) " ")))
-                             (list 'struct (symbol name)))))}))
+                             (list 'struct name))))}))
              
 (defn typedef
   ([types functions id]
@@ -131,9 +143,11 @@
           f (functions (:cat type))]
       (if f 
         (f types type)
-        (throw (IllegalStateException. (str "No function for " id))))))
-  ([types id]
-    (typedef types typedefs id)))
+        (throw (IllegalStateException. (str "No function for " id)))))))
+
+(defn shortdef
+  [types id]
+  (typedef types shortdefs id))
 
 (defn fulldef
   [types id]
@@ -142,26 +156,29 @@
 (defn get-types
   [xml]
   (merge 
-    (xml-get xml :Enumeration :id :name)
     (xml-get xml :ArrayType :id :type :size)
     (xml-get xml :CvQualifiedType :id :type)
+    (xml-get xml :Enumeration :id :name)
     (xml-get xml :FundamentalType :id :name)                  
     (xml-get xml :PointerType :id :type)
     (xml-get xml :ReferenceType :id :type)
     (xml-get xml :Typedef :id :name :type)
     (xml-get xml :Union :id :members)
+    (with-args xml                  
+      (xml-get xml :FunctionType :id :returns))
+    (xml-get xml :Class :id :name :members)
+    (xml-get xml :Struct :id :name :members)))
+
+(defn get-members
+  [xml]
+  (merge 
     (with-args xml
       (xml-get xml :Constructor :id :name))
     (xml-get xml :Destructor :id)
     (with-args xml
       (xml-get xml :OperatorMethod :id :name :returns))
-    (with-args xml                  
-      (xml-get xml :FunctionType :id :returns))
-    (xml-get xml :Field :id :name :type)
-    (xml-get xml :Class :id :name :members)
-    (xml-get xml :Struct :id :name :members)))
+    (xml-get xml :Field :id :name :type)))
 
-; TODO export typedefs and classes 
 (defn include
   [local-path]
   (if-let [f (get-file default-paths local-path)]
@@ -170,26 +187,26 @@
           out  (sh "gccxml" (.getAbsolutePath f) (str "-fxml=" (.getAbsolutePath temp)))
           xml  (get-xml temp)          
           types (get-types xml)
-          typedefs (into {} (map (fn [id] [id (fulldef types id)]) 
-                                 (keys types)))               
-          classes    (for [[_ v] typedefs 
-                           :when (and (seq? v) (= (first v) 'class))]
-                      (list (second v) v))
-          structs    (for [[_ v] typedefs 
-                           :when (and (seq? v) (= (first v) 'struct))]
-                      (list (second v) v))                    
-          variables (for [[id v] (xml-get xml :Variable :id :name :type)]
-                      (list (symbol (:name v)) (typedefs (:type v))))             
+          contents (merge types (get-members xml))
+          shortdefs (into {} (map (fn [id] [id (shortdef types id)]) 
+                                 (keys types)))
+          fulldefs (into {} (map (fn [id] [id (fulldef contents id)]) 
+                                 (keys contents)))               
+          complex    (for [[_ v] fulldefs 
+                           :when (and (seq? v) (#{'class 'struct 'typedef} (first v)))] 
+                       (list (second v) v))
           enumerations (for [enum (xml-get xml :Enumeration :id :name)]
                          (list (:name enum) 'int))
           enumvalues (for [enumvalue (xml-get xml :EnumValue :id name)]
                        (list (symbol (:name enumvalue)) 'int))
+          variables (for [[id v] (xml-get xml :Variable :id :name :type)]
+                      (list (symbol (:name v)) (shortdefs (:type v))))            
           functions (for [function (xml-> xml :Function)]
                       (list (symbol (xml1-> function (attr :name)))
                             (list 'fn
-                                  (map typedefs (xml-> function :Argument (attr :type)))
-                                  (typedefs (xml1-> function (attr :returns))))))]
-      (concat classes structs enumerations enumvalues variables functions))))
+                                  (map shortdefs (xml-> function :Argument (attr :type)))
+                                  (shortdefs (xml1-> function (attr :returns))))))]
+      (concat complex enumerations enumvalues variables functions))))
 
 ;(def include (memoize include*))
 

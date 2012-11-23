@@ -17,6 +17,7 @@
             [symbol.types :as types]
             [symbol.emission :as emission]))
 
+; copied from clojure.core
 (defn- sigs
  [fdecl]
    (let [asig 
@@ -39,6 +40,7 @@
            (seq ret)))
        (list (asig fdecl)))))
 
+; copied from clojure.core
 (defn- maybe-destructured
   [params body]
   (if (every? symbol? params)
