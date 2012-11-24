@@ -318,7 +318,12 @@
                (let ~(vec (interleave bs gs))
                  ~@body)))))))
 
-; EXPERIMENTAL
+
 (defmacro ns
   [name & forms]
   `(do (ns* ~name) ~@forms))
+
+(defmacro defstruct
+  [name & args]
+  `(def ~name (struct ~name ~@args)))
+    

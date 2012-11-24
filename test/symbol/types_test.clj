@@ -121,6 +121,9 @@
 (facts "arrays"
   (typeof '(array long 5)) => '(pointer long))
 
+(facts "struct"
+  (typeof '(struct parent (int i1) (int2))) => '(struct parent ((int i1) (int2))))
+
 (facts "constants"
   (typeof 1) => 'long
   (typeof "s") => 'string

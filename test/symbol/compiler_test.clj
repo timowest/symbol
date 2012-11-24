@@ -76,7 +76,11 @@
     (expand '(fn [x] x)) => '(fn* ([x] x)))
   
   (fact "loop"
-    (expand '(loop [x 4] x)) => '(loop* [x 4] x)))
+    (expand '(loop [x 4] x)) => '(loop* [x 4] x))
+  
+  (fact "struct"
+    (expand '(defstruct parent (int c) (int p))) => '(def parent (struct parent (int c) (int p)))))
+       
 
 (def env (types/to-env  '((set!  (fn [A A] void))
                           (<     (fn [A A] boolean))

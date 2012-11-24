@@ -7,7 +7,7 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns symbol.compiler
-  (:use [symbol.util])
+  (:use [symbol.common])
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [clojure.pprint :as pprint]
@@ -151,11 +151,15 @@
 
 (def core-env (types/to-env  
   '((nil   void)
-    (set!  (fn [A A] void)) 
-    (pset! (fn [(pointer A) A] void))
-    (pset! (fn [(pointer A) long A] void))
-    (pref  (fn [(pointer A long)] A))
-    (not   (fn [boolean] boolean))
+     
+     ; special forms
+    (set!  (sf [A A] void)) 
+    (pset! (sf [(pointer A) A] void))
+    (pset! (sf [(pointer A) long A] void))
+    (pref  (sf [(pointer A long)] A))
+    (not   (sf [boolean] boolean))
+    
+    ; operators
     (=     (fn [A A] boolean))
     (<     (fn [A A] boolean))
     (>     (fn [A A] boolean))

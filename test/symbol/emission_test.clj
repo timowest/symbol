@@ -135,6 +135,19 @@
   (fact "loop"
     (cpp '(loop [x 4] x)) => "int64_t _a = 4;\n_b:\n_a;"))
 
+(facts "structs"
+  (fact "product"
+    (cpp '(defstruct product (int weight) (float price))) 
+    => "struct product {\nint32_t weight;\nfloat price;\n}"))
+     
+(facts "math"
+       
+  (fact "plus"
+    (cpp '(+ 1 2 3)) => "((1 + 2) + 3)")
+   
+  (fact "complex"
+    (cpp '(+ 1 2 (- 3 4 5))) => "((1 + 2) + ((3 - 4) - 5))")) 
+
 (facts "examples"
        
   (fact "multiplier"

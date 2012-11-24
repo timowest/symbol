@@ -11,7 +11,7 @@
   (:require [clojure.walk :as walk]
             [symbol.includes :as includes])
   (:use clojure.core.logic
-        symbol.util))
+        symbol.common))
 
 (declare typedo typeso annotatedo)
 
@@ -103,10 +103,11 @@
 
 (defne applyo ; (f args*)
   [env form new-env]
-  ([_ [?f . ?args] [[form ?type] . ?env3]]
-    (fresh [env2 types]
+  ([_ [?f . ?args] [[form ?type] . ?env3]] 
+    (fresh [env2 op types]
            (typedo env ?f env2) 
-           (membero [?f ['fn types ?type]] env2)
+           (membero [?f [op types ?type]] env2)
+           (membero op ['fn 'sf])
            (typeso env2 ?args types ?env3))))
     
 (defne dot ; (. obj member args*)
@@ -168,6 +169,10 @@
 (defne arrayo
   [env form new-env]
   ([_ ['array ?type ?dimensions] [[form ['pointer ?type]] . env]]))
+
+(defne structo
+  [env form new-env]
+  ([_ ['struct ?name . ?members] [[form ['struct ?name ?members]] . env]]))
      
 (defn expand-type
   [type]
@@ -226,6 +231,7 @@
   ([_ [?fn . _] _] (applyo env form new-env))
   ([_ ['include . _] _] (includeo env form new-env))
   ([_ ['array . _] _] (arrayo env form new-env))
+  ([_ ['struct . _] _] (structo env form new-env))
   ([_ _ _] (conda ((fresh [type]
                          (membero [form type] env) 
                          (== env new-env)))

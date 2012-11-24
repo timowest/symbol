@@ -123,7 +123,7 @@
                                      (argtypes all (:args t))
                                      (shortdef all (:returns t)))))
      :OperatorMethod (fn [all t] (list (symbol (:name t)) 
-                                       (list 'method 
+                                       (list 'op 
                                              (argtypes all (:args t))
                                              (shortdef all (:returns t)))))
      :Field (fn [all t] (list (symbol (:name t)) (shortdef all (:type t))))

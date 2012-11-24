@@ -9,7 +9,7 @@
 (ns symbol.emission
   (:require [clojure.string :as string]
             [clojure.pprint :as pprint])
-  (:use symbol.util))
+  (:use symbol.common))
 
 (declare type->string)
 
@@ -167,21 +167,34 @@
   (if-let [types (->> type flatten distinct (keep generics) seq)]
     (str "template <class " (string/join ", class " types)  ">")))
 
+(defn def-fn
+  [env name value]
+  (let [type (get-type env name)
+        [_ arg-types rtype] type
+        rtypes (type->string env rtype)
+        [args & body] (second value)
+        args-str (args->string env args arg-types)]
+    (lines
+      (fn-generics type)
+      (format "%s %s(%s) {" rtypes name args-str)
+      (fn-body env nil body rtype)
+      "}")))
+
+(defn def-struct
+  [env name value]
+  (let [[_ name members] (get-type env name)]
+    (lines
+      (str "struct " (str name) " {")
+      (for [[type name] members]
+        (stmt (type->string env type) (str name)))
+      "}")))
+        
 (defmethod emit 'def
   [env target form]
-  (let [[_ name value] form
-        type (get-type env name)]
-    (if (form? value 'fn*)
-      (let [[_ arg-types rtype] type
-            rtypes (type->string env rtype)
-            [args & body] (second value)
-            args-str (args->string env args arg-types)]
-        (lines
-          (fn-generics type)
-          (format "%s %s(%s) {" rtypes name args-str)
-          (fn-body env target body rtype)
-          "}"))
-      (assignment env [name value])))) 
+  (let [[_ name value] form]
+    (cond (form? value 'struct) (def-struct env name value) 
+          (form? value 'fn*) (def-fn env name value) 
+          :else (assignment env [name value]))))
 
 (defmethod emit 'do
   [env target form]

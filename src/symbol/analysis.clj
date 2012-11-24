@@ -8,7 +8,7 @@
 
 (ns symbol.analysis
   (:require [clojure.walk :as walk])
-  (:use symbol.util))
+  (:use symbol.common))
 
 (declare unique-names expand-recur simplify)
 
@@ -66,8 +66,6 @@
   (postwalk form 
             #(form? % 'loop*) 
             #(expand-recur % (gensym))))
-
-(def operators '#{= != + - * / % > < >= <= & | ^ << >>})
 
 (defn expand-op
   [[op & args :as form]]
