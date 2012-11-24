@@ -37,6 +37,10 @@
     => '(loop* x [i 0] (when (< i 5) (println i) (recur* x (inc i))))
     (provided (gensym) => 'x)))
 
+(facts "ops"       
+   (expand-ops '(+ 1 2 3 4)) => '(+ (+ (+ 1 2) 3) 4)
+   (expand-ops '(+ 1 2 (- 3 4 5) 5)) => '(+ (+ (+ 1 2) (- (- 3 4) 5)) 5)) 
+
 (facts "simplify"
        
   (fact "if"

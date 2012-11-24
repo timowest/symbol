@@ -8,39 +8,26 @@
 
 (ns symbol.types-test
   (:require [clojure.core.logic :as logic]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [symbol.compiler :as compiler])
   (:use symbol.types 
         midje.sweet))
 
 ; TODO make this the base environment
-(def env (to-env  '((nil   void)
-                    (set!  (fn [A A] void))
-                    (pset! (fn [(pointer A) A] void))
-                    (pset! (fn [(pointer A) long A] void))
-                    (pref  (fn [(pointer A long)] A))
-                    (not   (fn [boolean] boolean))
-                    (<     (fn [A A] boolean))
-                    (>     (fn [A A] boolean))
-                    (=     (fn [A A] boolean))
-                    (<=    (fn [A A] boolean))
-                    (>=    (fn [A A] boolean))
-                    (+     (fn [A A] A))
-                    (-     (fn [A A] A))
-                    (*     (fn [A A] A))
-                    (/     (fn [A A] A))
-                                        
-                    (dec   (fn [long] long))
-                    (inc   (fn [long] long))
-                    (println (fn [A] void))
-                    
-                    (substr (fn [string long] string)))))
+(def env 
+  (concat
+    compiler/core-env
+    (to-env  '((dec   (fn [long] long))
+               (inc   (fn [long] long))
+               (println (fn [A] void))              
+               (substr (fn [string long] string))))))
 
 (def env2 (to-env '{person (pointer Person)                    
                     Person (class 
                             Person 
                            ((name string) 
                             (age long)
-                            (olderThan (fn [long] boolean))
+                            (olderThan (method [long] boolean))
                             (:new [string])
                             (:new [string long])))}))
 (facts "nil"
@@ -131,9 +118,6 @@
   (typeof '(do "abc" 1)) => 'long
   (typeof '(do true)) => 'boolean)         
 
-(facts "include"
-  (typeof '(do (include "math.h") (sin 2.0))) => 'double)
-
 (facts "arrays"
   (typeof '(array long 5)) => '(pointer long))
 
@@ -143,7 +127,11 @@
   (typeof \s) => 'char
   (typeof 1.2) => 'double
   (typeof 1/2) => 'ratio)
-    
-  
+   
+(facts "math include"
+  (typeof '(do (include "math.h") (sin 2.0))) => 'double)
+
+(comment (facts "iostream include"
+  (typeof '(do (include "iostream") (. cos good))) => 'bool))
       
 

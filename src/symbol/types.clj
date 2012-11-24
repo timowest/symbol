@@ -119,7 +119,7 @@
            (membero [?member membert] members)
            (typeso env2 ?args argst ?env3)
            (matcha [membert ?type]
-                   ([['fn argst ?type] ?type]) 
+                   ([['method argst ?type] ?type]) 
                    ([?type ?type])))))
                    
 (defne newo ; (new Class args*)

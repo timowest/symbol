@@ -7,20 +7,21 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns symbol.includes-test
-  (:use symbol.includes        
+  (:use [symbol.includes :only (include)]        
         midje.sweet))  
 
-(defn get-type
+(defn get-types
   [env form]
-  (let [matches (for [[f t] env :when (= f form)] t)]
-    (first matches)))
+  (map second (filter #(= (first %) form) env)))
+
+(def get-type (comp first get-types))
 
 (def math (include "math.h"))
 (def cmath (include "cmath"))
 (def stdio (include "stdio.h"))
 (def iostream (include "iostream"))
 
-(doseq [[name type](concat math cmath stdio)]
+(doseq [[name type](concat math cmath stdio iostream)]
   (if (not type)
     (throw (IllegalStateException. (str "No type for " name)))))
 
@@ -35,13 +36,14 @@
   (get-type cmath 'frexp) => '(fn (double (pointer int)) double))
 
 (facts "stdio"
-  (get-type stdio 'getc) => '(fn ((pointer FILE)) int)
+  (get-type stdio 'getc) => '(fn ((pointer _IO_FILE)) int)
   (get-type stdio 'gets) => '(fn ((pointer char)) (pointer char))
-  (get-type stdio 'getw) => '(fn ((pointer FILE)) int))      
+  (get-type stdio 'getw) => '(fn ((pointer _IO_FILE)) int))      
 
 (facts "iostream"   
-  (get-type iostream 'cin) => 'istream
-  (get-type iostream 'cout) => 'ostream
-  (get-type iostream 'cerr) => 'ostream
+  (get-type iostream 'cin) =>  '(basic_istream char (std/char_traits char))
+  (get-type iostream 'cout) => '(basic_ostream char (std/char_traits char))
+  (get-type iostream 'cerr) => '(basic_ostream char (std/char_traits char))
   (get-type iostream 'istream) => '(typedef istream (basic_istream char (std/char_traits char)))
-  (get-type iostream 'ostream) => '(typedef ostream (basic_ostream char (std/char_traits char))))
+  (get-type iostream 'ostream) => '(typedef ostream (basic_ostream char (std/char_traits char)))
+  (get-type iostream '(basic_istream char (std/char_traits char))) => (complement nil?))

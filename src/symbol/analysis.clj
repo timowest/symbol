@@ -67,6 +67,20 @@
             #(form? % 'loop*) 
             #(expand-recur % (gensym))))
 
+(def operators '#{= != + - * / % > < >= <= & | ^ << >>})
+
+(defn expand-op
+  [[op & args :as form]]
+  (if (< (count args) 3) 
+    form
+    (list op(expand-op (cons op (butlast args))) (last args))))
+    
+(defn expand-ops
+  [form]
+  (postwalk form
+            #(and (seq? %) (operators (first %)))
+            expand-op))
+
 (defn wrap
   [form args]
   (let [forms (filter seq? args)
@@ -129,4 +143,4 @@
   [form]
   (postwalk form seq? simple))
 
-(def convert (comp simplify unique-names expand-loop))
+(def convert (comp simplify expand-ops unique-names expand-loop))

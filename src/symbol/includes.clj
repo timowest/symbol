@@ -38,15 +38,18 @@
 
 (def cpp-types
   '{"char" char
+    "wchar_t" wchar
     "unsigned char" uchar
     "short int" short
     "unsigned short int" ushort
+    "short unsigned int" ushort
     "short" short
     "unsigned short" ushort
     "int" int
     "unsigned int" uint
     "long int" long
     "unsigned long int" ulong
+    "long unsigned int" ulong
     "long" long
     "unsigned long" ulong
     "bool" boolean
@@ -55,7 +58,8 @@
     "double" double
     "unsigned double" double
     "long double" ldouble
-    "unsigned long double" uldouble})
+    "unsigned long double" uldouble
+    "long unsigned double" uldouble})
           
 (defn xml-get
   [xml type k & vs]
@@ -99,7 +103,7 @@
    :FundamentalType (fn [all t] (cpp-types (:name t)))
    :PointerType (fn [all t] (list 'pointer (shortdef all (:type t))))
    :ReferenceType (fn [all t] (list 'reference (shortdef all (:type t))))
-   :Typedef (fn [all t] (symbol (:name t)))      
+   :Typedef (fn [all t] (shortdef all (:type t)))      
    :FunctionType (fn [all t] (list 'fn
                                    (argtypes all (:args t))
                                    (shortdef all (:returns t))))            
@@ -114,11 +118,17 @@
     shortdefs
     {:Constructor (fn [all t] (list :new (argtypes all (:args t))))
      :Destructor (fn [all t] (list))
+     :Method (fn [all t] (list (symbol (:name t)) 
+                               (list 'method
+                                     (argtypes all (:args t))
+                                     (shortdef all (:returns t)))))
      :OperatorMethod (fn [all t] (list (symbol (:name t)) 
-                                       (list 'fn 
+                                       (list 'method 
                                              (argtypes all (:args t))
                                              (shortdef all (:returns t)))))
      :Field (fn [all t] (list (symbol (:name t)) (shortdef all (:type t))))
+     :Variable (fn [all t] (list (symbol (:name t)) (shortdef all (:type t))))
+     :Converter (fn [all t] (list 'converter (symbol (:id t)))) ; TODO
      :Union (fn [all t] (list 'struct (symbol (:id t))
                             (map #(fulldef all %)
                                  (.split (:members t) " "))))
@@ -175,6 +185,10 @@
     (with-args xml
       (xml-get xml :Constructor :id :name))
     (xml-get xml :Destructor :id)
+    (xml-get xml :Converter :id :name :returns)
+    (xml-get xml :Variable :id :name :type)
+    (with-args xml
+      (xml-get xml :Method :id :name :returns))
     (with-args xml
       (xml-get xml :OperatorMethod :id :name :returns))
     (xml-get xml :Field :id :name :type)))
@@ -199,6 +213,7 @@
                          (list (:name enum) 'int))
           enumvalues (for [enumvalue (xml-get xml :EnumValue :id name)]
                        (list (symbol (:name enumvalue)) 'int))
+          ; TODO only top level vars
           variables (for [[id v] (xml-get xml :Variable :id :name :type)]
                       (list (symbol (:name v)) (shortdefs (:type v))))            
           functions (for [function (xml-> xml :Function)]
