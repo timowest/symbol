@@ -102,7 +102,8 @@
    :CvQualifiedType (fn [all t] (shortdef all (:type t)))
    :FundamentalType (fn [all t] (cpp-types (:name t)))
    :PointerType (fn [all t] (list 'pointer (shortdef all (:type t))))
-   :ReferenceType (fn [all t] (list 'reference (shortdef all (:type t))))
+   ;:ReferenceType (fn [all t] (list 'reference (shortdef all (:type t))))
+   :ReferenceType (fn [all t] (shortdef all (:type t)))
    :Typedef (fn [all t] (shortdef all (:type t)))      
    :FunctionType (fn [all t] (list 'fn
                                    (argtypes all (:args t))
@@ -144,7 +145,7 @@
                            (if (:members t)
                              (list 'struct name
                                    (map #(fulldef all %) 
-                                             (.split (:members t) " ")))
+                                        (filter #(pos? (.length %)) (.split (:members t) " "))))
                              (list 'struct name))))}))
              
 (defn typedef
@@ -153,7 +154,7 @@
           f (functions (:cat type))]
       (if f 
         (f types type)
-        (throw (IllegalStateException. (str "No function for " id)))))))
+        (throw (IllegalStateException. (str "No function for '" id "'")))))))
 
 (defn shortdef
   [types id]
