@@ -47,3 +47,8 @@
   (get-type iostream 'istream) => '(typedef istream (basic_istream char (std/char_traits char)))
   (get-type iostream 'ostream) => '(typedef ostream (basic_ostream char (std/char_traits char)))
   (get-type iostream '(basic_istream char (std/char_traits char))) => (complement nil?))
+
+(facts "iostream methods"
+  (let [istream-env (nth (get-type iostream '(basic_istream char (std/char_traits char))) 2)]
+    (get-types istream-env 'readsome) => '((method ((pointer char) int) int))))
+   

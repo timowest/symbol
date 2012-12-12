@@ -68,17 +68,17 @@
                [key
                 (merge (into {} (for [v vs]
                              [v (xml1-> entry (attr v))]))
-                       {k key :cat type})]))))
+                       {k key :cat type :xml entry})]))))
 
 (defn to-arg
   [arg]
-  {:name (symbol (xml1-> arg (attr :name)))
+  {:name (symbol (or (xml1-> arg (attr :name)) "?")) ; FIXME
    :type (xml1-> arg (attr :type))})                
 
 (defn with-args
-  [xml content]
+  [content]
   (into {} (for [[id entry] content]
-             (let [args (xml-> xml (attr= :id id) :Argument)]
+             (let [args (xml-> (:xml entry) :Argument)]
                [id 
                 (assoc entry :args (map to-arg args))]))))
 
@@ -175,7 +175,7 @@
     (xml-get xml :ReferenceType :id :type)
     (xml-get xml :Typedef :id :name :type)
     (xml-get xml :Union :id :members)
-    (with-args xml                  
+    (with-args                   
       (xml-get xml :FunctionType :id :returns))
     (xml-get xml :Class :id :name :members)
     (xml-get xml :Struct :id :name :members)))
@@ -183,14 +183,14 @@
 (defn get-members
   [xml]
   (merge 
-    (with-args xml
+    (with-args 
       (xml-get xml :Constructor :id :name))
     (xml-get xml :Destructor :id)
     (xml-get xml :Converter :id :name :returns)
     (xml-get xml :Variable :id :name :type)
-    (with-args xml
+    (with-args 
       (xml-get xml :Method :id :name :returns))
-    (with-args xml
+    (with-args 
       (xml-get xml :OperatorMethod :id :name :returns))
     (xml-get xml :Field :id :name :type)))
 
@@ -212,7 +212,7 @@
                        (list (second v) v))
           enumerations (for [enum (xml-get xml :Enumeration :id :name)]
                          (list (:name enum) 'int))
-          enumvalues (for [enumvalue (xml-get xml :EnumValue :id name)]
+          enumvalues (for [enumvalue (xml-get xml :EnumValue :id :name)]
                        (list (symbol (:name enumvalue)) 'int))
           ; TODO only top level vars
           variables (for [[id v] (xml-get xml :Variable :id :name :type)]
