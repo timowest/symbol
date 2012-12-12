@@ -174,11 +174,16 @@
   [env form new-env]
   ([_ ['struct ?name . ?members] [[form ['struct ?name ?members]] . env]]))
      
+(def expandables
+  (concat 
+    '(A B C D E F G H I J K L M N O P Q R X Y Z)
+    (map #(symbol (str "_." %)) (range 0 26))))
+
 (defn expand-type
   [type]
   (if (seq? type)
     (walk/postwalk-replace 
-      (zipmap '(A B C D E F G H) (repeatedly lvar))
+      (zipmap expandables (repeatedly lvar))
       type)
     type))
                  
@@ -219,6 +224,7 @@
 (defnu typedo
   [env form new-env]
   ([_ nil _] (== env new-env))
+  ([_ ['ns* ?name] _] (== env new-env))
   ([_ ['if . _] _] (ifo env form new-env))
   ([_ ['fn* . _] _] (fno env form new-env))
   ([_ ['let* . _] _] (leto env form new-env))
@@ -245,7 +251,7 @@
 
 (defn new-env
   [env form]
-  (first (run* [q] (typedo env form q))))
+  (first (map to-env (run* [q] (typedo env form q)))))
 
 (defn type-and-env
   [env form]

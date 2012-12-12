@@ -68,10 +68,9 @@
         (loop [forms []
                r (read pbr false eof false)]
             (if-not (identical? eof r)
-              (do
-                (recur
-                  (conj forms r)
-                  (read pbr false eof false)))
+              (recur
+                (conj forms r)
+                (read pbr false eof false))
               forms))))))
 
 (defn is-form? [& s]
@@ -152,7 +151,7 @@
 (def core-env (types/to-env  
   '((nil   void)
      
-     ; special forms
+     ; special forms 
     (set!  (sf [A A] void)) 
     (pset! (sf [(pointer A) A] void))
     (pset! (sf [(pointer A) long A] void))
@@ -161,6 +160,7 @@
     
     ; operators
     (=     (fn [A A] boolean))
+    (!=    (fn [A A] boolean))
     (<     (fn [A A] boolean))
     (>     (fn [A A] boolean))
     (<=    (fn [A A] boolean))
@@ -170,15 +170,20 @@
     (*     (fn [A A] A))
     (/     (fn [A A] A)))))
 
+(defn read-emit
+  [file]
+  (let [{:keys [ns forms macros]} (get-contents file)
+        normalized (map analysis/convert forms)]
+    (loop [forms normalized env core-env emitted []]
+      (let [form (first forms)
+            nenv (types/new-env env form)
+            output (emission/emit nenv nil form)
+            nemitted (conj emitted output)]
+        (if (seq (rest forms))
+          (recur (rest forms) nenv nemitted)
+          nemitted)))))
+
 (defn compile-files 
   [& files]
   (doseq [file files]
-    (let [{:keys [ns forms macros]} (get-contents files)
-          normalized (map analysis/convert forms)]
-      (loop [forms normalized env core-env]
-        (let [form (first forms)
-              nenv (types/new-env env form)]
-          (emission/emit nenv nil form)
-          (if (rest forms)
-            (recur (rest forms) nenv)))))))
-          
+    (read-emit file)))

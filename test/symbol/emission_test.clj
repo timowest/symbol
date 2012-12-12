@@ -48,7 +48,8 @@
     =>  "int64_t _a = 1;\nint64_t _b = 2;\n(_a + _b);")
   
   (fact "def"
-    (cpp '(def a 123.0)) => "double a = 123.0;") 
+    (cpp '(def a 123.0)) => "double a = 123.0;"
+    (cpp '(def inc (fn* ([x] (+ x 1))))) => "int64_t inc(int64_t _a) {\nreturn (_a + 1);\n}")
   
   (fact "defn (non-generic)"
     (cpp '(defn inc2 [a] (+ a 1))) 

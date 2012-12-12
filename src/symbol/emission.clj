@@ -87,14 +87,15 @@
 
 (defn args->string
   [env args types]
-  (->> (for [[arg type] (zipmap args types)]
-         (str (type->string env type) " " arg))
-    (string/join ", ")))
+  (string/join
+    ", "
+    (for [[arg type] (zipmap args types)]
+      (str (type->string env type) " " arg))))
 
 (defn fn-body
   [env target body rtype]
   (let [l (last body)
-        return (if (= rtype 'void) nil (gensym))]
+        return (when-not (= rtype 'void) (gensym))]
     (if return
       (lines
         (stmts env nil (butlast body))
@@ -188,6 +189,11 @@
       (for [[type name] members]
         (stmt (type->string env type) (str name)))
       "}")))
+
+(defmethod emit 'ns*
+  [env target form]
+  (let [[_ name] form]
+    (str "//ns " name "\n")))
         
 (defmethod emit 'def
   [env target form]

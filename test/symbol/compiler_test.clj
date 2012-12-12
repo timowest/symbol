@@ -106,6 +106,14 @@
    ; dotimes
    (typeof '(fn [a] a)) => '(fn [_.0] _.0))
 
+(comment (facts "read emit"
+       
+  (fact "simple"
+    (read-emit "dev-resources/tests/simple.s")
+    => ["//ns simple\n" 
+        "int64_t inc(int64_t G__5465) {\nreturn (G__5465 + 1);\n}"])))
+       
+
 
    
    
