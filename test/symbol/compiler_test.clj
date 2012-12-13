@@ -78,6 +78,20 @@
   (fact "loop"
     (expand '(loop [x 4] x)) => '(loop* [x 4] x))
   
+  
+  (facts "complex"
+    (expand '(defn osc_c [phase]
+               (fn [amp freq]
+                 (let [inc (* 3.141592 (* 2.0 (/ freq 44100.0)))]
+                   (set! phase (+ phase inc))
+                   (* amp (sin phase))))))
+    =>  '(def osc_c 
+           (fn* ([phase] 
+             (fn* ([amp freq] 
+               (let* [inc (* 3.141592 (* 2.0 (/ freq 44100.0)))] 
+                 (set! phase (+ phase inc)) 
+                 (* amp (sin phase)))))))))
+  
   (fact "struct"
     (expand '(defstruct parent (int c) (int p))) => '(def parent (struct parent (int c) (int p)))))
        
@@ -106,13 +120,6 @@
    ; dotimes
    (typeof '(fn [a] a)) => '(fn [_.0] _.0))
 
-(comment (facts "read emit"
-       
-  (fact "simple"
-    (read-emit "dev-resources/tests/simple.s")
-    => ["//ns simple\n" 
-        "int64_t inc(int64_t G__5465) {\nreturn (G__5465 + 1);\n}"])))
-       
 
 
    

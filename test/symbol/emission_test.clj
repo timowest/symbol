@@ -124,14 +124,14 @@
             "if ((_b < _a)) {\nprintln(_b);\n_b = inc(_b)\ngoto _c;\n}"))
   
   (fact "fn generic"
-    (cpp '(fn [x] x)) =>  "[](A _a){\nreturn _a;\n}")
+    (cpp '(fn [x] x)) =>  "[&](A _a) {\nreturn _a;\n}")
   
   (fact "fn typed"
-    (cpp '(fn [a] (+ a 1))) =>  "[](long _a){\nreturn (_a + 1);\n}")
+    (cpp '(fn [a] (+ a 1))) =>  "[&](long _a) {\nreturn (_a + 1);\n}")
   
   (fact "fn"
     (cpp '(fn [a] (if (< a 2) (println 2)))) 
-    =>  "[](long _a){\nif ((_a < 2)) {\nprintln(2);\n}\n}")
+    =>  "[&](long _a) {\nif ((_a < 2)) {\nprintln(2);\n}\n}")
   
   (fact "loop"
     (cpp '(loop [x 4] x)) => "long _a = 4;\n_b:\n_a;"))
@@ -155,16 +155,16 @@
     (cpp '(defn multiplier [factor]
             (fn [x] (* (+ x 0) factor))))    
     => (str "std::function<long(long)> multiplier(long _a) {\n"
-            "return [](long _b){\nreturn ((_b + 0) * _a);\n}\n}"))
+            "return [&](long _b) {\nreturn ((_b + 0) * _a);\n};\n}"))
   
   (fact "inline fn"
-    (cpp '((fn [x] (+ x 1)) 1)) => "[](long _a){\nreturn (_a + 1);\n}(1)") 
+    (cpp '((fn [x] (+ x 1)) 1)) => "[&](long _a) {\nreturn (_a + 1);\n}(1)") 
   
   (fact "let over fn"
     (cpp '(def inc (let [x 1] (fn [y] (+ x y))))) 
     => (str "std::function<long(long)> _a;\n"
             "long _b = 1;\n"
-            "_a = [](long _c){\nreturn (_b + _c);\n}\n"
+            "_a = [&](long _c) {\nreturn (_b + _c);\n}\n"
             "std::function<long(long)> inc = _a;")) 
 
   (fact "eq"

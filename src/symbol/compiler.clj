@@ -181,7 +181,7 @@
             nemitted (conj emitted output)]
         (if (seq (rest forms))
           (recur (rest forms) nenv nemitted)
-          nemitted)))))
+          (emission/format-cpp (string/join nemitted)))))))
 
 (defn compile-files 
   [& files]

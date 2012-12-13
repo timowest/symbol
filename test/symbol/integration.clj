@@ -7,10 +7,25 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns symbol.integration
-  (:require [symbol.compiler :as compiler])
-  (:use midje.sweet))
+  (:import [java.io File])
+  (:use [clojure.java.shell :only [sh]] 
+        midje.sweet)
+  (:require [symbol.compiler :as compiler]))
 
 (defn dump
   [file]
-  (compiler/read-emit file))
+  (let [str (compiler/read-emit file)
+        temp (doto (File/createTempFile "symbol" ".cpp")
+               (.deleteOnExit))]
+    (println str)
+    (spit temp str)
+    (sh "g++" "-shared" "-std=c++0x" (.getAbsolutePath temp))))
+    
+(def ok {:exit 0 :out "" :err ""})
+
+(facts "simple"
+  (dump "dev-resources/tests/simple.s") => ok)
+  ; TODO osc.s
+  ; TODO io/example*
+        
   

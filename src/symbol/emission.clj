@@ -50,7 +50,8 @@
 (defn stmt 
   [& args]
   (let [s (string/join " " args)] 
-    (cond (.endsWith s "}") s
+    (cond (.startsWith s "return") (str s ";")
+          (.endsWith s "}") s
           (.endsWith s ";") s
           :else (str s ";"))))
 
@@ -119,7 +120,7 @@
         args-str (args->string env args argtypes)
         to-target (if target (str (emit env nil target) " = ") "")]
     (lines 
-      (str to-target "[](" args-str "){")
+      (str to-target "[&](" args-str ") {")
       (fn-body env target body rtype)
       "}")))
       
@@ -131,6 +132,11 @@
         (stmt type name)
         (stmt (emit env name value)))
       (stmt type name "=" (emit env nil value)))))    
+
+(defmethod emit 'set!
+  [env target form]
+  (let [[_ to expr] form]
+    (emit env to expr)))
 
 (defmethod emit 'let*
   [env target form]
@@ -210,6 +216,11 @@
 (defmethod emit 'do
   [env target form]
   (stmts env target (rest form)))
+
+(defmethod emit 'include
+  [env target form]
+  (let [[_ & includes] form]
+    (string/join (map #(str "#include \"" % "\"\n") includes))))  
 
 (defmethod emit 'long
   [env target form]

@@ -194,7 +194,7 @@
       (xml-get xml :OperatorMethod :id :name :returns))
     (xml-get xml :Field :id :name :type)))
 
-(defn include
+(defn include*
   [local-path]
   (if-let [f (get-file default-paths local-path)]
     (let [temp (doto (File/createTempFile "gccxml" "xml")
@@ -224,7 +224,7 @@
                                   (shortdefs (xml1-> function (attr :returns))))))]
       (concat complex enumerations enumvalues variables functions))))
 
-;(def include (memoize include*))
+(def include (memoize include*))
 
 (defn include-pp
   [local-path]

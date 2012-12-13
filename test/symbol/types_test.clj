@@ -60,6 +60,14 @@
   (typeof env '(fn* ([a b] (+ a b)))) => '(fn [_.0 _.0] _.0)
   (typeof env '(fn* ([a] (+ a 1)))) => '(fn [long] long)
   (typeof env '(fn* ([a] (+ a 1.0)))) => '(fn [double] double))
+
+(facts "complex fn"
+  (typeof env '(fn* ([phase] 
+                 (fn* ([amp freq] 
+                   (let* [inc (* 3.141592 (* 2.0 (/ freq 44100.0)))] 
+                     (set! phase (+ phase inc)) 
+                     (* amp phase)))))))
+  => '(fn (double) (fn (double double) double)))
   
 (facts "inline fn"
   (typeof env '((fn* ([a] (+ a 1))) 1)) => 'long)
