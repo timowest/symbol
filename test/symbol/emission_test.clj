@@ -45,15 +45,15 @@
 (facts "emit"
   (fact "let"
     (cpp '(let [a 1 b 2] (+ a b))) 
-    =>  "int64_t _a = 1;\nint64_t _b = 2;\n(_a + _b);")
+    =>  "long _a = 1;\nlong _b = 2;\n(_a + _b);")
   
   (fact "def"
     (cpp '(def a 123.0)) => "double a = 123.0;"
-    (cpp '(def inc (fn* ([x] (+ x 1))))) => "int64_t inc(int64_t _a) {\nreturn (_a + 1);\n}")
+    (cpp '(def inc (fn* ([x] (+ x 1))))) => "long inc(long _a) {\nreturn (_a + 1);\n}")
   
   (fact "defn (non-generic)"
     (cpp '(defn inc2 [a] (+ a 1))) 
-    => "int64_t inc2(int64_t _a) {\nreturn (_a + 1);\n}")
+    => "long inc2(long _a) {\nreturn (_a + 1);\n}")
   
   (fact "defn (generic)"
     (cpp '(defn identity [a] a)) 
@@ -85,15 +85,15 @@
 
   (fact "if and"
     (cpp '(if (and (< 3 4) (< 0 1)) (println 5)))
-    => "boolean _a;\nif ((3 < 4)) {\n_a = (0 < 1);\n}\nif (_a) {\nprintln(5);\n}")
+    => "bool _a;\nif ((3 < 4)) {\n_a = (0 < 1);\n}\nif (_a) {\nprintln(5);\n}")
   
   (fact "if or"
     (cpp '(if (or (< 3 4) (< 0 1)) (println 5)))
-    =>  "boolean _a;\nif ((3 < 4)) {\n_a = true;\n} else {\n_a = (0 < 1);\n}\nif (_a) {\nprintln(5);\n}")
+    =>  "bool _a;\nif ((3 < 4)) {\n_a = true;\n} else {\n_a = (0 < 1);\n}\nif (_a) {\nprintln(5);\n}")
   
    (comment (fact "if"
     (cpp '((if (< 0 1) inc dec) 5)) 
-    => (str "std::function<int64_t(int64_t)> a__4219__auto__;\n"
+    => (str "std::function<long(long)> a__4219__auto__;\n"
             "if ((0 < 1)) {\na__4219__auto__ = inc;\n} else {\na__4219__auto__ = dec;\n}\n"
             "a__4219__auto__(5);")))
   
@@ -115,11 +115,11 @@
   
   (fact "when-let"
      (cpp '(when-let [a (< 1 2)] (println a))) 
-     => "boolean _a = (1 < 2);\nif (_a) {\nboolean _b = _a;\nprintln(_b);\n}")
+     => "bool _a = (1 < 2);\nif (_a) {\nbool _b = _a;\nprintln(_b);\n}")
   
   (fact "dotimes"
     (cpp '(dotimes [i 5] (println i))) 
-    => (str "int64_t _a = 5;\nint64_t _b = 0;\n"
+    => (str "long _a = 5;\nlong _b = 0;\n"
             "_c:\n"
             "if ((_b < _a)) {\nprintln(_b);\n_b = inc(_b)\ngoto _c;\n}"))
   
@@ -127,19 +127,19 @@
     (cpp '(fn [x] x)) =>  "[](A _a){\nreturn _a;\n}")
   
   (fact "fn typed"
-    (cpp '(fn [a] (+ a 1))) =>  "[](int64_t _a){\nreturn (_a + 1);\n}")
+    (cpp '(fn [a] (+ a 1))) =>  "[](long _a){\nreturn (_a + 1);\n}")
   
   (fact "fn"
     (cpp '(fn [a] (if (< a 2) (println 2)))) 
-    =>  "[](int64_t _a){\nif ((_a < 2)) {\nprintln(2);\n}\n}")
+    =>  "[](long _a){\nif ((_a < 2)) {\nprintln(2);\n}\n}")
   
   (fact "loop"
-    (cpp '(loop [x 4] x)) => "int64_t _a = 4;\n_b:\n_a;"))
+    (cpp '(loop [x 4] x)) => "long _a = 4;\n_b:\n_a;"))
 
 (facts "structs"
   (fact "product"
     (cpp '(defstruct product (int weight) (float price))) 
-    => "struct product {\nint32_t weight;\nfloat price;\n}"))
+    => "struct product {\nint weight;\nfloat price;\n}"))
      
 (facts "math"
        
@@ -154,22 +154,22 @@
   (fact "multiplier"
     (cpp '(defn multiplier [factor]
             (fn [x] (* (+ x 0) factor))))    
-    => (str "std::function<int64_t(int64_t)> multiplier(int64_t _a) {\n"
-            "return [](int64_t _b){\nreturn ((_b + 0) * _a);\n}\n}"))
+    => (str "std::function<long(long)> multiplier(long _a) {\n"
+            "return [](long _b){\nreturn ((_b + 0) * _a);\n}\n}"))
   
   (fact "inline fn"
-    (cpp '((fn [x] (+ x 1)) 1)) => "[](int64_t _a){\nreturn (_a + 1);\n}(1)") 
+    (cpp '((fn [x] (+ x 1)) 1)) => "[](long _a){\nreturn (_a + 1);\n}(1)") 
   
   (fact "let over fn"
     (cpp '(def inc (let [x 1] (fn [y] (+ x y))))) 
-    => (str "std::function<int64_t(int64_t)> _a;\n"
-            "int64_t _b = 1;\n"
-            "_a = [](int64_t _c){\nreturn (_b + _c);\n}\n"
-            "std::function<int64_t(int64_t)> inc = _a;")) 
+    => (str "std::function<long(long)> _a;\n"
+            "long _b = 1;\n"
+            "_a = [](long _c){\nreturn (_b + _c);\n}\n"
+            "std::function<long(long)> inc = _a;")) 
 
   (fact "eq"
     (cpp '(defn eq [x y] (= x y))) 
-    => "template <class A>\nboolean eq(A _a, A _b) {\nreturn (_b == _a);\n}")
+    => "template <class A>\nbool eq(A _a, A _b) {\nreturn (_b == _a);\n}")
   
   (fact "string"
     (cpp '(def greeting "Hello, world!")) => "string greeting = \"Hello, world!\";")

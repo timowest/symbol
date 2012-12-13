@@ -37,7 +37,8 @@
     (slurp f)))
 
 (def cpp-types
-  '{"char" char
+  '{"void" void
+    "char" char
     "wchar_t" wchar
     "unsigned char" uchar
     "short int" short
@@ -102,7 +103,6 @@
    :CvQualifiedType (fn [all t] (shortdef all (:type t)))
    :FundamentalType (fn [all t] (cpp-types (:name t)))
    :PointerType (fn [all t] (list 'pointer (shortdef all (:type t))))
-   ;:ReferenceType (fn [all t] (list 'reference (shortdef all (:type t))))
    :ReferenceType (fn [all t] (shortdef all (:type t)))
    :Typedef (fn [all t] (shortdef all (:type t)))      
    :FunctionType (fn [all t] (list 'fn

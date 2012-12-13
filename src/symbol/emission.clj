@@ -14,16 +14,21 @@
 (declare type->string)
 
 (def cpp-types
-  '{string  string
-    boolean boolean
-    char   int8_t
-    short  int16_t
-    int    int32_t
-    long   int64_t
-    uchar  uint8_t
-    ushort uint16_t
-    uint   uint32_t
-    ulong  uint64_t})
+  '{void    "void"
+    string  "string"
+    boolean "bool"
+    char    "char"
+    short   "short"
+    int     "int"
+    long    "long"
+    float   "float"
+    double  "double"
+    uchar   "unsigned char"
+    ushort  "unsigned short"
+    uint    "unsigned int"
+    ulong   "unsigned long"
+    ufloat  "unsigned float"
+    udouble "unsigned double"})
 
 (def generics 
   (zipmap (map #(symbol (str "_." %)) (range 0 26))
