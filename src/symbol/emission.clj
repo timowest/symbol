@@ -220,7 +220,9 @@
 (defmethod emit 'include
   [env target form]
   (let [[_ & includes] form]
-    (string/join (map #(str "#include \"" % "\"\n") includes))))  
+    (str 
+      (string/join (map #(str "#include \"" % "\"\n") includes))
+      "\n")))
 
 (defmethod emit 'long
   [env target form]

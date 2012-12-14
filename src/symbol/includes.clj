@@ -222,13 +222,15 @@
                             (list 'fn
                                   (map shortdefs (xml-> function :Argument (attr :type)))
                                   (shortdefs (xml1-> function (attr :returns))))))]
-      (concat complex enumerations enumvalues variables functions))))
+      (->> (concat complex enumerations enumvalues variables functions) 
+           (remove #(.startsWith (str (first %)) "_"))))
+    (throw (IllegalArgumentException. (str "Got no file for " local-path)))))
 
 (def include (memoize include*))
 
 (defn include-pp
   [local-path]
-  (doseq [entry (include local-path)]
+  (doseq [entry (include* local-path)]
     (println entry)))
           
       

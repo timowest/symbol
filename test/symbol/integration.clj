@@ -24,7 +24,8 @@
 (def ok {:exit 0 :out "" :err ""})
 
 (facts "simple"
-  (dump "dev-resources/tests/simple.s") => ok)
+  (dump "dev-resources/tests/simple.s") => ok
+  (dump "dev-resources/tests/osc.s") => ok)
   ; TODO osc.s
   ; TODO io/example*
         

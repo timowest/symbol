@@ -176,7 +176,8 @@
         normalized (map analysis/convert forms)]
     (loop [forms normalized env core-env emitted []]
       (let [form (first forms)
-            nenv (types/new-env env form)
+            nenv (or (types/new-env env form)
+                     (throw (IllegalStateException. (str "Type inference failed for " form))))
             output (emission/emit nenv nil form)
             nemitted (conj emitted output)]
         (if (seq (rest forms))
