@@ -3,7 +3,8 @@
 
 (defn main []
   (let [i 0]
-    (<< cout "Please enter an integer value: ")
-    (>> cin i)
-    (<< cout "The value entered is " i)
-    (<< cout "and its double is " (* i 2) ".\n")))
+    (<< std/cout "Please enter an integer value: ")
+    (>> std/cin i)
+    (<< std/cout "The value entered is " i)
+    (<< std/cout "and its double is " (* i 2) ".\n"))
+  0)

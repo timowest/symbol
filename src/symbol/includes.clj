@@ -228,9 +228,9 @@
 
 (def include (memoize include*))
 
-(defn include-pp
+(defn- include-pp
   [local-path]
-  (doseq [entry (include* local-path)]
+  (doseq [entry (include local-path)]
     (println entry)))
           
       

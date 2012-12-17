@@ -2,4 +2,5 @@
   (include "iostream" "string"))
 
 (defn main []
-  (<< cout "This is a string"))
+  (<< std/cout "This is a string")
+  0)

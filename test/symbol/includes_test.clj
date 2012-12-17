@@ -7,6 +7,7 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns symbol.includes-test
+  (:require [symbol.types :as types])
   (:use [symbol.includes :only (include)]        
         midje.sweet))  
 
@@ -16,10 +17,10 @@
 
 (def get-type (comp first get-types))
 
-(def math (include "math.h"))
-(def cmath (include "cmath"))
-(def stdio (include "stdio.h"))
-(def iostream (include "iostream"))
+(def math (include "math.h")) ; 228
+(def cmath (include "cmath")) ; 350
+(def stdio (include "stdio.h")) ; 118
+(def iostream (include "iostream")) ; 1059
 
 (doseq [[name type](concat math cmath stdio iostream)]
   (if (not type)

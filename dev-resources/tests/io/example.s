@@ -2,4 +2,5 @@
   (include "iostream"))
   
 (defn main []
-  (<< cout "Hello World!"))
+  (<< std/cout "Hello World!")
+  0)

@@ -48,16 +48,16 @@
   (typeof '(let* [x (< 3 4)] (if x (< -1.0 1.0) x))) => nil) ; FIXME
 
 (facts "fn*"
-  (typeof env '(fn* ([a b] (+ a b)))) => '(fn [_.0 _.0] _.0)
+  (typeof env '(fn* ([a b] (+ a b)))) => '(fn [_0 _0] _0)
   (typeof env '(fn* ([a] (substr a 1)))) => '(fn [string] string)
-  (typeof env '(fn* ([a] (fn* ([b] (+ a b)))))) => '(fn [_.0] (fn [_.0] _.0)))
+  (typeof env '(fn* ([a] (fn* ([b] (+ a b)))))) => '(fn [_0] (fn [_0] _0)))
 
 (facts "fn* annotated"
   (typeof env '(fn* ([^int a] a))) => '(fn [int] int))
 
 (facts "fn* generic"
-  (typeof env '(fn* ([a] a))) => '(fn [_.0] _.0)
-  (typeof env '(fn* ([a b] (+ a b)))) => '(fn [_.0 _.0] _.0)
+  (typeof env '(fn* ([a] a))) => '(fn [_0] _0)
+  (typeof env '(fn* ([a b] (+ a b)))) => '(fn [_0 _0] _0)
   (typeof env '(fn* ([a] (+ a 1)))) => '(fn [long] long)
   (typeof env '(fn* ([a] (+ a 1.0)))) => '(fn [double] double))
 
@@ -118,7 +118,7 @@
 
 (facts "def annotated"
   (typeof '(def ^int a)) => 'int
-  (typeof '(def + ^{:tag (fn [A A] A)} 'native)) => '(fn [_.0 _.0] _.0)
+  (typeof '(def + ^{:tag (fn [A A] A)} 'native)) => '(fn [_0 _0] _0)
   (typeof '(def cos ^{:tag (fn [double] double)} 'native)) => '(fn [double] double))
 
 (facts "do"

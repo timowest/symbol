@@ -26,7 +26,13 @@
 (facts "simple"
   (dump "dev-resources/tests/simple.s") => ok
   (dump "dev-resources/tests/osc.s") => ok)
-  ; TODO osc.s
-  ; TODO io/example*
         
+(facts "io"
+  (dump "dev-resources/tests/io/example.s")  => ok
+  (dump "dev-resources/tests/io/example2.s") => ok
+  (dump "dev-resources/tests/io/example3.s") => ok
+  (dump "dev-resources/tests/io/example4.s") => ok
+  (dump "dev-resources/tests/io/example5.s") => ok
+  (dump "dev-resources/tests/io/example6.s") => ok
+  (dump "dev-resources/tests/io/example7.s") => ok)
   

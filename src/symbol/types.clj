@@ -13,6 +13,13 @@
   (:use clojure.core.logic
         symbol.common))
 
+(defmacro time2
+  [text expr]
+  `(let [start# (. System (nanoTime))
+         ret# ~expr]
+     (prn (str ~text " elapsed time: " (/ (double (- (. System (nanoTime)) start#)) 1000000.0) " msecs"))
+     ret#))
+
 (declare typedo typeso annotatedo)
 
 (def specials '#{if fn* let* . new def do})
@@ -133,6 +140,9 @@
 
 (defne defo  ; (def name expr)
   [env form new-env]
+  ; TODO support also main methods with more args
+  ;([_ ['def 'main ?expr] [[form ['fn [] 'int]] . ?env2]]
+  ;  (conso ['main ['fn [] 'int]] env ?env2))  
   ([_ ['def ?name ?expr] [[form ?type] . ?env3]]
     (fresh [env2]
            (conso [?name ?type] env env2)
@@ -177,7 +187,7 @@
 (def expandables
   (concat 
     '(A B C D E F G H I J K L M N O P Q R X Y Z)
-    (map #(symbol (str "_." %)) (range 0 26))))
+    (map #(symbol (str "_" %)) (range 0 26))))
 
 (defn expand-type
   [type]
@@ -244,14 +254,17 @@
                   ((annotatedo env form new-env))
                   ((literalo env form new-env))))) 
 
-(defn to-env
-  [env]
-  (for [[k v] (seq env)]
-      [k (expand-type v)]))    
+(defn expand-entry
+  [[k v]]
+  [k (expand-type v)])  
 
-(defn new-env
+(defn to-env 
+  [env]
+  (map expand-entry env))    
+
+(defn new-env ; FIXME
   [env form]
-  (first (map to-env (run* [q] (typedo env form q)))))
+  (to-env (first (run* [q] (typedo env form q)))))
 
 (defn type-and-env
   [env form]

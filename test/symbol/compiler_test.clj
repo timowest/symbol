@@ -109,7 +109,7 @@
 
 (facts "types"
    (typeof '(let [a 1 b 2] (+ a b))) => 'long
-   (typeof '(defn identity [a] a)) => '(fn [_.0] _.0)
+   (typeof '(defn identity [a] a)) => '(fn [_0] _0)
    (typeof '(when true 1 2 (+ 1.0 2.1))) => 'double
    (typeof '(when-not (< 1 2) 2.0)) => 'double
    (typeof '(let [a 5] (cond (< a 1) 2 (< a 2) 3))) => 'long
@@ -118,7 +118,7 @@
    (typeof '(-> 2 (+ 3) (* 5))) => 'long
    (typeof '(->> 2 (+ 3) (* 5))) => 'long
    ; dotimes
-   (typeof '(fn [a] a)) => '(fn [_.0] _.0))
+   (typeof '(fn [a] a)) => '(fn [_0] _0))
 
 
 

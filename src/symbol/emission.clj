@@ -31,7 +31,7 @@
     udouble "unsigned double"})
 
 (def generics 
-  (zipmap (map #(symbol (str "_." %)) (range 0 26))
+  (zipmap (map #(symbol (str "_" %)) (range 0 26))
           (map str "ABCDEFGHIJKLMNOPQRSTUVWXYZ")))
 
 (defn get-type
@@ -232,9 +232,11 @@
 
 (defmethod emit 'string
   [env target form]
-  (let [escaped (str "\"" form "\"")]  ; TODO property escaping
+  (let [escaped (str "\"" 
+                     (string/escape form {\newline "\\n" }) 
+                     "\"")]  
     (if target
-      (str target " = " escaped)
+      (str (emit target) " = " escaped)
       escaped))) 
 
 (defmethod emit 'char
@@ -260,11 +262,11 @@
 (defmethod emit 'symbol
   [env target form]
   (if target
-    (str target " = " form)
-    form))
+    (str (emit target) " = " (emit form))
+    (string/replace (str form) #"/" "::")))
 
 (def math-ops 
-  (let [base (into {} (for [k '#{+ - * / < > <= >= !=}]
+  (let [base (into {} (for [k '#{+ - * / < > <= >= != << >>}]
                         [k (str " " k " ")]))]
     (merge base '{= " == "})))
 

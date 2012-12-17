@@ -7,5 +7,6 @@
 (defn main []
   (let [r 5.0
         circle (* 2 PI r)]
-    (<< cout circle)
-    (<< cout NEWLINE)))
+    (<< std/cout circle)
+    (<< std/cout NEWLINE))
+  0)

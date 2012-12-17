@@ -5,4 +5,5 @@
   (let [a 2
         b 7
         c (if (> a b) a b)]
-    (<< cout c)))
+    (<< std/cout c))
+  0)

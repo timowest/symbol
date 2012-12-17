@@ -158,6 +158,10 @@
     (pref  (sf [(pointer A long)] A))
     (not   (sf [boolean] boolean))
     
+    ; IO operators (temporary)
+    (<<    (fn [A B] A))
+    (>>    (fn [A B] A))
+    
     ; operators
     (=     (fn [A A] boolean))
     (!=    (fn [A A] boolean))
