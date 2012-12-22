@@ -4,4 +4,4 @@
 (defn main []
   (<< std/cout "Hello World! ")
   (<< std/cout "I'm a C++ programmer")
-  0)
+  (let [^int x 0] x))

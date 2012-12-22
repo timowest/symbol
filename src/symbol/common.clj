@@ -27,4 +27,4 @@
    clojure.lang.Ratio 'ratio
    clojure.lang.Symbol 'symbol})
 
-(def operators '#{= != + - * / % > < >= <= & | ^ << >>})
+(def operators #{'= '!= '+ '- '* '/ '% '> '< '>= '<= '& '| '<< '>>})

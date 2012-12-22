@@ -17,7 +17,7 @@
   (let [str (compiler/read-emit file)
         temp (doto (File/createTempFile "symbol" ".cpp")
                (.deleteOnExit))]
-    (println str)
+    ;(println str)
     (spit temp str)
     (sh "g++" "-shared" "-std=c++0x" (.getAbsolutePath temp))))
     
@@ -30,9 +30,9 @@
 (facts "io"
   (dump "dev-resources/tests/io/example.s")  => ok
   (dump "dev-resources/tests/io/example2.s") => ok
-  (dump "dev-resources/tests/io/example3.s") => ok
+  (dump "dev-resources/tests/io/example3.s") => ok ; XXX reuse of variable
   (dump "dev-resources/tests/io/example4.s") => ok
-  (dump "dev-resources/tests/io/example5.s") => ok
+  (dump "dev-resources/tests/io/example5.s") => ok 
   (dump "dev-resources/tests/io/example6.s") => ok
-  (dump "dev-resources/tests/io/example7.s") => ok)
+  (dump "dev-resources/tests/io/example7.s") => ok) ; XXX ?!?
   

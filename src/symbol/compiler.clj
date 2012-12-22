@@ -148,7 +148,7 @@
         namespace (->> forms (filter (is-form? 'ns)) first second)]
     (expand-forms namespace (:macros core-forms) forms)))
 
-(def core-env (types/to-env  
+(def core-env   
   '((nil   void)
      
      ; special forms 
@@ -159,7 +159,9 @@
     (not   (sf [boolean] boolean))
     
     ; IO operators (temporary)
+    (std/cout out)
     (<<    (fn [A B] A))
+    (std/cin in)
     (>>    (fn [A B] A))
     
     ; operators
@@ -172,7 +174,7 @@
     (+     (fn [A A] A))
     (-     (fn [A A] A))
     (*     (fn [A A] A))
-    (/     (fn [A A] A)))))
+    (/     (fn [A A] A))))
 
 (defn read-emit
   [file]
@@ -186,7 +188,7 @@
             nemitted (conj emitted output)]
         (if (seq (rest forms))
           (recur (rest forms) nenv nemitted)
-          (emission/format-cpp (string/join nemitted)))))))
+          (emission/format-cpp (string/join "\n" nemitted)))))))
 
 (defn compile-files 
   [& files]

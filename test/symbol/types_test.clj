@@ -17,19 +17,20 @@
 (def env 
   (concat
     compiler/core-env
-    (to-env  '((dec   (fn [long] long))
-               (inc   (fn [long] long))
-               (println (fn [A] void))              
-               (substr (fn [string long] string))))))
+    '((dec   (fn [long] long))
+       (inc   (fn [long] long))
+       (println (fn [A] void))              
+       (substr (fn [string long] string)))))
 
-(def env2 (to-env '{person (pointer Person)                    
-                    Person (class 
-                            Person 
-                           ((name string) 
-                            (age long)
-                            (olderThan (method [long] boolean))
-                            (:new [string])
-                            (:new [string long])))}))
+(def env2 '((person (pointer Person))                    
+            (Person (class 
+                     Person 
+                     ((name string) 
+                       (age long)
+                       (olderThan (method [long] boolean))
+                       (:new [string])
+                       (:new [string long]))))))
+
 (facts "nil"
   (typeof env nil) => 'void)
 
@@ -73,6 +74,7 @@
   (typeof env '((fn* ([a] (+ a 1))) 1)) => 'long)
 
 (facts "let*"
+  (typeof '(let* [^int x 0] x)) => 'int
   (typeof '(let* [a 1 b "x"] a)) => 'long
   (typeof '(let* [a 1 b "x"] b)) => 'string)
 

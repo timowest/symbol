@@ -20,7 +20,7 @@
      (prn (str ~text " elapsed time: " (/ (double (- (. System (nanoTime)) start#)) 1000000.0) " msecs"))
      ret#))
 
-(declare typedo typeso annotatedo)
+(declare typedo typeso annotatedo geno)
 
 (def specials '#{if fn* let* . new def do})
 
@@ -111,9 +111,10 @@
 (defne applyo ; (f args*)
   [env form new-env]
   ([_ [?f . ?args] [[form ?type] . ?env3]] 
-    (fresh [env2 op types]
+    (fresh [env2 template op types]
            (typedo env ?f env2) 
-           (membero [?f [op types ?type]] env2)
+           (membero [?f template] env2)
+           (geno template [op types ?type])
            (membero op ['fn 'sf])
            (typeso env2 ?args types ?env3))))
     
@@ -140,9 +141,6 @@
 
 (defne defo  ; (def name expr)
   [env form new-env]
-  ; TODO support also main methods with more args
-  ;([_ ['def 'main ?expr] [[form ['fn [] 'int]] . ?env2]]
-  ;  (conso ['main ['fn [] 'int]] env ?env2))  
   ([_ ['def ?name ?expr] [[form ?type] . ?env3]]
     (fresh [env2]
            (conso [?name ?type] env env2)
@@ -162,7 +160,9 @@
   [i result]
   (fn [a]
     (let [gi (walk a i)
-          content (includes/include gi)]
+          content (if (= gi "iostream") ; FIXME iostream causes StackOverflowError
+                     []
+                    (includes/include gi))]
       (when content
         (unify a [result] [content])))))    
 
@@ -196,6 +196,12 @@
       (zipmap expandables (repeatedly lvar))
       type)
     type))
+
+(defn geno
+  [template fresh]
+  (fn [a]
+    (let [gtemplate (walk a template)]
+      (unify a [fresh] [(expand-type gtemplate)]))))
                  
 ; TODO this should probably first check if symbol can be resolved via the env
 ;      and if not, take the symbol as such
@@ -254,17 +260,9 @@
                   ((annotatedo env form new-env))
                   ((literalo env form new-env))))) 
 
-(defn expand-entry
-  [[k v]]
-  [k (expand-type v)])  
-
-(defn to-env 
-  [env]
-  (map expand-entry env))    
-
-(defn new-env ; FIXME
+(defn new-env 
   [env form]
-  (to-env (first (run* [q] (typedo env form q)))))
+  (first (run* [q] (typedo env form q))))
 
 (defn type-and-env
   [env form]

@@ -56,27 +56,3 @@
 (facts "iostream methods"
   (let [istream-env (nth (get-type iostream '(basic_istream char (std/char_traits char))) 2)]
     (get-types istream-env 'readsome) => '((method ((pointer char) int) int))))
-
-(comment
-  ((op ((pointer (fn ((basic_istream char (std/char_traits char))) 
-                   (basic_istream char (std/char_traits char))))) (basic_istream char (std/char_traits char))) 
-   (op ((pointer (fn ((basic_ios char (std/char_traits char))) (basic_ios char (std/char_traits char))))) 
-       (basic_istream char (std/char_traits char))) 
-   (op ((pointer (fn (ios_base) ios_base))) (basic_istream char (std/char_traits char))) 
-   (op (boolean) (basic_istream char (std/char_traits char))) 
-   (op (short) (basic_istream char (std/char_traits char))) 
-   (op (ushort) (basic_istream char (std/char_traits char))) 
-   (op (int) (basic_istream char (std/char_traits char))) 
-   (op (uint) (basic_istream char (std/char_traits char))) 
-   (op (long) (basic_istream char (std/char_traits char))) 
-   (op (ulong) (basic_istream char (std/char_traits char))) 
-   (op (nil) (basic_istream char (std/char_traits char))) 
-   (op (nil) (basic_istream char (std/char_traits char))) 
-   (op (float) (basic_istream char (std/char_traits char))) 
-   (op (double) (basic_istream char (std/char_traits char)))
-   (op (ldouble) (basic_istream char (std/char_traits char))) 
-   (op ((pointer nil)) (basic_istream char (std/char_traits char))) 
-   (op ((pointer (basic_streambuf char (std/char_traits char)))) (basic_istream char (std/char_traits char)))))
-
-  
-   

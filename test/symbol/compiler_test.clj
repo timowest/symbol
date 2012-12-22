@@ -96,20 +96,21 @@
     (expand '(defstruct parent (int c) (int p))) => '(def parent (struct parent (int c) (int p)))))
        
 
-(def env (types/to-env  '((set!  (fn [A A] void))
-                          (<     (fn [A A] boolean))
-                          (+     (fn [A A] A))                
-                          (*     (fn [A A] A))
-                          (not   (fn [boolean] boolean))
-                          (substr (fn [string long] string)))))
+(comment (def env '((set!  (fn [A A] void))
+                     (<     (fn [A A] boolean))
+                     (+     (fn [A A] A))                
+                     (*     (fn [A A] A))
+                     (not   (fn [boolean] boolean))
+                     (substr (fn [string long] string)))))
 
 (defn typeof
   [form]
-  (types/typeof env (expand form)))
+  (types/typeof core-env (expand form)))
 
 (facts "types"
    (typeof '(let [a 1 b 2] (+ a b))) => 'long
    (typeof '(defn identity [a] a)) => '(fn [_0] _0)
+   (typeof '(defn main [] (+ 1 2) (let [^int x 0] x))) => '(fn [] int) 
    (typeof '(when true 1 2 (+ 1.0 2.1))) => 'double
    (typeof '(when-not (< 1 2) 2.0)) => 'double
    (typeof '(let [a 5] (cond (< a 1) 2 (< a 2) 3))) => 'long

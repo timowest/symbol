@@ -21,7 +21,9 @@
 
 (defn- replace-names
   [form names]
-  (let [mapped (zipmap names (repeatedly gensym))]
+  (let [mapped (into {}
+                     (for [[k v] (zipmap names (repeatedly gensym))]
+                       [k (with-meta v (or (meta k) {}))]))]
     (walk/postwalk-replace mapped form)))
 
 (defn fn-names

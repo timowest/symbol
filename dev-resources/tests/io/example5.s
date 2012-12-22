@@ -6,7 +6,7 @@
 
 (defn main []
   (let [r 5.0
-        circle (* 2 PI r)]
+        circle (* 2.0 PI r)]
     (<< std/cout circle)
     (<< std/cout NEWLINE))
-  0)
+  (let [^int x 0] x))

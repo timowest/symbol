@@ -17,9 +17,9 @@
 (def core-env 
   (concat 
     compiler/core-env
-    (types/to-env  '((println (fn [A] void))
-                     (inc   (fn [long] long))
-                     (dec   (fn [long] long))))))
+    '((println (fn [A] void))
+       (inc   (fn [long] long))
+       (dec   (fn [long] long)))))
   
 (defn expand
   [form]
@@ -48,7 +48,7 @@
     =>  "long _a = 1;\nlong _b = 2;\n(_a + _b);")
   
   (fact "def"
-    (cpp '(def a 123.0)) => "double a = 123.0;"
+    (cpp '(def a 123.0)) => "const double a = 123.0;"
     (cpp '(def inc (fn* ([x] (+ x 1))))) => "long inc(long _a) {\nreturn (_a + 1);\n}")
   
   (fact "defn (non-generic)"
@@ -165,14 +165,14 @@
     => (str "std::function<long(long)> _a;\n"
             "long _b = 1;\n"
             "_a = [&](long _c) {\nreturn (_b + _c);\n}\n"
-            "std::function<long(long)> inc = _a;")) 
+            "const std::function<long(long)> inc = _a;")) 
 
   (fact "eq"
     (cpp '(defn eq [x y] (= x y))) 
     => "template <class A>\nbool eq(A _a, A _b) {\nreturn (_b == _a);\n}")
   
   (fact "string"
-    (cpp '(def greeting "Hello, world!")) => "string greeting = \"Hello, world!\";")
+    (cpp '(def greeting "Hello, world!")) => "const std::string greeting = \"Hello, world!\";")
   
 ) 
 

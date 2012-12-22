@@ -15,7 +15,7 @@
 
 (def cpp-types
   '{void    "void"
-    string  "string"
+    string  "std::string"
     boolean "bool"
     char    "char"
     short   "short"
@@ -126,12 +126,15 @@
       
 (defn assignment
   [env [name value]]
-  (let [type (type->string env (get-type env name))]
+  (let [type (type->string env (get-type env name))
+        const (:const (meta name))]
     (if (complex? value)
       (lines
         (stmt type name)
         (stmt (emit env name value)))
-      (stmt type name "=" (emit env nil value)))))    
+      (if const
+        (stmt "const" type name "=" (emit env nil value))
+        (stmt type name "=" (emit env nil value))))))    
 
 (defmethod emit 'set!
   [env target form]
@@ -204,14 +207,14 @@
 (defmethod emit 'ns*
   [env target form]
   (let [[_ name] form]
-    (str "//ns " name "\n")))
+    (str "//ns " name)))
         
 (defmethod emit 'def
   [env target form]
   (let [[_ name value] form]
     (cond (form? value 'struct) (def-struct env name value) 
           (form? value 'fn*) (def-fn env name value) 
-          :else (assignment env [name value]))))
+          :else (assignment env [(with-meta name {:const true}) value]))))
 
 (defmethod emit 'do
   [env target form]
@@ -220,9 +223,7 @@
 (defmethod emit 'include
   [env target form]
   (let [[_ & includes] form]
-    (str 
-      (string/join (map #(str "#include \"" % "\"\n") includes))
-      "\n")))
+    (string/join (map #(str "#include \"" % "\"\n") includes))))
 
 (defmethod emit 'long
   [env target form]
@@ -262,7 +263,7 @@
 (defmethod emit 'symbol
   [env target form]
   (if target
-    (str (emit target) " = " (emit form))
+    (str (emit env nil target) " = " (emit env nil form))
     (string/replace (str form) #"/" "::")))
 
 (def math-ops 
