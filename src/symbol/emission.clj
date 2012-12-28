@@ -182,10 +182,11 @@
         [_ arg-types rtype] type
         rtypes (type->string env rtype)
         [args & body] (second value)
-        args-str (args->string env args arg-types)]
+        args-str (args->string env args arg-types)
+        name-str (emit env nil name)]
     (lines
       (fn-generics type)
-      (format "%s %s(%s) {" rtypes name args-str)
+      (format "%s %s(%s) {" rtypes name-str args-str)
       (fn-body env nil body rtype)
       "}")))
 
@@ -193,9 +194,9 @@
   [env name value]
   (let [[_ name members] (get-type env name)]
     (lines
-      (str "struct " (str name) " {")
+      (str "struct " (emit env nil name) " {")
       (for [[type name] members]
-        (str (type->string env type) " " name ";"))
+        (str (type->string env type) " " (emit env nil name) ";"))
       "}")))
 
 (defmethod emit 'ns*
@@ -223,6 +224,10 @@
   [env target form]
   (let [[_ type dimensions] form]
     (str "new " (type->string env type) "[" dimensions "]")))
+
+(defmethod emit 'comment
+  [env target form]
+  "\n")
 
 (def math-ops 
   (let [base (into {} (for [k '#{+ - * / < > <= >= != << >>}]
@@ -253,7 +258,9 @@
 (defmethod emit :default
   [env target form]
   (let [s (cond (seq? form) (emit-seq env form)
-                (symbol? form) (string/replace (str form) #"/" "::")
+                (symbol? form) (-> (str form)
+                                   (string/replace #"/" "::")
+                                   (string/replace #"-" "_"))
                 ; TODO proper string escaping
                 (string? form) (str "\"" (string/escape form {\newline "\\n" }) "\"")
                 (char? form) (str "'" form "'")

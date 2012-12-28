@@ -241,6 +241,7 @@
   [env form new-env]
   ([_ nil _] (== env new-env))
   ([_ ['ns* ?name] _] (== env new-env))
+  ([_ ['comment . _] _] (== env new-env))
   ([_ ['if . _] _] (ifo env form new-env))
   ([_ ['fn* . _] _] (fno env form new-env))
   ([_ ['let* . _] _] (leto env form new-env))

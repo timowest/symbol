@@ -1,4 +1,4 @@
-(ns osc
+(ns audio
   (include "math.h" "functional"))
 
 (def PI 3.141592)
@@ -11,22 +11,22 @@
       (* amp (sin phase)))))
 
 ;; square oscillator
-(defn square-c [phase]
+(comment (defn square-c [phase]
   (let [osc (osc-c phase)
         n 50.0]
     (fn [amp freq]
-      (* amp (tanh (* n (osc 1.0 freq)))))))
+      (* amp (tanh (* n (osc 1.0 freq))))))))
 
 ;; rect wave oscillator - useful for pulse width modulation
-(defn rect-c [phase]
+(defn rect-c [phase] 
   (fn [amp freq duty]
     (let [inc (/ freq SAMPLERATE)]
       (set! phase (+ phase inc))
       (when (> phase 1.0) (set! phase (- phase 1.0)))
-      (if (< phase duty) amp  (* -1.0 amp)))))
+      (if (< phase duty) amp (* -1.0 amp)))))
 
 ;; saw oscillator
-(defn saw-c []
+(comment (defn saw-c []
   (let [p 0.0
         dp 1.0
         x 0.0
@@ -45,7 +45,7 @@
         (set! x (* PI p))
         (if (< x 0.000001) (set! x 0.00001))
         (set! saw (* leak (+ saw (+ dc (/ (sin x) x)))))
-        (* amp saw)))))
+        (* amp saw))))))
 
 ;; white noise generator
 ;(bind-func white_c
@@ -58,7 +58,7 @@
 ; TODO
 
 ;; pulse train
-(defn pulse-c []
+(comment (defn pulse-c []
   (let [time -1.0
         width 100.0]
     (fn [amp freq]
@@ -66,7 +66,7 @@
         (set! time (+ time 1.0))
         (if (< (mod time period) width)
           amp
-          0.0)))))
+          0.0))))))
 
 ; (bind-func delay_c
 
