@@ -11,11 +11,11 @@
       (* amp (sin phase)))))
 
 ;; square oscillator
-(comment (defn square-c [phase]
+(defn square-c [phase]
   (let [osc (osc-c phase)
         n 50.0]
     (fn [amp freq]
-      (* amp (tanh (* n (osc 1.0 freq))))))))
+      (* amp (tanh (* n (osc 1.0 freq)))))))
 
 ;; rect wave oscillator - useful for pulse width modulation
 (defn rect-c [phase] 

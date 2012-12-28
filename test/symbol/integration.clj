@@ -27,7 +27,8 @@
   (dump "dev-resources/tests/simple.s") => ok
   (dump "dev-resources/tests/functions1.s") => ok
   (dump "dev-resources/tests/functions2.s") => ok
-  (dump "dev-resources/tests/functions3.s") => ok)
+  (dump "dev-resources/tests/functions3.s") => ok
+  (dump "dev-resources/tests/functions4.s") => ok)
 
 (facts "audio"
   (dump "dev-resources/tests/audio.s") => ok)       
