@@ -17,8 +17,7 @@
 (facts "expand forms"
   (fact "normal"
     (:forms (expand-forms 'test {} '((println 1) (println 2) (println 3))))
-    => '[(println 1) (println 2) (println 3)])
-  
+    => '[(println 1) (println 2) (println 3)])  
   (fact "with do"
     (:forms (expand-forms 'test {} '((do (println 1) (println 2) (println 3)))))
     => '[(println 1) (println 2) (println 3)]))
@@ -27,58 +26,42 @@
   [form]
   (expand-all (:macros core-forms) form))
 
-(facts "expand"
-       
+(facts "expand"       
   (facts "ns"
-    (expand '(ns symbol.test (use symbol.string))) => '(do (ns* symbol.test) (use symbol.string)))
-       
+    (expand '(ns symbol.test (use symbol.string))) => '(do (ns* symbol.test) (use symbol.string)))       
   (fact "let"
-    (expand '(let [a 1 b 2] (+ a b))) => '(let* [a 1 b 2] (+ a b)))
-  
+    (expand '(let [a 1 b 2] (+ a b))) => '(let* [a 1 b 2] (+ a b)))  
   (fact "defn"
-    (expand '(defn identity [a] a)) => '(def identity (fn* ([a] a))))
-  
+    (expand '(defn identity [a] a)) => '(def identity (fn* ([a] a))))  
   (fact "when"
     (expand '(when a (println "hello") (println "world"))) 
-          => '(if a (do (println "hello") (println "world"))))
-  
+          => '(if a (do (println "hello") (println "world"))))  
   (fact "when-not"
     (expand '(when-not a (println "hello") (println "world"))) 
-          => '(if (not a) (do (println "hello") (println "world"))))
-  
+          => '(if (not a) (do (println "hello") (println "world"))))  
   (fact "cond"
-    (expand '(cond a 1 b 2 c 3)) =>  '(if a 1 (if b 2 (if c 3))))
-  
+    (expand '(cond a 1 b 2 c 3)) =>  '(if a 1 (if b 2 (if c 3))))  
   (fact "if-not"
     (expand '(if-not a b c)) => '(if (not a) b c))
   ; and
-  ; or
-  
+  ; or  
   (fact "."
     (expand '(.member obj)) => '(. obj member)
-    (expand '(.member obj arg)) => '(. obj member arg))
-  
+    (expand '(.member obj arg)) => '(. obj member arg))  
   (fact "new"
-    (expand '(Class1. arg1 arg2)) => '(new Class1 arg1 arg2)) 
-  
+    (expand '(Class1. arg1 arg2)) => '(new Class1 arg1 arg2))   
   (fact "->"
-    (expand '(-> a (b 1) c)) => '(c (b a 1)))
-  
+    (expand '(-> a (b 1) c)) => '(c (b a 1)))  
   (fact "->>"
      (expand '(->> a (b 1) c)) => '(c (b 1 a)))
   ; if-let
-  ; when-let
-  
+  ; when-let  
   (fact "dotimes"
-    (expand '(dotimes [i 5] (println i))) => anything)
-  
+    (expand '(dotimes [i 5] (println i))) => anything)  
   (fact "fn"
-    (expand '(fn [x] x)) => '(fn* ([x] x)))
-  
+    (expand '(fn [x] x)) => '(fn* ([x] x)))  
   (fact "loop"
-    (expand '(loop [x 4] x)) => '(loop* [x 4] x))
-  
-  
+    (expand '(loop [x 4] x)) => '(loop* [x 4] x))   
   (facts "complex"
     (expand '(defn osc_c [phase]
                (fn [amp freq]
@@ -90,8 +73,7 @@
              (fn* ([amp freq] 
                (let* [inc (* 3.141592 (* 2.0 (/ freq 44100.0)))] 
                  (set! phase (+ phase inc)) 
-                 (* amp (sin phase)))))))))
-  
+                 (* amp (sin phase)))))))))  
   (fact "struct"
     (expand '(defstruct parent (int c) (int p))) => '(def parent (struct parent (int c) (int p)))))
        
@@ -111,6 +93,7 @@
    (typeof '(let [a 1 b 2] (+ a b))) => 'long
    (typeof '(defn identity [a] a)) => '(fn [_0] _0)
    (typeof '(defn main [] (+ 1 2) (let [^int x 0] x))) => '(fn [] int) 
+   (typeof '(defn adder [rhs] (fn [lhs] (+ lhs rhs)))) => '(fn (_0) (fn (_0) _0))
    (typeof '(when true 1 2 (+ 1.0 2.1))) => 'double
    (typeof '(when-not (< 1 2) 2.0)) => 'double
    (typeof '(let [a 5] (cond (< a 1) 2 (< a 2) 3))) => 'long

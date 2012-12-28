@@ -191,7 +191,7 @@
 
 (defn expand-type
   [type]
-  (if (seq? type)
+  (if (coll? type)
     (walk/postwalk-replace 
       (zipmap expandables (repeatedly lvar))
       type)
@@ -199,7 +199,7 @@
 
 (defn geno
   [template fresh]
-  (fn [a]
+  (fn [a]    
     (let [gtemplate (walk a template)]
       (unify a [fresh] [(expand-type gtemplate)]))))
                  

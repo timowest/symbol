@@ -22,17 +22,20 @@
     (sh "g++" "-shared" "-std=c++0x" (.getAbsolutePath temp))))
     
 (def ok {:exit 0 :out "" :err ""})
-
 (facts "simple"
   (dump "dev-resources/tests/simple.s") => ok
-  (dump "dev-resources/tests/osc.s") => ok)
+  (dump "dev-resources/tests/functions1.s") => ok
+  (dump "dev-resources/tests/functions2.s") => ok)
+
+(facts "audio"
+  (dump "dev-resources/tests/audio.s") => ok)       
         
 (facts "io"
   (dump "dev-resources/tests/io/example.s")  => ok
   (dump "dev-resources/tests/io/example2.s") => ok
-  (dump "dev-resources/tests/io/example3.s") => ok ; XXX reuse of variable
+  ;(dump "dev-resources/tests/io/example3.s") => ok ; FIXME reuse of variable
   (dump "dev-resources/tests/io/example4.s") => ok
   (dump "dev-resources/tests/io/example5.s") => ok 
   (dump "dev-resources/tests/io/example6.s") => ok
-  (dump "dev-resources/tests/io/example7.s") => ok) ; XXX ?!?
+  (dump "dev-resources/tests/io/example7.s") => ok) 
   

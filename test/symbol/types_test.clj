@@ -115,6 +115,7 @@
 
 (facts "def"
   (typeof env '(def fact (fn* ([x] (if (<= x 1) 1 (* x  (fact (- x 1)))))))) => '(fn [long] long)
+  (typeof env '(def adder (fn* ([rhs] (fn* ([lhs] (+ lhs rhs))))))) => '(fn [_0] (fn [_0] _0))
   (typeof '(def a 1)) => 'long
   (typeof '(def b (fn* ([] 1)))) => '(fn [] long))
 
@@ -143,8 +144,4 @@
    
 (facts "math include"
   (typeof '(do (include "math.h") (sin 2.0))) => 'double)
-
-(comment (facts "iostream include"
-  (typeof '(do (include "iostream") (. cos good))) => 'bool))
-      
 

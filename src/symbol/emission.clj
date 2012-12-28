@@ -47,14 +47,6 @@
 
 (defmulti emit emit-selector)
 
-(defn stmt 
-  [& args]
-  (let [s (string/join " " args)] 
-    (cond (.startsWith s "return") (str s ";")
-          (.endsWith s "}") s
-          (.endsWith s ";") s
-          :else (str s ";"))))
-
 (defn lines 
   [& l]
   (string/join "\n" (keep identity (flatten l))))
@@ -62,16 +54,17 @@
 (defn stmts
   [env target body]
   (when (seq body)
-    (let [start (map #(emit env nil %) (butlast body))
-          end (emit env target (last body))]
-      (lines (map stmt (concat start [end]))))))  
+    (let [start (map #(emit env :stmt %) (butlast body))
+          end (emit env (or target :stmt) (last body))]
+      (lines (concat start [end])))))  
 
 (defmethod emit 'if 
   [env target form]
   (let [[_ c t e] form  
+        target (or target :stmt)
         ce (emit env nil c)
-        te (stmt (emit env target t))
-        ee (if e (stmt (emit env target e)))]
+        te (emit env target t)
+        ee (if e (emit env target e))]
     (cond (form? e 'if) (format "if (%s) {\n%s\n} else %s" ce te ee)
           ee           (format "if (%s) {\n%s\n} else {\n%s\n}" ce te ee)
           :else        (format "if (%s) {\n%s\n}" ce te))))     
@@ -88,7 +81,8 @@
   (cond (cpp-types t) (cpp-types t)
         (generics t) (generics t)
         (symbol? t) (str t)
-        (form? (seq t) 'fn) (fn-type->string env t) 
+        (form? (seq t) 'fn) (fn-type->string env t)
+        (form? (seq t) 'pointer) (str (type->string env (second t)) "*")
         :else (-> t type str)))
 
 (defn args->string
@@ -107,10 +101,10 @@
         (stmts env nil (butlast body))
         (if (complex? l)
           (lines
-            (stmt (type->string env rtype) return)
-            (stmt (emit env return l))
-            (stmt "return" return))
-          (stmt "return" (emit env nil l))))
+            (str (type->string env rtype) " " return ";")
+            (emit env return l)
+            (str "return " return ";"))
+          (str "return " (emit env nil l) ";")))
       (stmts env nil body))))  
 
 (defmethod emit 'fn* ; (fn* (args body)
@@ -122,7 +116,7 @@
     (lines 
       (str to-target "[&](" args-str ") {")
       (fn-body env target body rtype)
-      "}")))
+      (if target "};" "}"))))
       
 (defn assignment
   [env [name value]]
@@ -130,11 +124,11 @@
         const (:const (meta name))]
     (if (complex? value)
       (lines
-        (stmt type name)
-        (stmt (emit env name value)))
+        (str type " " name ";")
+        (emit env name value))
       (if const
-        (stmt "const" type name "=" (emit env nil value))
-        (stmt type name "=" (emit env nil value))))))    
+        (str "const " type " " name " = " (emit env nil value) ";")
+        (str type " " name " = " (emit env nil value) ";")))))    
 
 (defmethod emit 'set!
   [env target form]
@@ -165,7 +159,7 @@
         bind-pairs (zipmap names args)]
     (lines 
       (for [[k v] bind-pairs] (emit env k v))
-      (stmt "goto" name))))
+      (str "goto " name ";"))))
 
 (defmethod emit '. ; TODO
   [env target form]
@@ -201,7 +195,7 @@
     (lines
       (str "struct " (str name) " {")
       (for [[type name] members]
-        (stmt (type->string env type) (str name)))
+        (str (type->string env type) " " name ";"))
       "}")))
 
 (defmethod emit 'ns*
@@ -225,46 +219,10 @@
   (let [[_ & includes] form]
     (string/join (map #(str "#include \"" % "\"\n") includes))))
 
-(defmethod emit 'long
+(defmethod emit 'array
   [env target form]
-  (if target
-    (str target " = " form)
-    (str form)))
-
-(defmethod emit 'string
-  [env target form]
-  (let [escaped (str "\"" 
-                     (string/escape form {\newline "\\n" }) 
-                     "\"")]  
-    (if target
-      (str (emit target) " = " escaped)
-      escaped))) 
-
-(defmethod emit 'char
-  [env target form]
-  (let [literal (str "'" form "'")]
-    (if target
-      (str target " = " literal)
-      literal)))
-
-(defmethod emit 'boolean
-  [env target form]
-  (if target
-    (str target " = " form)
-    form))
-
-(defmethod emit 'ratio
-  [env target form]
-  (let [literal (double form)]
-    (if target
-      (str target " = " literal)
-      literal)))
-
-(defmethod emit 'symbol
-  [env target form]
-  (if target
-    (str (emit env nil target) " = " (emit env nil form))
-    (string/replace (str form) #"/" "::")))
+  (let [[_ type dimensions] form]
+    (str "new " (type->string env type) "[" dimensions "]")))
 
 (def math-ops 
   (let [base (into {} (for [k '#{+ - * / < > <= >= != << >>}]
@@ -273,21 +231,36 @@
 
 (def unary-ops '{not "!" + "+" - "-"}) 
 
+(defn emit-signature
+  [env [f & r]]
+  (let [[_ gent rt] (get-type env f)
+        argst (map #(get-type env %) r)]
+    (if-not (or (< (count gent) 2) (= gent argst))
+      (str "<" (string/join ", " (map second (sort-by first (zipmap gent argst)))) ">")
+      "")))  
+
+(defn emit-seq
+  [env form]
+  (let [f (first form)
+        r (map #(emit env nil %) (rest form))
+        unary (= 1 (count r))]
+    (cond (and unary (unary-ops f)) (str (unary-ops f) (first r))             
+          (math-ops f) (str "(" (string/join (math-ops f) r) ")")
+          :else (str (emit env nil f) 
+                     (emit-signature env form) 
+                     "(" (string/join ", " r) ")"))))
+
 (defmethod emit :default
   [env target form]
-  (if (seq? form)
-    (let [f (first form)
-          r (map #(emit env nil %) (rest form))
-          unary (= 1 (count r))
-          val (cond (and unary (unary-ops f)) (str (unary-ops f) (first r))             
-                    (math-ops f) (str "(" (string/join (math-ops f) r) ")")
-                    :else (str (emit env nil f) "(" (string/join ", " r) ")"))]
-      (if target
-        (str target " = " val)
-        val))
-    (if target 
-      (str target " = " form) 
-      form)))
+  (let [s (cond (seq? form) (emit-seq env form)
+                (symbol? form) (string/replace (str form) #"/" "::")
+                ; TODO proper string escaping
+                (string? form) (str "\"" (string/escape form {\newline "\\n" }) "\"")
+                (char? form) (str "'" form "'")
+                :else (str form))]
+    (cond (= target :stmt) (str s ";")
+          (nil? target) s
+          :else (str target " = " s ";"))))
 
 (defn- block-in 
   [indent] 
