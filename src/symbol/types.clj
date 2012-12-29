@@ -13,13 +13,6 @@
   (:use clojure.core.logic
         symbol.common))
 
-(defmacro time2
-  [text expr]
-  `(let [start# (. System (nanoTime))
-         ret# ~expr]
-     (prn (str ~text " elapsed time: " (/ (double (- (. System (nanoTime)) start#)) 1000000.0) " msecs"))
-     ret#))
-
 (declare typedo typeso annotatedo geno)
 
 (def specials '#{if fn* let* . new def do})

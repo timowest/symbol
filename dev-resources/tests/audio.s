@@ -11,7 +11,7 @@
       (* amp (sin phase)))))
 
 ;; square oscillator
-(defn square-c [phase]
+(defn square-c [phase] ; FIXME
   (let [osc (osc-c phase)
         n 50.0]
     (fn [amp freq]
