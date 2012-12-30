@@ -18,8 +18,12 @@
   (concat 
     compiler/core-env
     '((println (fn [A] void))
-       (inc   (fn [long] long))
-       (dec   (fn [long] long)))))
+      (a       long) 
+      (b       (fn [long long] long)) 
+      (c       (fn [long] long))
+      (d       boolean)
+      (inc     (fn [long] long))
+      (dec     (fn [long] long)))))
   
 (defn expand
   [form]
@@ -56,11 +60,11 @@
     (cpp '(defn identity [a] a)) 
     => "template <class A>\nA identity(A _a) {\nreturn _a;\n}")  
   (fact "when"
-    (cpp '(when a (println "hello") (println "world"))) 
-    => "if (a) {\nprintln(\"hello\");\nprintln(\"world\");\n}")  
+    (cpp '(when d (println "hello") (println "world"))) 
+    => "if (d) {\nprintln(\"hello\");\nprintln(\"world\");\n}")  
   (fact "when-not"
-    (cpp '(when-not a (println "hello") (println "world"))) 
-    => "if (!a) {\nprintln(\"hello\");\nprintln(\"world\");\n}")  
+    (cpp '(when-not d (println "hello") (println "world"))) 
+    => "if (!d) {\nprintln(\"hello\");\nprintln(\"world\");\n}")  
   (fact "cond"
     (cpp '(cond a 1 b 2 c 3)) 
     => "if (a) {\n1;\n} else if (b) {\n2;\n} else if (c) {\n3;\n}")  

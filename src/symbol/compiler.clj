@@ -183,7 +183,7 @@
     (loop [forms normalized env core-env emitted []]
       (let [form (first forms)
             nenv (or (types/new-env env form)
-                     (throw (IllegalStateException. (str "Type inference failed for " form))))
+                     (throw  (IllegalStateException. (str "Type inference failed for " form))))
             output (emission/emit nenv nil form)
             nemitted (conj emitted output)]
         (if (seq (rest forms))

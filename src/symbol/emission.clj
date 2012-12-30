@@ -36,8 +36,10 @@
 
 (defn get-type
   [env form]
-  (let [matches (for [[f t] env :when (= f form)] t)]
-    (first matches)))
+  (or 
+    (first 
+      (for [[f t] env :when (= f form)] t))
+    (throw (IllegalStateException. (str "Found no type for " form)))))  
 
 (defn- emit-selector
   [env target form]
@@ -80,7 +82,7 @@
   [env t]  
   (cond (cpp-types t) (cpp-types t)
         (generics t) (generics t)
-        (symbol? t) (str t)
+        (symbol? t) (emit env nil t)
         (form? (seq t) 'fn) (fn-type->string env t)
         (form? (seq t) 'pointer) (str (type->string env (second t)) "*")
         :else (-> t type str)))
@@ -242,7 +244,7 @@
         argst (map #(get-type env %) r)]
     (if-not (or (< (count gent) 2) (= gent argst))
       (str "<" (string/join ", " (map second (sort-by first (zipmap gent argst)))) ">")
-      "")))  
+      "")))
 
 (defn emit-seq
   [env form]

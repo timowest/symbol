@@ -9,13 +9,14 @@
     (let [inc (* 2.0 PI (/ freq SAMPLERATE))]
       (set! phase (+ phase inc))
       (* amp (sin phase)))))
-
+  
 ;; square oscillator
-(defn square-c [phase] ; FIXME
+(defn square-c [phase]
   (let [osc (osc-c phase)
         n 50.0]
     (fn [amp freq]
-      (* amp (tanh (* n (osc 1.0 freq)))))))
+      (* amp (tanh (* n (osc 1.0 freq))))))) ; FIXME tanh
+      ;(* amp (tanh (* n (osc 1.0 freq))))))) ; FIXME tanh
 
 ;; rect wave oscillator - useful for pulse width modulation
 (defn rect-c [phase] 
@@ -24,6 +25,7 @@
       (set! phase (+ phase inc))
       (when (> phase 1.0) (set! phase (- phase 1.0)))
       (if (< phase duty) amp (* -1.0 amp)))))
+
 
 ;; saw oscillator
 (comment (defn saw-c []
