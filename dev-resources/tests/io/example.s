@@ -3,4 +3,4 @@
   
 (defn main []
   (<< std/cout "Hello World!")
-  (let [^int x 0] x))
+  (int 0))

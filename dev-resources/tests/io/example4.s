@@ -3,4 +3,4 @@
 
 (defn main []
   (<< std/cout "This is a string")
-  (let [^int x 0] x))
+  (int 0))

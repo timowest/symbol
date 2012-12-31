@@ -137,6 +137,25 @@
   (let [[_ to expr] form]
     (emit env to expr)))
 
+(defmethod emit 'pset!
+  [env target form]
+  (let [pointer (emit env nil (second form))
+        value (emit env nil (last form))
+        idx (when (> (count form) 2)
+              (emit env nil (nth form 2)))]
+    (if idx
+      (format "%s[%s] = %s;" pointer idx value)
+      (format "*%s = %s;" pointer value))))
+
+(defmethod emit 'pref
+  [env target form]
+  (let [pointer (emit env nil (second form))
+        idx (emit env nil (last form))
+        s (format "%s[%s]" pointer idx)]
+  (cond (= target :stmt) (str s ";")
+          (nil? target) s
+          :else (str target " = " s ";"))))
+  
 (defmethod emit 'let*
   [env target form]
   (let [[_ bindings & body] form
@@ -190,7 +209,7 @@
       (fn-generics type)
       (format "%s %s(%s) {" rtypes name-str args-str)
       (fn-body env nil body rtype)
-      "}")))
+      "}\n")))
 
 (defn def-struct
   [env name value]
@@ -199,7 +218,7 @@
       (str "struct " (emit env nil name) " {")
       (for [[type name] members]
         (str (type->string env type) " " (emit env nil name) ";"))
-      "}")))
+      "}\n")))
 
 (defmethod emit 'ns*
   [env target form]
@@ -232,7 +251,7 @@
   "\n")
 
 (def math-ops 
-  (let [base (into {} (for [k '#{+ - * / < > <= >= != << >>}]
+  (let [base (into {} (for [k '#{+ - * / < > <= >= != << >> %}]
                         [k (str " " k " ")]))]
     (merge base '{= " == "})))
 
@@ -246,20 +265,21 @@
       (str "<" (string/join ", " (map second (sort-by first (zipmap gent argst)))) ">")
       "")))
 
-(defn emit-seq
+(defn emit-apply
   [env form]
   (let [f (first form)
         r (map #(emit env nil %) (rest form))
         unary (= 1 (count r))]
     (cond (and unary (unary-ops f)) (str (unary-ops f) (first r))             
           (math-ops f) (str "(" (string/join (math-ops f) r) ")")
+          (cpp-types f) (str "(" (cpp-types f) ")" (first r))
           :else (str (emit env nil f) 
                      (emit-signature env form) 
                      "(" (string/join ", " r) ")"))))
 
 (defmethod emit :default
   [env target form]
-  (let [s (cond (seq? form) (emit-seq env form)
+  (let [s (cond (seq? form) (emit-apply env form)
                 (symbol? form) (-> (str form)
                                    (string/replace #"/" "::")
                                    (string/replace #"-" "_"))

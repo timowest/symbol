@@ -23,7 +23,7 @@
   (fresh [begin d]
     (appendo begin [a] l)))
 
-(defne ifo ; (if c t e) (if c t)
+(defna ifo ; (if c t e) (if c t)
   [env form new-env]
    ([_ ['if ?c ?t ?e] [[form ?type] . ?env2]]
      (fresh [type1 type2]
@@ -35,7 +35,7 @@
    ([_ ['if ?c ?t] [[form ?type] . ?env2]]
      (typeso env [?c ?t] ['boolean ?type] ?env2)))
 
-(defne ftypeso
+(defna ftypeso
   [env args types new-env]
   ([_ [?a . ?r] [?at . ?rt] [[?a ?at] . ?env2]]
     (conda 
@@ -44,7 +44,7 @@
     (ftypeso env ?r ?rt ?env2))
   ([?e [] [] ?e]))
 
-(defne fno ; (fn args body)
+(defna fno ; (fn args body)
   [env form new-env]  
   ([_ ['fn* [?args . ?exprs]] [[form ['fn ?argst ?type]] . ?env3]]
     (fresh [env1 env2 exprst]
@@ -58,7 +58,7 @@
            (typeso env3 ?exprs exprst ?env4)
            (lasto exprst ?type))))
 
-(defne bindingso
+(defna bindingso
   [env bindings types new-env]
   ([_ [?k ?v . ?rest] [?vt . ?restt] _]
     (fresh [env2 env3]
@@ -68,13 +68,13 @@
            (bindingso env3 ?rest ?restt new-env)))
   ([?e [] [] ?e]))
 
-(defne argso
+(defna argso
   [bindings args]
   ([[?k ?v . ?rest] [?k . ?resta]]
     (argso ?rest ?resta))
   ([[] []]))                   
 
-(defne loopo ; (loop* name bindings body*)
+(defna loopo ; (loop* name bindings body*)
   [env form new-env]
   ([_ ['loop* ?name ?bindings . ?exprs] _] 
     (fresh [types env2 env3 env4 exprst type args]
@@ -85,14 +85,14 @@
            (lasto exprst type)
            (conso [form type] env4 new-env))))
 
-(defne recuro ; (recur f args*)
+(defna recuro ; (recur f args*)
   [env form new-env]
   ([_ ['recur* ?f . ?args] [[form 'void] . ?env2]]
     (fresh [type args types]
            (membero [?f ['loop args types type]] env)
            (typeso env ?args types ?env2))))
 
-(defne leto ; (let* bindings body*)
+(defna leto ; (let* bindings body*)
   [env form new-env]
   ([_ ['let* ?bindings . ?exprs] _] ; normal let
     (fresh [types env2 exprst env3 type]
@@ -101,7 +101,7 @@
            (lasto exprst type)
            (conso [form type] env3 new-env))))
 
-(defne applyo ; (f args*)
+(defna applyo ; (f args*)
   [env form new-env]
   ([_ [?f . ?args] [[form ?type] . ?env3]] 
     (fresh [env2 template op types]
@@ -111,7 +111,7 @@
            (membero op ['fn 'sf])
            (typeso env2 ?args types ?env3))))
     
-(defne dot ; (. obj member args*)
+(defna dot ; (. obj member args*)
   [env form new-env]
   ([_ [_ ?obj ?member . ?args] [[form ?type] . ?env3]]
     (fresh [env2 clazz members membert argst]
@@ -124,7 +124,7 @@
                    ([['method argst ?type] ?type]) 
                    ([?type ?type])))))
                    
-(defne newo ; (new Class args*)
+(defna newo ; (new Class args*)
   [env form new-env]
   ([_ ['new ?class . ?args] [[form ['pointer ?class]] . ?env2]]
     (fresh [argst members]
@@ -132,7 +132,7 @@
            (membero [?class ['class ?class members]] env)
            (membero [:new argst] members))))
 
-(defne defo  ; (def name expr)
+(defna defo  ; (def name expr)
   [env form new-env]
   ([_ ['def ?name ?expr] [[form ?type] . ?env3]]
     (fresh [env2]
@@ -142,7 +142,7 @@
     (annotatedo env ?name ?env2)
     (membero [?name ?type] ?env2)))
   
-(defne doo ; (do exprs*)
+(defna doo ; (do exprs*)
   [env form new-env]
   ([_ ['do . ?exprs] [[form ?type] . ?env2]]
     (fresh [types]
@@ -159,7 +159,7 @@
       (when content
         (unify a [result] [content])))))    
 
-(defne includeo
+(defna includeo
   [env form new-env]
   ([_ ['include ?f . ?rest] [[form 'include] . ?nenv]]
     (fresh [content new-form reste]
@@ -169,11 +169,11 @@
            (appendo content reste ?nenv)))
   ([?e ['include] ?e]))   
 
-(defne arrayo
+(defna arrayo
   [env form new-env]
   ([_ ['array ?type ?dimensions] [[form ['pointer ?type]] . env]]))
 
-(defne structo
+(defna structo
   [env form new-env]
   ([_ ['struct ?name . ?members] [[form ['struct ?name ?members]] . env]]))
      
@@ -220,7 +220,13 @@
         (if-let [t (literal-types (.getClass gf))]
           (unify a [type] [t])))))) 
 
-(defne typeso
+(defn failo
+  [form]
+  (fn [a]
+    (throw (IllegalStateException. 
+             (str "Type inference failed for " (walk a form))))))
+
+(defna typeso
   [env args types new-env]
   ([_ [?a . ?r] [?at . ?rt] _]
     (fresh [env2]

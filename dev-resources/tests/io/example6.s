@@ -6,4 +6,4 @@
         b 7
         c (if (> a b) a b)]
     (<< std/cout c))
-  (let [^int x 0] x))
+  (int 0))

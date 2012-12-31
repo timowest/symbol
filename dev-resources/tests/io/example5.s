@@ -9,4 +9,4 @@
         circle (* 2.0 PI r)]
     (<< std/cout circle)
     (<< std/cout NEWLINE))
-  (let [^int x 0] x))
+  (int 0))

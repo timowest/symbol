@@ -155,14 +155,8 @@
     (set!  (sf [A A] void)) 
     (pset! (sf [(pointer A) A] void))
     (pset! (sf [(pointer A) long A] void))
-    (pref  (sf [(pointer A long)] A))
+    (pref  (sf [(pointer A) long] A))
     (not   (sf [boolean] boolean))
-    
-    ; IO operators (temporary)
-    (std/cout out)
-    (<<    (fn [A B] A))
-    (std/cin in)
-    (>>    (fn [A B] A))
     
     ; operators
     (=     (fn [A A] boolean))
@@ -174,7 +168,29 @@
     (+     (fn [A A] A))
     (-     (fn [A A] A))
     (*     (fn [A A] A))
-    (/     (fn [A A] A))))
+    (%     (fn [A A] A))
+    (/     (fn [A A] A))
+    
+    ; casts
+    (short (fn [A] short) )
+    (ushort (fn [A] ushort))
+    (int (fn [A] int))
+    (uint (fn [A] uint))
+    (long (fn [A] long))
+    (ulong (fn [A] ulong))
+    (float (fn [A] float))
+    (ufloat (fn [A] ufloat))
+    (double (fn [A] double))
+    (udouble (fn [A] udouble))
+    (ldouble (fn [A] ldouble))
+    (uldouble (fn [A] uldouble))
+        
+    ; IO operators (temporary)
+    (std/cout out)
+    (<<    (fn [A B] A))
+    (std/cin in)
+    (>>    (fn [A B] A))
+    ))
 
 (defn read-emit
   [file]

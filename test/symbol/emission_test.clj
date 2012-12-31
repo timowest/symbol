@@ -52,13 +52,13 @@
     =>  "long _a = 1;\nlong _b = 2;\n(_a + _b);")  
   (fact "def"
     (cpp '(def a 123.0)) => "const double a = 123.0;"
-    (cpp '(def inc (fn* ([x] (+ x 1))))) => "long inc(long _a) {\nreturn (_a + 1);\n}")  
+    (cpp '(def inc (fn* ([x] (+ x 1))))) => "long inc(long _a) {\nreturn (_a + 1);\n}\n")  
   (fact "defn (non-generic)"
     (cpp '(defn inc2 [a] (+ a 1))) 
-    => "long inc2(long _a) {\nreturn (_a + 1);\n}")  
+    => "long inc2(long _a) {\nreturn (_a + 1);\n}\n")  
   (fact "defn (generic)"
     (cpp '(defn identity [a] a)) 
-    => "template <class A>\nA identity(A _a) {\nreturn _a;\n}")  
+    => "template <class A>\nA identity(A _a) {\nreturn _a;\n}\n")  
   (fact "when"
     (cpp '(when d (println "hello") (println "world"))) 
     => "if (d) {\nprintln(\"hello\");\nprintln(\"world\");\n}")  
@@ -113,7 +113,7 @@
             "_c:\n"
             "if ((_b < _a)) {\n"
               "println(_b);\n"
-              "_b = inc(_b);\n"
+              "_b = (_b - 1);\n"
               "goto _c;\n}"))  
   (fact "fn generic"
     (cpp '(fn [x] x)) =>  "[&](A _a) {\nreturn _a;\n}")  
@@ -128,10 +128,14 @@
   (fact "loop"
     (cpp '(loop [x 4] x)) => "long _a = 4;\n_b:\n_a;"))
 
+(facts "casts"
+  (fact "double"
+    (cpp '(def a (double 1))) => "const double a = (double)1;"))
+
 (facts "structs"
   (fact "product"
     (cpp '(defstruct product (int weight) (float price))) 
-    => "struct product {\nint weight;\nfloat price;\n}"))
+    => "struct product {\nint weight;\nfloat price;\n}\n"))
      
 (facts "math"       
   (fact "plus"
@@ -144,7 +148,7 @@
     (cpp '(defn multiplier [factor]
             (fn [x] (* (+ x 0) factor))))    
     => (str "std::function<long(long)> multiplier(long _a) {\n"
-            "return [&](long _b) {\nreturn ((_b + 0) * _a);\n};\n}"))  
+            "return [&](long _b) {\nreturn ((_b + 0) * _a);\n};\n}\n"))  
   (fact "inline fn"
     (cpp '((fn [x] (+ x 1)) 1)) => "[&](long _a) {\nreturn (_a + 1);\n}(1)")   
   (fact "let over fn"
@@ -155,7 +159,7 @@
             "const std::function<long(long)> inc = _a;")) 
   (fact "eq"
     (cpp '(defn eq [x y] (= x y))) 
-    => "template <class A>\nbool eq(A _a, A _b) {\nreturn (_b == _a);\n}")  
+    => "template <class A>\nbool eq(A _a, A _b) {\nreturn (_b == _a);\n}\n")  
   (fact "string"
     (cpp '(def greeting "Hello, world!")) => "const std::string greeting = \"Hello, world!\";")) 
 

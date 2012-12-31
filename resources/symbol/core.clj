@@ -217,7 +217,8 @@
        (loop [~i 0]
          (when (< ~i n#)
            ~@body
-           (recur (inc ~i)))))))
+           (recur (- ~i 1)))))))
+           ;(recur (inc ~i)))))))
 
 (defmacro let
   "binding => binding-form init-expr

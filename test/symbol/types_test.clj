@@ -13,23 +13,25 @@
   (:use symbol.types 
         midje.sweet))
 
-; TODO make this the base environment
 (def env 
   (concat
     compiler/core-env
     '((dec   (fn [long] long))
-       (inc   (fn [long] long))
-       (println (fn [A] void))              
-       (substr (fn [string long] string)))))
+      (inc   (fn [long] long))
+      (println (fn [A] void))              
+      (substr (fn [string long] string)))))
 
-(def env2 '((person (pointer Person))                    
-            (Person (class 
-                     Person 
-                     ((name string) 
-                       (age long)
-                       (olderThan (method [long] boolean))
-                       (:new [string])
-                       (:new [string long]))))))
+(def env2 
+  (concat 
+    compiler/core-env
+    '((person (pointer Person))                    
+      (Person (class 
+                Person 
+                ((name string) 
+                 (age long)
+                 (olderThan (method [long] boolean))
+                 (:new [string])
+                 (:new [string long])))))))
 
 (facts "nil"
   (typeof env nil) => 'void)
