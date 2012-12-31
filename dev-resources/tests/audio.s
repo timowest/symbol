@@ -124,7 +124,7 @@
 ; TODO
 
 ;; tap delay
-(defn tap-delay-c [max-delay num-of-taps]
+(comment (defn tap-delay-c [max-delay num-of-taps]
   (let [line (array double max-delay)
 	      taps (array long num-of-taps)
 	      delay max-delay
@@ -137,7 +137,7 @@
         (dotimes [i num-of-taps]
           (set! y (+ y (* gain (pref line (% (+ (pref taps i) n) delay))))))
         (set! time (+ time 1))
-        y))))
+        y)))))
 
 ; (bind-func allpass_c
 
