@@ -139,11 +139,33 @@
         (set! time (+ time 1))
         y)))))
 
-; (bind-func allpass_c
+;; allpass
+(comment (defn allpass-c [delay]
+  (let [inline (array double delay)
+	      outline (array double delay)
+        time 0
+        g 0.9]
+    (fn [x]
+      (let [n (% time delay)
+            dy (pref outline n)
+            dx (pref inline n)
+            y (+ (* -1.0 g x)
+                 dx
+                 (* g dy))]
+        (pset! inline n x)
+        (pset! outline n y)
+        (set! time (+ time 1))
+        y)))))
 
 ; (bind-func reverb_c
+; TODO
 
-; (bind-func crusher_c
+;; a dodgy bitcrusher
+(comment (defn crusher-c [bits]
+  (let [amp 1.0]
+      (fn [in]
+        (* amp (/ (floor (* in (pow 2.0 bits))) 
+                  (pow 2.0 bits)))))))
 
 ; (bind-func distort_c
 

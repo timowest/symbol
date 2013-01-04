@@ -10,18 +10,11 @@
   (:refer-clojure :exclude [== reify inc type])
   (:require [clojure.walk :as walk]
             [symbol.includes :as includes])
-  (:use clojure.core.logic
+  (:use [clojure.core.logic]
+        [clojure.core.match :only (match)]
         symbol.common))
 
 (declare typedo typeso last-typeo annotatedo geno)
-
-(def specials '#{if fn* let* . new def do})
-
-(defn lasto
-  "A relation where l is a collection, such that a is the last of l"
-  [l a]
-  (fresh [begin]
-    (appendo begin [a] l)))
 
 (defnu ifo ; (if c t e) (if c t)
   [env form new-env]
@@ -98,7 +91,7 @@
   [env form new-env]
   ([_ ['recur* ?f . ?args] [[form 'void] . ?env2]]
     (fresh [type args types]
-           (membero [?f ['loop args types type]] env)
+           (membero [?f ['loop args types type]] env)           
            (typeso env ?args types ?env2))))
 
 (defnu leto ; (let* bindings body*)
@@ -149,7 +142,7 @@
   ([_ ['def ?name] [[form ?type] . ?env2]]
     (annotatedo env ?name ?env2)
     (membero [?name ?type] ?env2)))
-  
+      
 (defnu doo ; (do exprs*)
   [env form new-env]
   ([_ ['do . ?exprs] [[form ?type] . ?env2]]
@@ -170,7 +163,7 @@
   ([_ ['include ?f] [[form 'include] . ?nenv]]
     (fresh [content]
            (include* ?f content)
-           (appendo content env ?nenv)))         
+           (appendo content env ?nenv)))        
   ([_ ['include ?f . ?rest] [[form 'include] . ?nenv]]
     (fresh [content new-form reste]
            (include* ?f content)
@@ -236,21 +229,22 @@
     (throw (IllegalStateException. 
              (str "Type inference failed for " (walk a form))))))
 
-(defna last-typeo
+(defne last-typeo
   [env args last new-env]
-  ([_ [?a] _ _]
-    (typedo env ?a new-env)
-    (membero [?a last] new-env))
   ([_ [?a . ?rest] _ _]
-    (fresh [env2]
-           (typedo env ?a env2)
-           (last-typeo env2 ?rest last new-env)))) 
+  (conda
+    ((== ?rest []) 
+     (typedo env ?a new-env)
+     (membero [?a last] new-env))
+    ((fresh [env2]
+            (typedo env ?a env2)
+            (last-typeo env2 ?rest last new-env))))))
      
 (defna typeso
   [env args types new-env]
   ([_ [?a] [?at] _]
     (typedo env ?a new-env)
-    (membero [?a ?at] new-env))
+    (membero [?a ?at] new-env))    
   ([_ [?a1 ?a2] [?at1 ?at2] _]
     (fresh [env2]
            (typedo env ?a1 env2)
@@ -260,7 +254,7 @@
   ([_ [?a . ?r] [?at . ?rt] _]
     (fresh [env2]
            (typedo env ?a env2)
-           (membero [?a ?at] env2)
+           (membero [?a ?at] env2)           
            (typeso env2 ?r ?rt new-env)))
   ([?e [] [] ?e]))
 
@@ -283,22 +277,22 @@
   ([_ ['include . _] _] (includeo env form new-env))
   ([_ ['array . _] _] (arrayo env form new-env))
   ([_ ['struct . _] _] (structo env form new-env))
-  ([_ _ _] (condu ((fresh [type]
-                         (membero [form type] env) 
+  ([_ _ _] (condu ((fresh [type] 
+                         (membero [form type] env)
                          (== env new-env)))
                   ((annotatedo env form new-env))
                   ((literalo env form new-env))))) 
 
 (defn new-env 
   [env form]
-  (first (run* [q] (typedo env form q))))
+  (first (run 1 [q] (typedo env form q))))
 
 (defn type-and-env
   [env form]
   (->> (all
          (typedo env form env2)
-         (membero [form type] env2))
-    (run* [type env2])
+         (membero [form type] env2))         
+    (run 1 [type env2])
     first))
 
 (defn typeof
@@ -308,5 +302,5 @@
     (->> (fresh [env2]
                 (typedo env form env2)
                 (membero [form type] env2))
-      (run* [type])
+      (run 1 [type])
       first)))
