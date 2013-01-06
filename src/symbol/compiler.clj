@@ -189,8 +189,7 @@
     (std/cout out)
     (<<    (fn [A B] A))
     (std/cin in)
-    (>>    (fn [A B] A))
-    ))
+    (>>    (fn [A B] A))))
 
 (defn read-emit
   [file]

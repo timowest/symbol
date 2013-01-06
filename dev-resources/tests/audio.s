@@ -124,7 +124,7 @@
 ; TODO
 
 ;; tap delay
-(comment (defn tap-delay-c [max-delay num-of-taps]
+(defn tap-delay-c [max-delay num-of-taps]
   (let [line (array double max-delay)
 	      taps (array long num-of-taps)
 	      delay max-delay
@@ -137,10 +137,10 @@
         (dotimes [i num-of-taps]
           (set! y (+ y (* gain (pref line (% (+ (pref taps i) n) delay))))))
         (set! time (+ time 1))
-        y)))))
+        y))))
 
 ;; allpass
-(comment (defn allpass-c [delay]
+(defn allpass-c [delay]
   (let [inline (array double delay)
 	      outline (array double delay)
         time 0
@@ -155,7 +155,7 @@
         (pset! inline n x)
         (pset! outline n y)
         (set! time (+ time 1))
-        y)))))
+        y))))
 
 ; (bind-func reverb_c
 ; TODO
