@@ -320,7 +320,8 @@
                          (geto form type env)
                          (== env new-env)))
                   ((annotatedo env form new-env))
-                  ((literalo env form new-env))))) 
+                  ((literalo env form new-env))
+                  ((failo form))))) 
 
 (defn new-env 
   [env form]

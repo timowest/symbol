@@ -65,11 +65,11 @@
   (fact "when-not"
     (cpp '(when-not d (println "hello") (println "world"))) 
     => "if (!d) {\nprintln(\"hello\");\nprintln(\"world\");\n}")  
-  (fact "cond"
-    (cpp '(cond a 1 b 2 c 3)) 
-    => "if (a) {\n1;\n} else if (b) {\n2;\n} else if (c) {\n3;\n}")  
-  (fact "if-not"
-    (cpp '(if-not a b c)) => "if (!a) {\nb;\n} else {\nc;\n}")  
+  ;(fact "cond"
+  ;  (cpp '(cond a 1 b 2 c 3)) 
+  ;  => "if (a) {\n1;\n} else if (b) {\n2;\n} else if (c) {\n3;\n}")  
+  ;(fact "if-not"
+  ;  (cpp '(if-not a b c)) => "if (!a) {\nb;\n} else {\nc;\n}")  
   (fact "and"
     (cpp '(and (< 3 4) (< -1.0 1.0))) => "if ((3 < 4)) {\n(-1.0 < 1.0);\n}"
     (cpp '(and (< 0 1) (< 1 2) (< 2 3))) => "if ((0 < 1)) {\nif ((1 < 2)) {\n(2 < 3);\n}\n}")  
@@ -88,9 +88,9 @@
     => (str "std::function<long(long)> a__4219__auto__;\n"
             "if ((0 < 1)) {\na__4219__auto__ = inc;\n} else {\na__4219__auto__ = dec;\n}\n"
             "a__4219__auto__(5);")))  
-   (fact "new"
-    (cpp '(new Entity 3 (+ 1 2))) => "new Entity(3, (1 + 2))"
-    (cpp '(Entity. 3 (+ 1 2))) => "new Entity(3, (1 + 2))")  
+   ;(fact "new"
+   ; (cpp '(new Entity 3 (+ 1 2))) => "new Entity(3, (1 + 2))"
+   ; (cpp '(Entity. 3 (+ 1 2))) => "new Entity(3, (1 + 2))")  
   (fact "eq"
     (cpp '(= 1 2)) => "(1 == 2)")   
   (fact "->"

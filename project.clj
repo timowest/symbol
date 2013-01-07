@@ -8,6 +8,6 @@
                  [midje "1.4.0"]]
   :profiles {:dev {:plugins [[lein-midje "2.0.0-SNAPSHOT"]]}
              :user {:plugins [[lein-kibit "0.0.7"]]}}
-  :jvm-opts ["-Xss100m"] 
+  :jvm-opts ["-Xss60m"] 
   :dev-dependencies [[com.stuartsierra/lazytest "1.2.3"]])
 
