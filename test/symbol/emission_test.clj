@@ -15,15 +15,15 @@
         midje.sweet))
 
 (def core-env 
-  (concat 
+  (merge 
     compiler/core-env
-    '((println (fn [A] void))
-      (a       long) 
-      (b       (fn [long long] long)) 
-      (c       (fn [long] long))
-      (d       boolean)
-      (inc     (fn [long] long))
-      (dec     (fn [long] long)))))
+    '{println [(fn [A] void)]
+      a       [long]
+      b       [(fn [long long] long)] 
+      c       [(fn [long] long)]
+      d       [boolean]
+      inc     [(fn [long] long)]
+      dec     [(fn [long] long)]}))
   
 (defn expand
   [form]
@@ -51,7 +51,7 @@
     (cpp '(let [a 1 b 2] (+ a b))) 
     =>  "long _a = 1;\nlong _b = 2;\n(_a + _b);")  
   (fact "def"
-    (cpp '(def a 123.0)) => "const double a = 123.0;"
+    (cpp '(def e 123.0)) => "const double e = 123.0;"
     (cpp '(def inc (fn* ([x] (+ x 1))))) => "long inc(long _a) {\nreturn (_a + 1);\n}\n")  
   (fact "defn (non-generic)"
     (cpp '(defn inc2 [a] (+ a 1))) 
@@ -130,7 +130,7 @@
 
 (facts "casts"
   (fact "double"
-    (cpp '(def a (double 1))) => "const double a = (double)1;"))
+    (cpp '(def e (double 1))) => "const double e = (double)1;"))
 
 (facts "structs"
   (fact "product"

@@ -23,40 +23,29 @@
       ((== head x))
       ((membero x tail)))))
 
-(defn fappendo
+(defn mergeo
   [x y z]
   (fn [a]
     (let [gx (walk a x)
           gy (walk a y)]
-      (unify a z (concat gx gy)))))
+      (unify a z (merge-with concat gx gy)))))
 
 (defn geto
-  [k v l]
+  [k v m]
   (fn [a]
-    (let [gk (walk a k)
-          gl (walk a l)]
-      (loop [l gl]
-        (let [f (first l)]
-          (cond (= (first f) gk) (unify a v (second f))
-                (seq l) (recur (rest l))))))))
+    (let [gv (get (walk a m) (walk a k))
+          f (first gv)]
+      (if (and f (= (rest gv) []))
+        (unify a v f)
+        ((membero v gv) a)))))
 
-(defn getfo
-  [k v l]
-  (fn [a]
-    (let [gk (walk a k)
-          gl (walk a l)
-          filtered (map second (filter #(= (first %) gk) gl))]
-      (if (= (rest filtered) [])
-        (unify a v (first filtered))
-        ((membero v filtered) a)))))
-
-(defn addo
+(defn updateo
   [x k v y]
   (fn [a]
     (let [gx (walk a x)
           gk (walk a k)
           gv (walk a v)]
-      (unify a y (cons [gk gv] gx)))))
+      (unify a y (update-in gx [gk] conj gv)))))
 
 (defnu ifo ; (if c t e) (if c t)
   [env form new-env]
@@ -67,11 +56,11 @@
          ([type type])
          ([type 'void])
          (['void ype]))
-       (addo env2 form type new-env)))
+       (updateo env2 form type new-env)))
    ([_ ['if ?c ?t] _]
      (fresh [type env2]
             (typeso env [?c ?t] ['boolean type] env2)
-            (addo env2 form type new-env))))
+            (updateo env2 form type new-env))))
 
 (defn ftypeo
   [a at]
@@ -85,7 +74,7 @@
     (fresh [env2]
            (ftypeo ?a ?at)
            (ftypeso env ?r ?rt env2)
-           (addo env2 ?a ?at new-env)))
+           (updateo env2 ?a ?at new-env)))
   ([?e [] [] ?e]))
 
 (defnu fno ; (fn args body)
@@ -94,13 +83,13 @@
     (fresh [argst type env1 env2 env3]
            (ftypeso env ?args argst env2)
            (last-typeo env2 ?exprs type env3)
-           (addo env3 form ['fn argst type] new-env)))
+           (updateo env3 form ['fn argst type] new-env)))
   ([_ ['fn* ?name [?args . ?exprs]] _]
     (fresh [argst type env1 env2 env3 env4]
            (ftypeso env ?args argst env2)
-           (addo env2 ?name ['fn argst type] env3)
+           (updateo env2 ?name ['fn argst type] env3)
            (last-typeo env3 ?exprs type env4)
-           (addo env4 form ['fn argst type] new-env))))
+           (updateo env4 form ['fn argst type] new-env))))
 
 (defnu bindingso
   [env bindings types new-env]
@@ -110,7 +99,7 @@
            (typedo env ?v env2)
            (geto ?v ?vt env2)
            (condu ((annotatedo env2 ?k env3)) 
-                  ((addo env2 ?k ?vt env3)))
+                  ((updateo env2 ?k ?vt env3)))
            (bindingso env3 ?rest ?restt new-env)))
   ([?e [] [] ?e]))
 
@@ -126,9 +115,9 @@
     (fresh [types env2 env3 env4 type args]
            (bindingso env ?bindings types env2)
            (argso ?bindings args)
-           (addo env2 ?name ['loop args types type] env3)
+           (updateo env2 ?name ['loop args types type] env3)
            (last-typeo env3 ?exprs type env4)
-           (addo env4 form type new-env))))
+           (updateo env4 form type new-env))))
 
 (defnu recuro ; (recur f args*)
   [env form new-env]
@@ -136,7 +125,7 @@
     (fresh [type args types env2]
            (geto ?f ['loop args types type] env)           
            (typeso env ?args types env2)
-           (addo env2 form 'void new-env))))
+           (updateo env2 form 'void new-env))))
 
 (defnu leto ; (let* bindings body*)
   [env form new-env]
@@ -144,18 +133,20 @@
     (fresh [types env2 env3 type]
            (bindingso env ?bindings types env2)
            (last-typeo env2 ?exprs type env3)
-           (addo env3 form type new-env))))
+           (updateo env3 form type new-env))))
 
 (defnu applyo ; (f args*)
   [env form new-env]
   ([_ [?f . ?args] _] 
     (fresh [env2 template op types type env3]
            (typedo env ?f env2) 
-           (getfo ?f template env2)
+           (geto ?f template env2)
            (geno template [op types type])
-           (membero op ['fn 'sf])
+           (conda
+             ((== op 'fn))
+             ((== op 'sf)))
            (typeso env2 ?args types env3)
-           (addo env3 form type new-env))))
+           (updateo env3 form type new-env))))
     
 (defnu dot ; (. obj member args*)
   [env form new-env]
@@ -169,7 +160,7 @@
            (matcha [membert type]
                    ([['method argst type] type]) 
                    ([type type]))
-           (addo env3 form type new-env))))
+           (updateo env3 form type new-env))))
                    
 (defnu newo ; (new Class args*)
   [env form new-env]
@@ -177,30 +168,30 @@
     (fresh [argst members env2]
            (typeso env ?args argst env2)
            (geto ?class ['class ?class members] env)
-           (membero [:new argst] members)
-           (addo env2 form ['pointer ?class] new-env))))
+           (geto :new argst members)
+           (updateo env2 form ['pointer ?class] new-env))))
 
 (defnu defo  ; (def name expr)
   [env form new-env]
   ([_ ['def ?name ?expr] _]
     (fresh [env2 type env3]
-           (addo env ?name type env2)
+           (updateo env ?name type env2)
            ;(typeso env2 [?expr] [type] env3)
            (typedo env2 ?expr env3)
            (geto ?expr type env3)
-           (addo env3 form type new-env)))
+           (updateo env3 form type new-env)))
   ([_ ['def ?name] _]
     (fresh [type env2]
            (annotatedo env ?name env2)
            (geto ?name type env2)
-           (addo env2 form type new-env))))
+           (updateo env2 form type new-env))))
       
 (defnu doo ; (do exprs*)
   [env form new-env]
   ([_ ['do . ?exprs] _]
     (fresh [type env2]
            (last-typeo env ?exprs type env2)
-           (addo env2 form type new-env))))
+           (updateo env2 form type new-env))))
 
 (defn include*
   [i result]
@@ -217,26 +208,26 @@
   ([_ ['include ?f] _]
     (fresh [content nenv]
            (include* ?f content)
-           (fappendo content env nenv)
-           (addo nenv form 'include new-env)))        
+           (mergeo env content nenv)
+           (updateo nenv form 'include new-env)))        
   ([_ ['include ?f . ?rest] _]
     (fresh [content new-form reste nenv]
            (include* ?f content)
            (conso 'include ?rest new-form)
            (includeo env new-form reste)
-           (fappendo content reste nenv)
-           (addo nenv form 'include new-env)))
+           (mergeo reste content nenv)
+           (updateo nenv form 'include new-env)))
   ([?e ['include] ?e]))   
 
 (defnu arrayo
   [env form new-env]
   ([_ ['array ?type ?dimensions] _]
-    (addo env form ['pointer ?type] new-env)))
+    (updateo env form ['pointer ?type] new-env)))
 
 (defnu structo
   [env form new-env]
   ([_ ['struct ?name . ?members] _]
-    (addo env form ['struct ?name ?members] new-env)))
+    (updateo env form ['struct ?name ?members] new-env)))
      
 (def expandables 
   (concat 
@@ -263,7 +254,7 @@
   ([env form new-env]
     (fresh [type]
            (annotatedo form type)
-           (addo env form type new-env)))
+           (updateo env form type new-env)))
   ([form type]
     (fn [a]
       (let [gf (walk a form)]
@@ -274,7 +265,7 @@
   ([env form new-env]
     (fresh [type]
            (literalo form type)
-           (addo env form type new-env)))
+           (updateo env form type new-env)))
   ([form type]
     (fn [a]
       (let [gf (walk a form)]
@@ -337,18 +328,17 @@
 
 (defn type-and-env
   [env form]
-  (->> (all
+  (first
+    (run 1 [type env2]
          (typedo env form env2)
-         (geto form type env2))         
-    (run 1 [type env2])
-    first))
+         (geto form type env2))))
 
 (defn typeof
   ([form]
-    (typeof [] form))
+    (typeof {} form))
   ([env form]
-    (->> (fresh [env2]
-                (typedo env form env2)
-                (geto form type env2))
-      (run 1 [type])
-      first)))
+    (first
+      (run 1 [type] 
+           (fresh [env2]
+                  (typedo env form env2)
+                  (geto form type env2))))))

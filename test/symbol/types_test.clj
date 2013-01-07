@@ -14,24 +14,23 @@
         midje.sweet))
 
 (def env 
-  (concat
+  (merge
     compiler/core-env
-    '((dec   (fn [long] long))
-      (inc   (fn [long] long))
-      (println (fn [A] void))              
-      (substr (fn [string long] string)))))
+    '{dec   [(fn [long] long)]
+      inc   [(fn [long] long)]
+      println [(fn [A] void)]             
+      substr [(fn [string long] string)]}))
 
 (def env2 
-  (concat 
+  (merge 
     compiler/core-env
-    '((person (pointer Person))                    
-      (Person (class 
+    '{person [(pointer Person)]                    
+      Person [(class 
                 Person 
-                ((name string) 
-                 (age long)
-                 (olderThan (method [long] boolean))
-                 (:new [string])
-                 (:new [string long])))))))
+                {name [string] 
+                 age  [long]
+                 olderThan [(method [long] boolean)]
+                 :new [[string] [string long]]})]}))
 
 (facts "nil"
   (typeof env nil) => 'void)
@@ -67,8 +66,8 @@
 (facts "complex fn"
   (typeof env '(fn* ([phase] 
                  (fn* ([amp freq] 
-                   (let* [inc (* 3.141592 (* 2.0 (/ freq 44100.0)))] 
-                     (set! phase (+ phase inc)) 
+                   (let* [i (* 3.141592 (* 2.0 (/ freq 44100.0)))] 
+                     (set! phase (+ phase i)) 
                      (* amp phase)))))))
   => '(fn (double) (fn (double double) double)))
   
@@ -112,8 +111,8 @@
   (typeof env2 '(new Person "a" 1)) => '(pointer Person))
 
 (facts "apply"
-  (typeof '((a (fn [long] long))) '(a 1)) => 'long
-  (typeof '((+ (fn [long long] long))) '(+ 1 2)) => 'long)
+  (typeof '{a [(fn [long] long)]}'(a 1)) => 'long
+  (typeof '{+ [(fn [long long] long)]} '(+ 1 2)) => 'long)
 
 (facts "def"
   (typeof env '(def fact (fn* ([x] (if (<= x 1) 1 (* x  (fact (- x 1)))))))) => '(fn [long] long)

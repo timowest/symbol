@@ -77,14 +77,6 @@
   (fact "struct"
     (expand '(defstruct parent (int c) (int p))) => '(def parent (struct parent (int c) (int p)))))
        
-
-(comment (def env '((set!  (fn [A A] void))
-                     (<     (fn [A A] boolean))
-                     (+     (fn [A A] A))                
-                     (*     (fn [A A] A))
-                     (not   (fn [boolean] boolean))
-                     (substr (fn [string long] string)))))
-
 (defn typeof
   [form]
   (types/typeof core-env (expand form)))

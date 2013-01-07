@@ -37,8 +37,7 @@
 (defn get-type
   [env form]
   (or 
-    (first 
-      (for [[f t] env :when (= f form)] t))
+    (first (env form))
     (throw (IllegalStateException. (str "Found no type for " form)))))  
 
 (defn- emit-selector
