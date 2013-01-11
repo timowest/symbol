@@ -134,7 +134,7 @@
   (typeof '(array long 5)) => '(pointer long))
 
 (facts "struct"
-  (typeof '(struct parent (int i1) (int2))) => '(struct parent ((int i1) (int2))))
+  (typeof '(struct parent (i1 int) (i2 int))) => '(struct parent {i2 (int), i1 (int)}))
 
 (facts "constants"
   (typeof 1) => 'long
@@ -145,4 +145,3 @@
    
 (facts "math include"
   (typeof '(do (include "math.h") (sin 2.0))) => 'double)
-

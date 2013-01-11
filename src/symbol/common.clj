@@ -28,3 +28,11 @@
    clojure.lang.Symbol 'symbol})
 
 (def operators #{'= '!= '+ '- '* '/ '% '> '< '>= '<= '& '| '<< '>>})
+
+(defn to-env 
+  [coll]
+  (reduce
+    (fn [acc [k v]] (update-in acc [k] conj v))
+    {}
+    coll))
+

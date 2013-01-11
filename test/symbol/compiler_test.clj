@@ -93,6 +93,7 @@
    (typeof '(if-not (< 1 2) 3.0 4.0)) => 'double
    (typeof '(-> 2 (+ 3) (* 5))) => 'long
    (typeof '(->> 2 (+ 3) (* 5))) => 'long
+   (typeof '(pset! (array double 10) 0 0.0)) => 'void
    ; dotimes
    (typeof '(fn [a] a)) => '(fn [_0] _0))
 

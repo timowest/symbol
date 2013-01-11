@@ -134,8 +134,8 @@
 
 (facts "structs"
   (fact "product"
-    (cpp '(defstruct product (int weight) (float price))) 
-    => "struct product {\nint weight;\nfloat price;\n}\n"))
+    (cpp '(defstruct product (weight int) (price float))) 
+    => "struct product {\nfloat price;\nint weight;\n}\n"))
      
 (facts "math"       
   (fact "plus"

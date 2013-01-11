@@ -9,7 +9,8 @@
 (ns symbol.includes
   (:import [java.io File])
   (:use [clojure.data.zip.xml :only (attr attr= text xml-> xml1->)] 
-        [clojure.java.shell :only [sh]])
+        [clojure.java.shell :only [sh]]
+        symbol.common)
   (:require [clojure.data.zip :as zf]
             [clojure.string :as str]
             [clojure.xml :as xml]
@@ -98,13 +99,6 @@
     (str/replace #"\s*>" ")") ; replace >
     (read-string)))
 
-(defn to-map 
-  [coll]
-  (reduce
-    (fn [acc [k v]] (update-in acc [k] conj v))
-    {}
-    coll))
-
 (def shortdefs
   {:ArrayType (fn [all t] (list 'array (shortdef all (:type t)) (:size t)))
    :CvQualifiedType (fn [all t] (shortdef all (:type t)))
@@ -146,13 +140,13 @@
                           (if (:members t) 
                             (let [members (map #(fulldef all %) 
                                                (.split (:members t) " "))]
-                              (list 'class name (to-map (filter coll? members)))) 
+                              (list 'class name (to-env (filter coll? members)))) 
                             (list 'class name))))     
      :Struct (fn [all t] (let [name (convert-name (or (:name t) (:id t)))]
                            (if (:members t)
                              (let [members (map #(fulldef all %) 
                                                 (filter #(pos? (.length %)) (.split (:members t) " ")))]
-                               (list 'struct name (to-map (filter coll? members)))                                    
+                               (list 'struct name (to-env (filter coll? members)))                                    
                              (list 'struct name)))))}))
              
 (defn typedef
@@ -231,7 +225,7 @@
                                   (shortdefs (xml1-> function (attr :returns))))))]
       (->> (concat complex enumerations enumvalues variables functions) 
            (remove #(.startsWith (str (first %)) "_"))
-           to-map))
+           to-env))
     (throw (IllegalArgumentException. (str "Got no file for " local-path)))))
 
 (def include (memoize include*))

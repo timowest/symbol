@@ -215,7 +215,8 @@
   (let [[_ name members] (get-type env name)]
     (lines
       (str "struct " (emit env nil name) " {")
-      (for [[type name] members]
+      (for [[name types] members
+            type types]        
         (str (type->string env type) " " (emit env nil name) ";"))
       "}\n")))
 
