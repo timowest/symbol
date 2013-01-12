@@ -221,9 +221,7 @@
       (unify a [type new-env] [gtype (update-in genv [gform] conj gtype)]))))
      
 (def expandables 
-  (concat 
-    '(A B C D E F G H I J K L M N O P Q R X Y Z)
-    (map #(symbol (str "_" %)) (range 0 26))))
+  (map #(symbol (str "_" %)) (range 0 10)))
 
 (defn expand-type
   [type]

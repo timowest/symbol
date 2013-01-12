@@ -158,9 +158,16 @@
 (defmethod emit 'let*
   [env target form]
   (let [[_ bindings & body] form
-        bind-pairs (partition 2 bindings)]
+        bind-pairs (partition 2 bindings)]                      
     (lines 
-      (map #(assignment env %) bind-pairs)
+      (loop [acc [] pairs bind-pairs seen #{}]
+        (if (seq pairs)
+          (let [[name value] (first pairs)
+                line (if (seen name)
+                       (emit env name value)
+                       (assignment env (first pairs)))]
+            (recur (conj acc line) (rest pairs) (conj seen name)))
+          acc))
       (stmts env target body))))
         
 (defmethod emit 'loop* 

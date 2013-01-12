@@ -18,7 +18,7 @@
     compiler/core-env
     '{dec   [(fn [long] long)]
       inc   [(fn [long] long)]
-      println [(fn [A] void)]             
+      println [(fn [_0] void)]             
       substr [(fn [string long] string)]}))
 
 (def env2 
@@ -122,7 +122,7 @@
 
 (facts "def annotated"
   (typeof '(def ^int a)) => 'int
-  (typeof '(def + ^{:tag (fn [A A] A)} 'native)) => '(fn [_0 _0] _0)
+  (typeof '(def + ^{:tag (fn [_0 _0] _0)} 'native)) => '(fn [_0 _0] _0)
   (typeof '(def cos ^{:tag (fn [double] double)} 'native)) => '(fn [double] double))
 
 (facts "do"

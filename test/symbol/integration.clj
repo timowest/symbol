@@ -37,7 +37,7 @@
 (facts "io"
   (dump "dev-resources/tests/io/example.s")  => ok
   (dump "dev-resources/tests/io/example2.s") => ok
-  ;(dump "dev-resources/tests/io/example3.s") => ok ; FIXME redefinition of let binding
+  (dump "dev-resources/tests/io/example3.s") => ok 
   (dump "dev-resources/tests/io/example4.s") => ok
   (dump "dev-resources/tests/io/example5.s") => ok 
   (dump "dev-resources/tests/io/example6.s") => ok

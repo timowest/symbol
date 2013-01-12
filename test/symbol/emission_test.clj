@@ -17,7 +17,7 @@
 (def core-env 
   (merge 
     compiler/core-env
-    '{println [(fn [A] void)]
+    '{println [(fn [_0] void)]
       a       [long]
       b       [(fn [long long] long)] 
       c       [(fn [long] long)]

@@ -152,44 +152,44 @@
   '{nil   [void]
      
      ; special forms 
-    set!  [(sf [A A] void)] 
-    pset! [(sf [(pointer A) A] void)
-           (sf [(pointer A) long A] void)]
-    pref  [(sf [(pointer A) long] A)]
+    set!  [(sf [_0 _0] void)] 
+    pset! [(sf [(pointer _0) _0] void)
+           (sf [(pointer _0) long _0] void)]
+    pref  [(sf [(pointer _0) long] _0)]
     not   [(sf [boolean] boolean)]
     
     ; operators
-    =     [(fn [A A] boolean)]
-    !=    [(fn [A A] boolean)]
-    <     [(fn [A A] boolean)]
-    >     [(fn [A A] boolean)]
-    <=    [(fn [A A] boolean)]
-    >=    [(fn [A A] boolean)]
-    +     [(fn [A A] A)]
-    -     [(fn [A A] A)]
-    *     [(fn [A A] A)]
-    %     [(fn [A A] A)]
-    /     [(fn [A A] A)]
+    =     [(fn [_0 _0] boolean)]
+    !=    [(fn [_0 _0] boolean)]
+    <     [(fn [_0 _0] boolean)]
+    >     [(fn [_0 _0] boolean)]
+    <=    [(fn [_0 _0] boolean)]
+    >=    [(fn [_0 _0] boolean)]
+    +     [(fn [_0 _0] _0)]
+    -     [(fn [_0 _0] _0)]
+    *     [(fn [_0 _0] _0)]
+    %     [(fn [_0 _0] _0)]
+    /     [(fn [_0 _0] _0)]
     
     ; casts
-    short [(fn [A] short)]
-    ushort [(fn [A] ushort)]
-    int [(fn [A] int)]
-    uint [(fn [A] uint)]
-    long [(fn [A] long)]
-    ulong [(fn [A] ulong)]
-    float [(fn [A] float)]
-    ufloat [(fn [A] ufloat)]
-    double [(fn [A] double)]
-    udouble [(fn [A] udouble)]
-    ldouble [(fn [A] ldouble)]
-    uldouble [(fn [A] uldouble)]
+    short [(fn [_0] short)]
+    ushort [(fn [_0] ushort)]
+    int [(fn [_0] int)]
+    uint [(fn [_0] uint)]
+    long [(fn [_0] long)]
+    ulong [(fn [_0] ulong)]
+    float [(fn [_0] float)]
+    ufloat [(fn [_0] ufloat)]
+    double [(fn [_0] double)]
+    udouble [(fn [_0] udouble)]
+    ldouble [(fn [_0] ldouble)]
+    uldouble [(fn [_0] uldouble)]
         
     ; IO operators (temporary)
     std/cout [out]
-    <<    [(fn [A B] A)]
+    <<    [(fn [_0 _1] _0)]
     std/cin [in]
-    >>    [(fn [A B] A)]})
+    >>    [(fn [_0 _1] _0)]})
 
 (defn read-emit
   [file]
