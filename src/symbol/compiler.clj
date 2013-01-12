@@ -204,8 +204,3 @@
         (if (seq (rest forms))
           (recur (rest forms) nenv nemitted)
           (emission/format-cpp (string/join "\n" nemitted)))))))
-
-(defn compile-files 
-  [& files]
-  (doseq [file files]
-    (read-emit file)))

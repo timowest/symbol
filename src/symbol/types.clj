@@ -11,7 +11,6 @@
   (:require [clojure.walk :as walk]
             [symbol.includes :as includes])
   (:use [clojure.core.logic :exclude [membero]]
-        [clojure.core.match :only (match)]
         symbol.common))
 
 (declare typedo typeso last-typeo annotatedo geno)

@@ -6,14 +6,15 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns symbol.emission
+(ns symbol.emission  
+  (:refer-clojure :exclude [munge])
   (:require [clojure.string :as string]
             [clojure.pprint :as pprint])
   (:use symbol.common))
 
 (declare type->string)
 
-(def cpp-types
+(def ^:private cpp-types
   '{void    "void"
     string  "std::string"
     boolean "bool"
@@ -29,6 +30,37 @@
     ulong   "unsigned long"
     ufloat  "unsigned float"
     udouble "unsigned double"})
+
+(def ^:private char-map
+  {\- "_",
+   \: "_COLON_",
+   \+ "_PLUS_",
+   \> "_GT_",
+   \< "_LT_",
+   \= "_EQ_",
+   \~ "_TILDE_",
+   \! "_BANG_",
+   \@ "_CIRCA_",
+   \# "_SHARP_",
+   \' "_SINGLEQUOTE_",
+   (char 34) "_DOUBLEQUOTE_", 
+   \% "_PERCENT_",
+   \^ "_CARET_",
+   \& "_AMPERSAND_",
+   \* "_STAR_",
+   \| "_BAR_",
+   \{ "_LBRACE_",
+   \} "_RBRACE_",
+   \[ "_LBRACK_",
+   \] "_RBRACK_",
+   ;\/ "_SLASH_",
+   \/ "::"
+   \\ "_BSLASH_",
+   \? "_QMARK_",
+   \. "_DOT_"})
+
+(defn munge [s]
+  (apply str (map #(char-map % %) (str s))))
 
 (def generics 
   (zipmap (map #(symbol (str "_" %)) (range 0 26))
@@ -287,9 +319,7 @@
 (defmethod emit :default
   [env target form]
   (let [s (cond (seq? form) (emit-apply env form)
-                (symbol? form) (-> (str form)
-                                   (string/replace #"/" "::")
-                                   (string/replace #"-" "_"))
+                (symbol? form) (munge (str form))
                 ; TODO proper string escaping
                 (string? form) (str "\"" (string/escape form {\newline "\\n" }) "\"")
                 (char? form) (str "'" form "'")

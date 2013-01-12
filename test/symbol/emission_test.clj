@@ -7,6 +7,7 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns symbol.emission-test
+  (:refer-clojure :exclude [munge])
   (:require [clojure.string :as string] 
             [symbol.analysis :as analysis]
             [symbol.compiler :as compiler]
@@ -137,11 +138,16 @@
     (cpp '(defstruct product (weight int) (price float))) 
     => "struct product {\nfloat price;\nint weight;\n}\n"))
      
-(facts "math"       
+(facts "math"
   (fact "plus"
     (cpp '(+ 1 2 3)) => "((1 + 2) + 3)")   
   (fact "complex"
     (cpp '(+ 1 2 (- 3 4 5))) => "((1 + 2) + ((3 - 4) - 5))")) 
+
+(facts "escaping"
+  (cpp 'empty?) => "empty_QMARK_"
+  (cpp 'a->b) => "a__GT_b"
+  (cpp 'a<>b) => "a_LT__GT_b")
 
 (facts "examples"       
   (fact "multiplier"
