@@ -13,7 +13,7 @@
   (:use [clojure.core.logic :exclude [membero]]
         symbol.common))
 
-(declare typedo typeso last-typeo annotatedo geno)
+(declare typedo typeso typeso2 typeso3 last-typeo annotatedo geno expand-type)
 
 (defne membero  
   [x l]
@@ -46,33 +46,54 @@
     (let [gx (walk a x)
           gk (walk a k)
           gv (walk a v)]
+      ;(println gk gv)
       (unify a y (update-in gx [gk] conj gv)))))
+
+(defn assoco
+  [x k v y]
+  (fn [a]
+    (let [gx (walk a x)
+          gk (walk a k)
+          gv (walk a v)]
+      ;(println gk gv)
+      (unify a y (assoc gx gk (vector gv))))))
 
 (defnu ifo ; (if c t e) (if c t)
   [env form type new-env]
    ([_ ['if ?c ?t ?e] _ _]
-     (fresh [type1 type2 env2]
-       (typeso env [?c ?t ?e] ['boolean type1 type2] env2)
-       (matchu [type1 type2] ; allows one to be void typed
-         ([type type])
-         ([type 'void])
-         (['void ype]))
-       (updateo env2 form type new-env)))
+     (fresh [type1 type2 env2 env3 env4]
+            ;(typeso env [?c ?t ?e] ['boolean type1 type2] env2)
+            (typedo env ?c 'boolean env2)
+            (typedo env2 ?t type1 env3)
+            (typedo env3 ?e type2 env4)
+            (matchu [type1 type2] ; allows one to be void typed
+                    ([type type])
+                    ([type 'void])
+                    (['void type]))
+            (assoco env4 form type new-env)))
    ([_ ['if ?c ?t] _ _]
-     (fresh [env2]
-            (typeso env [?c ?t] ['boolean type] env2)
-            (updateo env2 form type new-env))))
+     (fresh [env2 env3]
+            ;(typeso env [?c ?t] ['boolean type] env2)
+            (typedo env ?c 'boolean env2)
+            (typedo env2 ?t type env3)
+            (assoco env3 form type new-env))))
 
-(defna ftypeso
+(defn ftype
+  [arg]
+  (if-let [t (-> arg meta :tag)]
+    (expand-type t)
+    (lvar)))
+
+(defn ftypeso
   [env args types new-env]
-  ([_ [?a . ?r] [?at . ?rt] _]
-    (fresh [env2]
-           (conda
-             ((annotatedo ?a ?at))
-             (succeed))
-           (ftypeso env ?r ?rt env2)
-           (updateo env2 ?a ?at new-env)))
-  ([?e [] [] ?e]))
+  (fn [a]
+    (let [genv (walk a env)
+          gargs (walk a args)
+          gtypes (map ftype gargs)
+          gnenv (merge genv 
+                       (zipmap gargs (map vector gtypes)))]
+      (unify a [types new-env] [gtypes gnenv]))))
+      
 
 (defnu fno ; (fn args body)
   [env form type new-env]  
@@ -81,14 +102,14 @@
            (ftypeso env ?args argst env2)
            (last-typeo env2 ?exprs rtype env3)
            (== type ['fn argst rtype])
-           (updateo env3 form type new-env)))
+           (assoco env3 form type new-env)))
   ([_ ['fn* ?name [?args . ?exprs]] _ _]
     (fresh [argst env1 env2 env3 env4 rtype]
            (ftypeso env ?args argst env2)
            (== type ['fn argst rtype])
            (updateo env2 ?name type env3)
            (last-typeo env3 ?exprs rtype env4)            
-           (updateo env4 form type new-env))))
+           (assoco env4 form type new-env))))
 
 (defnu bindingso
   [env bindings types new-env]
@@ -112,9 +133,9 @@
     (fresh [types env2 env3 env4 args]
            (bindingso env ?bindings types env2)
            (argso ?bindings args)
-           (updateo env2 ?name ['loop args types type] env3)
+           (assoco env2 ?name ['loop args types type] env3)
            (last-typeo env3 ?exprs type env4)
-           (updateo env4 form type new-env))))
+           (assoco env4 form type new-env))))
 
 (defnu recuro ; (recur f args*)
   [env form type new-env]
@@ -123,7 +144,7 @@
            (geto ?f ['loop args types rtype] env)           
            (typeso env ?args types env2)
            (== type 'void)
-           (updateo env2 form type new-env))))
+           (assoco env2 form type new-env))))
 
 (defnu leto ; (let* bindings body*)
   [env form type new-env]
@@ -131,7 +152,7 @@
     (fresh [types env2 env3]
            (bindingso env ?bindings types env2)
            (last-typeo env2 ?exprs type env3)
-           (updateo env3 form type new-env))))
+           (assoco env3 form type new-env))))
 
 (defnu applyo ; (f args*)
   [env form type new-env]
@@ -140,10 +161,15 @@
            (typedo env ?f template env2) 
            (typeso env2 ?args types env3)
            (geno template [op types type])
-           (conda
-             ((== op 'fn))
-             ((== op 'sf)))           
-           (updateo env3 form type new-env))))
+           (assoco env3 form type new-env))))
+
+(defnu binopo
+  [env form type new-env]
+  ([_ [_ ?a1 ?a2] _ _]
+  (fresh [env2 env3]
+         (typedo env ?a1 type env2)
+         (typedo env2 ?a2 type env3)
+         (assoco env3 form type new-env))))
     
 (defnu dot ; (. obj member args*)
   [env form type new-env]
@@ -156,7 +182,7 @@
            (matcha [membert type]
                    ([['method argst type] type]) 
                    ([type type]))
-           (updateo env3 form type new-env))))
+           (assoco env3 form type new-env))))
                    
 (defnu newo ; (new Class args*)
   [env form type new-env]
@@ -166,7 +192,7 @@
            (geto ?class ['class ?class members] env)
            (geto :new argst members)
            (== type ['pointer ?class])
-           (updateo env2 form type new-env))))
+           (assoco env2 form type new-env))))
 
 (defnu defo  ; (def name expr)
   [env form type new-env]
@@ -174,18 +200,18 @@
     (fresh [env2 env3]
            (updateo env ?name type env2)
            (typedo env2 ?expr type env3)
-           (updateo env3 form type new-env)))
+           (assoco env3 form type new-env)))
   ([_ ['def ?name] _ _]
     (fresh [env2]
            (annotatedo env ?name type env2)
-           (updateo env2 form type new-env))))
+           (assoco env2 form type new-env))))
 
 (defnu doo ; (do exprs*)
   [env form type new-env]
   ([_ ['do . ?exprs] _ _]
     (fresh [env2]
            (last-typeo env ?exprs type env2)
-           (updateo env2 form type new-env))))
+           (assoco env2 form type new-env))))
 
 (defn include* 
   [path]
@@ -219,16 +245,15 @@
           gtype (list 'struct name (to-env members))]
       (unify a [type new-env] [gtype (update-in genv [gform] conj gtype)]))))
      
-(def expandables 
+(def ^:private expandables 
   (map #(symbol (str "_" %)) (range 0 10)))
 
 (defn expand-type
   [type]
-  (if (coll? type)
-    (walk/postwalk-replace 
-      (zipmap expandables (repeatedly lvar))
-      type)
-    type))
+  (cond (coll? type) (walk/postwalk-replace 
+                       (zipmap expandables (repeatedly lvar))
+                       type)
+        :else type))
 
 (defn geno
   [template fresh]
@@ -253,7 +278,7 @@
   (fn [a]
     (let [gform (walk a form)]
       (if-let [t (literal-types (.getClass gform))]
-        (unify a [type new-env] [t (update-in (walk a env) [gform] conj t)])))))
+        (unify a [type new-env] [t (assoc (walk a env) gform (vector t))])))))
 
 (defn failo
   [form]
@@ -262,17 +287,17 @@
              (str "Type inference failed for " (walk a form))))))
 
 ; OPTIMIZE
-(defna last-typeo
+(defnu last-typeo
   [env args last new-env]
   ([_ [?a] _ _]
     (typedo env ?a last new-env))    
   ([_ [?a . ?rest] _ _]
     (fresh [t env2]
            (typedo env ?a t env2)
-           (last-typeo env2 ?rest last new-env)))) 
+           (last-typeo env2 ?rest last new-env))))
 
 ; OPTIMIZE
-(defna typeso
+(defnu typeso
   [env args types new-env]
   ([_ [?a . ?r] [?at . ?rt] _]
     (fresh [env2]
@@ -285,7 +310,8 @@
 (def handlers
   {'if ifo 'fn* fno 'let* leto 'loop* loopo 'recur* recuro
    '. dot 'new newo 'def defo 'do doo 'include includeo
-   'array arrayo 'struct structo})
+   'array arrayo 'struct structo
+   '+ binopo '- binopo '* binopo '/ binopo})
 
 (defn seqo
   [env form type new-env]
@@ -297,18 +323,18 @@
           ((f env form type new-env) a))))))
  
 (comment (defn typedo
-  [env form new-env]
+  [env form type new-env]
   (fn [a]
-    (let [gf (walk a form)
-          genv (walk a env)
-          f (cond (coll? gf) seqo
-                  (meta gf) annotatedo
-                  (literal-types (.getClass gf)) literalo)]
-      (cond (genv gf) (unify a env new-env)
-          f ((f env form new-env) a)
-          :else (throw (IllegalStateException. 
-                         (str "Type inference failed for " gf))))))))
-  
+    (let [genv (walk a env)
+          gf (walk a form)]
+      (println (.getClass genv) gf)
+      (cond (nil? gf) (unify a [type new-env] ['void env])
+            (coll? gf) ((seqo env form type new-env) a)            
+            (genv gf) ((geto form type env) a)
+            (-> gf meta :tag) ((annotatedo env form type new-env) a)
+            (literal-types (.getClass gf)) ((literalo env form type new-env) a)            
+            :else ((failo form) a))))))
+
 ; TODO special handling of sets, maps and vectors
 (defna typedo
   [env form type new-env]
@@ -322,8 +348,9 @@
 
 (defn new-env 
   [env form]
-  (first (run 1 [q]
-              (fresh [type] (typedo env form type q)))))
+  (first 
+    (run 1 [q]
+         (fresh [type] (typedo env form type q)))))
 
 (defn type-and-env
   [env form]

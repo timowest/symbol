@@ -37,7 +37,6 @@
       (when (> phase 1.0) (set! phase (- phase 1.0)))
       (if (< phase duty) amp (* -1.0 amp)))))
 
-
 ;; saw oscillator
 (defn saw-c []
   (let [p 0.0

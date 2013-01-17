@@ -145,3 +145,10 @@
    
 (facts "math include"
   (typeof '(do (include "math.h") (sin 2.0))) => 'double)
+
+(defn performance1
+  []
+  (count (loop [env compiler/core-env n 0]
+           (if (< n 1000)
+             (recur (new-env env (list '+ n (inc n))) (inc n))
+             env))))
