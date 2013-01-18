@@ -159,7 +159,7 @@
     not   [(sf [boolean] boolean)]
     
     ; operators
-    =     [(fn [_0 _0] boolean)]
+    =     [(fn [_0 _0] boolean)] 
     !=    [(fn [_0 _0] boolean)]
     <     [(fn [_0 _0] boolean)]
     >     [(fn [_0 _0] boolean)]
@@ -167,9 +167,9 @@
     >=    [(fn [_0 _0] boolean)]
     +     [(fn [_0 _0] _0)]
     -     [(fn [_0 _0] _0)]
-    *     [(fn [_0 _0] _0)]
-    %     [(fn [_0 _0] _0)]
+    *     [(fn [_0 _0] _0)]    
     /     [(fn [_0 _0] _0)]
+    %     [(fn [_0 _0] _0)]
     
     ; casts
     short [(fn [_0] short)]
