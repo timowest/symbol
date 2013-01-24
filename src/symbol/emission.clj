@@ -277,8 +277,12 @@
 
 (defmethod emit 'include
   [env target form]
-  (let [[_ & includes] form]
-    (string/join (map #(str "#include \"" % "\"\n") includes))))
+  (str "#include \"" (second form) "\"\n"))
+
+(defmethod emit 'use
+  [env target form]
+  (let [path (.replace (str (second form)) "." "/")]
+    (str "#include \"" path ".cpp" "\"\n")))
 
 (defmethod emit 'array
   [env target form]

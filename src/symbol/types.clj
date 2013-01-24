@@ -247,10 +247,10 @@
   (fn [a]
     (let [genv (walk a env)
           gform (walk a form)
-          includes (rest gform)]
-      (if (seq (rest includes))
-        (unify a [type new-env] ['void (reduce combine genv (map include* includes))])
-        (unify a [type new-env] ['void (combine genv (include* (first includes)))])))))
+          include (second gform)]
+      (if (genv gform)
+        (unify a [type new-env] ['void genv])
+        (unify a [type new-env] ['void (combine (assoc genv gform ['void]) (include* include))])))))
 
 (defn arrayo
   [env form type new-env]

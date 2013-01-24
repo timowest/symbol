@@ -140,7 +140,7 @@
         (cond (form? ex 'do) (recur (mapcat rest [ex in]) macros forms)
               (form? ex 'use) (let [ns (str (second ex))
                                     file (str *ns-includes* "/" (.replace ns "." "/") ".s")
-                                    {:keys [u-forms u-macros]} (get-contents file)]
+                                    [u-forms u-macros] (map (get-contents file) [:forms :macros])]
                                 (recur (rest in)
                                        (merge macros u-macros)
                                        (conj forms (list 'use (second ex) u-forms))))
@@ -211,7 +211,7 @@
           nenv (new-type-env env f)]
       (if (seq (rest forms))
         (recur (rest forms) nenv)
-        nenv))))
+          nenv))))
 
 (defn new-type-env
   [env form]

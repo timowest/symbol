@@ -31,9 +31,12 @@
   (dump "dev-resources/tests/functions4.s") => ok
   (dump "dev-resources/tests/functions5.s") => ok)
 
+(facts "use"
+  (binding [compiler/*ns-includes* "dev-resources/tests"]
+    (compiler/read-emit "dev-resources/tests/uses.s")) => string?)
+
 (facts "audio"
   (dump "dev-resources/tests/audio.s") => ok)
-  ;(dump "dev-resources/tests/audio/osc.s") => ok)       
         
 (facts "io"
   (dump "dev-resources/tests/io/example.s")  => ok
@@ -43,4 +46,9 @@
   (dump "dev-resources/tests/io/example5.s") => ok 
   (dump "dev-resources/tests/io/example6.s") => ok
   (dump "dev-resources/tests/io/example7.s") => ok) 
+ 
+
+
+
+
   
