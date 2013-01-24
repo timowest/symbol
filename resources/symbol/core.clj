@@ -327,4 +327,17 @@
 (defmacro defstruct
   [name & args]
   `(def ~name (struct ~name ~@args)))
+
+(defmacro use
+  [& nss]
+  (if (> (count nss) 1)
+    (cons 'do (map #(list 'use %) nss))    
+    &form))
+
+(defmacro include
+  [& files]
+  (if (> (count files) 1)
+    (cons 'do (map #(list 'include %) files))
+    &form))
+  
     

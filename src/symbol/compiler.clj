@@ -17,6 +17,8 @@
             [symbol.types :as types]
             [symbol.emission :as emission]))
 
+(def ^:dynamic *ns-includes* "src")
+
 ; copied from clojure.core
 (defn- sigs
  [fdecl]
@@ -116,7 +118,8 @@
           (.endsWith (str fst) ".") (expand-new form) 
           :else (if-let [f (macros fst)]
                   (let [ex (f form)]
-                    (cond (identical? ex form) form
+                    (cond ;(identical? ex form) form
+                          (= ex form) form
                           (seq? ex) (expand-form macros ex)
                           :else ex))
                   form))))
@@ -127,12 +130,20 @@
     (fn [x] (if (seq? x) (expand-form macros x) x)) 
     form))
 
+(declare get-contents)
+
 (defn expand-forms
   [ns m f]
   (loop* [in f macros {} forms []]
     (if (seq in)
       (let [ex (expand-all (merge m macros) (first in))]
         (cond (form? ex 'do) (recur (mapcat rest [ex in]) macros forms)
+              (form? ex 'use) (let [ns (str (second ex))
+                                    file (str *ns-includes* "/" (.replace ns "." "/") ".s")
+                                    {:keys [u-forms u-macros]} (get-contents file)]
+                                (recur (rest in)
+                                       (merge macros u-macros)
+                                       (conj forms (list 'use (second ex) u-forms))))
               (is-macro? ex) (recur (rest in) 
                                      (assoc macros (second ex) (to-fn macros ex))
                                      forms)
@@ -191,14 +202,35 @@
     std/cin [in]
     >>    [(fn [_0 _1] _0)]})
 
+(declare new-type-env)
+
+(defn forms-to-env
+  [env forms]
+  (loop [forms forms env env]
+    (let [f (first forms)
+          nenv (new-type-env env f)]
+      (if (seq (rest forms))
+        (recur (rest forms) nenv)
+        nenv))))
+
+(defn new-type-env
+  [env form]
+  (cond (form? form 'use) (let [[_ ns forms] form
+                                key (list 'use ns)]
+                            (if-not (env key)
+                              (forms-to-env (assoc env key ['void])
+                                            (map analysis/convert forms))
+                              env))
+        :else (or (types/new-env env form)
+                  (throw (IllegalStateException. (str "Type inference failed for " form))))))
+
 (defn read-emit
   [file]
   (let [{:keys [ns forms macros]} (get-contents file)
         normalized (map analysis/convert forms)]
     (loop [forms normalized env core-env emitted []]
       (let [form (first forms)
-            nenv (or (types/new-env env form)
-                     (throw  (IllegalStateException. (str "Type inference failed for " form))))
+            nenv (new-type-env env form)
             output (emission/emit nenv nil form)
             nemitted (conj emitted output)]
         (if (seq (rest forms))

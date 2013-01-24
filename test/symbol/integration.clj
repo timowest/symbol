@@ -32,7 +32,8 @@
   (dump "dev-resources/tests/functions5.s") => ok)
 
 (facts "audio"
-  (dump "dev-resources/tests/audio.s") => ok)       
+  (dump "dev-resources/tests/audio.s") => ok)
+  ;(dump "dev-resources/tests/audio/osc.s") => ok)       
         
 (facts "io"
   (dump "dev-resources/tests/io/example.s")  => ok

@@ -19,6 +19,7 @@
 ; TODO make this independent of the gcc version
 (def default-paths
   [""
+   "includes"
    "/usr/local/include"
    "/usr/include/c++/4.6"
    "/usr/include"])
