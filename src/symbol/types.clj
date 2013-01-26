@@ -252,6 +252,14 @@
         (unify a [type new-env] ['void genv])
         (unify a [type new-env] ['void (combine (assoc genv gform ['void]) (include* include))])))))
 
+(defnu casto
+  [env form type new-env]
+  ([_ [_ type expr] _ _]
+    (fresh [type2 env2]
+           ; TODO expand type
+           (typedo env expr type2 env2)
+           (assoco env2 form type new-env))))
+    
 (defn arrayo
   [env form type new-env]
   (fn [a]
@@ -331,9 +339,9 @@
 (def skipped #{'ns* 'comment})
 
 (def handlers
-  {'if ifo 'fn* fno 'let* leto 'loop* loopo 'recur* recuro
-   '. dot 'new newo 'def defo 'do doo 'include includeo
-   'array arrayo 'struct structo
+  {'array arrayo 'cast casto 'def defo 'do doo 'fn* fno
+   'if ifo 'include includeo 'let* leto 'loop* loopo 'new newo   
+   'recur* recuro 'struct structo '. dot        
    '= binpredo '!= binpredo '< binpredo '> binpredo '<= binpredo '>= binpredo 
    '+ binopo '- binopo '* binopo '/ binopo '% binopo})
 

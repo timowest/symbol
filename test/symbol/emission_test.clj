@@ -130,8 +130,9 @@
   (fact "loop"
     (cpp '(loop [x 4] x)) => "long _a = 4;\n_b:\n_a;"))
 
-(facts "casts"
+(facts "casts"       
   (fact "double"
+    (cpp '(cast double (+ 1 2))) => "(double)((1 + 2))"
     (cpp '(def e (double 1))) => "const double e = (double)1;"))
 
 (facts "structs"
