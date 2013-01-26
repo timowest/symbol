@@ -31,6 +31,9 @@
   (dump "dev-resources/tests/functions4.s") => ok
   (dump "dev-resources/tests/functions5.s") => ok)
 
+(facts "structs"
+  (dump "dev-resources/tests/structs1.s") => ok)
+
 (facts "use"
   (binding [compiler/*ns-includes* "dev-resources/tests"]
     (compiler/read-emit "dev-resources/tests/uses.s")) => string?)

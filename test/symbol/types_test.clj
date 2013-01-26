@@ -135,7 +135,7 @@
   (typeof '(array long 5)) => '(pointer long))
 
 (facts "struct"
-  (typeof '(struct parent (i1 int) (i2 int))) => '(struct parent {i2 (int), i1 (int)}))
+  (typeof '(struct parent (i1 int) (i2 int))) => '(struct parent {i2 (int), i1 (int), :new ([])}))
 
 (facts "constants"
   (typeof 1) => 'long

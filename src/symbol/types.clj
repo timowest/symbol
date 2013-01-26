@@ -197,9 +197,9 @@
 (defnu dot ; (. obj member args*)
   [env form type new-env]
   ([_ [_ ?obj ?member . ?args] _ _]
-    (fresh [env2 clazz members membert argst env3]
+    (fresh [env2 class-fn clazz members membert argst env3]
            (typedo env ?obj ['pointer clazz] env2)
-           (geto clazz ['class clazz members] env)
+           (geto clazz [class-fn clazz members] env)
            (geto ?member membert members)
            (typeso env2 ?args argst env3)
            (matcha [membert type]
@@ -210,9 +210,9 @@
 (defnu newo ; (new Class args*)
   [env form type new-env]
   ([_ [_ ?class . ?args] _ _]
-    (fresh [argst members env2]
+    (fresh [argst members env2 class-fn]
            (typeso env ?args argst env2)
-           (geto ?class ['class ?class members] env)
+           (geto ?class [class-fn ?class members] env)
            (geto :new argst members)
            (== type ['pointer ?class])
            (assoco env2 form type new-env))))
@@ -273,6 +273,7 @@
   (fn [a]
     (let [genv (walk a env)
           [_ name & members :as gform] (walk a form)
+          members (cons [:new []] members)
           gtype (list 'struct name (to-env members))]
       (unify a [type new-env] [gtype (update-in genv [gform] conj gtype)]))))
      
@@ -314,8 +315,9 @@
 (defn failo
   [form]
   (fn [a]
-    (throw (IllegalStateException. 
-             (str "Type inference failed for " (walk a form))))))
+    (let [gform (walk a form)]          
+      (throw (IllegalStateException. 
+             (str "Type inference failed for " (print-str gform)))))))
 
 ; OPTIMIZE
 (defnu last-typeo

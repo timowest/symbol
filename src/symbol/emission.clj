@@ -172,10 +172,10 @@
   (let [[_ name members] (get-type env name)]
     (lines
       (str "struct " (emit env nil name) " {")
-      (for [[name types] members
+      (for [[name types] members :when (not (= name :new))
             type types]        
         (str (type->string env type) " " (emit env nil name) ";"))
-      "}\n")))
+      "};\n")))
 
 ; defmethods in alphabetic order
 
@@ -310,7 +310,10 @@
 
 (defmethod emit '. ; TODO
   [env target form]
-  (string/join " " (map str form)))
+  (let [[_ obj member & args] (map #(emit env nil %) form)]
+    (if (empty? args)
+      (str obj "->" member)
+      (str obj "->" member "(" (string/join ", " args) ")"))))
 
 (defn emit-signature
   [env [f & r]]
@@ -342,7 +345,7 @@
                 :else (str form))]
     (cond (= target :stmt) (str s ";")
           (nil? target) s
-          :else (str target " = " s ";"))))
+          :else (str (emit env nil target) " = " s ";"))))
 
 ; formatted output
 
