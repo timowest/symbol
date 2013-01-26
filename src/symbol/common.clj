@@ -38,6 +38,7 @@
            (sf [(pointer _0) long _0] void)]
     pref  [(sf [(pointer _0) long] _0)]
     not   [(sf [boolean] boolean)]
+    delete [(sf [(pointer _0)] void)]
     
     ; operators
     =     [(fn [_0 _0] boolean)] 

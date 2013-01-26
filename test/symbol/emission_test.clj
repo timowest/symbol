@@ -138,6 +138,11 @@
   (fact "product"
     (cpp '(defstruct product (weight int) (price float))) 
     => "struct product {\nfloat price;\nint weight;\n}\n"))
+
+(facts "delete"
+  (cpp '(let [a (array double 4)]
+          (delete a))) 
+  => "double* _a = new double[4];\ndelete _a;\n")
      
 (facts "math"
   (fact "plus"

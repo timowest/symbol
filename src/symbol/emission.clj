@@ -195,6 +195,11 @@
           (form? value 'fn*) (def-fn env name value) 
           :else (assignment env [(with-meta name {:const true}) value]))))
 
+(defmethod emit 'delete
+  [env target form]
+  (let [[_ value] form]
+    (str "delete " (emit env nil value) ";\n")))
+
 (defmethod emit 'do
   [env target form]
   (stmts env target (rest form)))
