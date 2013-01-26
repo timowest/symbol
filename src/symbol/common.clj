@@ -36,7 +36,8 @@
     set!  [(sf [_0 _0] void)] 
     pset! [(sf [(pointer _0) _0] void)
            (sf [(pointer _0) long _0] void)]
-    pref  [(sf [(pointer _0) long] _0)]
+    pref  [(sf [(pointer _0)] _0)
+           (sf [(pointer _0) long] _0)]
     not   [(sf [boolean] boolean)]
     delete [(sf [(pointer _0)] void)]
     
@@ -53,7 +54,8 @@
     /     [(fn [_0 _0] _0)]
     %     [(fn [_0 _0] _0)]
     
-    ; casts
+    ; XXX maybe these should be macros instead ?
+    ; casts 
     short [(fn [_0] short)]
     ushort [(fn [_0] ushort)]
     int [(fn [_0] int)]

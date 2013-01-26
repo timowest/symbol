@@ -20,5 +20,7 @@
 ; in casts
 (defn fnb []
   (let [a (array double* 4)
-        b (cast double* a)]
+        b (cast double* a)
+        c (pref a)
+        d (pref a 0)]        
     (delete a)))

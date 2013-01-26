@@ -18,3 +18,7 @@
   (let [a (Synth.)]
     (set! (.freq a) (float 0.0))
     (delete a)))
+
+(defn set-value [^Synth* synth idx value]
+  (cond (= idx 0) (set! (.freq synth) value)
+        (= idx 1) (set! (.output synth) value)))

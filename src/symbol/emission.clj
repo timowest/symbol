@@ -188,8 +188,11 @@
 (defmethod emit 'cast
   [env target form]
   (let [[_ type expr] form
-        type (get-type env form)]
-    (str "(" (type->string env type) ")" "(" (emit env nil expr) ")")))
+        type (get-type env form)
+        s (str "(" (type->string env type) ")" "(" (emit env nil expr) ")")]
+    (cond (= target :stmt) (str s ";")
+          (nil? target) s
+          :else (str (emit env nil target) " = " s ";"))))
 
 (defmethod emit 'comment
   [env target form]
@@ -283,11 +286,13 @@
 (defmethod emit 'pref
   [env target form]
   (let [pointer (emit env nil (second form))
-        idx (emit env nil (last form))
-        s (format "%s[%s]" pointer idx)]
+        s (if (> (count form) 2)
+            (let [idx (emit env nil (last form))]
+              (format "%s[%s]" pointer idx))
+            (str "*(" pointer ")"))]        
   (cond (= target :stmt) (str s ";")
           (nil? target) s
-          :else (str target " = " s ";"))))
+          :else (str (emit env nil target) " = " s ";"))))
 
 (defmethod emit 'pset!
   [env target form]
@@ -318,12 +323,15 @@
   (let [path (.replace (str (second form)) "." "/")]
     (str "#include \"" path ".cpp" "\"\n")))
 
-(defmethod emit '. ; TODO
+(defmethod emit '. 
   [env target form]
-  (let [[_ obj member & args] (map #(emit env nil %) form)]
-    (if (empty? args)
-      (str obj "->" member)
-      (str obj "->" member "(" (string/join ", " args) ")"))))
+  (let [[_ obj member & args] (map #(emit env nil %) form)
+        s (if (empty? args)
+              (str obj "->" member)
+              (str obj "->" member "(" (string/join ", " args) ")"))]
+    (cond (= target :stmt) (str s ";")
+          (nil? target) s
+          :else (str (emit env nil target) " = " s ";"))))
 
 (defn emit-signature
   [env [f & r]]

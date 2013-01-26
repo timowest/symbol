@@ -12,16 +12,18 @@
         midje.sweet)
   (:require [symbol.compiler :as compiler]))
 
+(def ok {:exit 0 :out "" :err ""})
+
 (defn dump
   [file]
   (let [str (compiler/read-emit file)
         temp (doto (File/createTempFile "symbol" ".cpp")
-               (.deleteOnExit))]
-    ;(println str)
-    (spit temp str)
-    (sh "g++" "-shared" "-std=c++0x" (.getAbsolutePath temp))))
-    
-(def ok {:exit 0 :out "" :err ""})
+               (.deleteOnExit))
+        _ (spit temp str)
+        out (sh "g++" "-shared" "-std=c++0x" (.getAbsolutePath temp))]
+    (when-not (= out ok)
+      (println str))
+    out))   
 
 (facts "simple"
   (dump "dev-resources/tests/simple.s") => ok)
@@ -59,6 +61,9 @@
 (facts "extern"
   (dump "dev-resources/tests/extern.s") => ok)
 
+; TEMP
+;(facts "rogue"
+;  (dump "../rogue/src/synth.s") => ok)
 
 
 
