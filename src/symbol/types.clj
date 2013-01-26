@@ -350,7 +350,7 @@
            (typeso env2 ?r ?rt new-env)))
   ([?e [] [] ?e]))
 
-(def skipped #{'ns* 'comment})
+(def skipped #{'ns* 'comment 'extern})
 
 (def handlers
   {'array arrayo 'cast casto 'def defo 'do doo 'fn* fno

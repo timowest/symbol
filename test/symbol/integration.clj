@@ -55,6 +55,8 @@
   (dump "dev-resources/tests/io/example6.s") => ok
   (dump "dev-resources/tests/io/example7.s") => ok) 
  
+(facts "extern"
+  (dump "dev-resources/tests/extern.s") => ok)
 
 
 

@@ -211,6 +211,14 @@
   [env target form]
   (stmts env target (rest form)))
 
+(defmethod emit 'extern
+  [env target form]
+  (let [[_ lang content] form]
+    (lines
+      (str "extern \"" lang "\" {")
+      content
+      "}")))
+
 (defmethod emit 'fn* ; (fn* (args body)
   [env target form]
   (let [[_ argtypes rtype] (get-type env form)
