@@ -91,17 +91,6 @@
           end (emit env (or target :stmt) (last body))]
       (lines (concat start [end])))))  
 
-(defmethod emit 'if 
-  [env target form]
-  (let [[_ c t e] form  
-        target (or target :stmt)
-        ce (emit env nil c)
-        te (emit env target t)
-        ee (if e (emit env target e))]
-    (cond (form? e 'if) (format "if (%s) {\n%s\n} else %s" ce te ee)
-          ee           (format "if (%s) {\n%s\n} else {\n%s\n}" ce te ee)
-          :else        (format "if (%s) {\n%s\n}" ce te))))     
-
 (defn fn-type->string
   [env [_ arg-types rtype]]
   (let [t->s #(type->string env %)
@@ -140,17 +129,6 @@
           (str "return " (emit env nil l) ";")))
       (stmts env nil body))))  
 
-(defmethod emit 'fn* ; (fn* (args body)
-  [env target form]
-  (let [[_ argtypes rtype] (get-type env form)
-        [args & body] (second form)
-        args-str (args->string env args argtypes)
-        to-target (if target (str (emit env nil target) " = ") "")]
-    (lines 
-      (str to-target "[&](" args-str ") {")
-      (fn-body env target body rtype)
-      (if target "};" "}"))))
-      
 (defn assignment
   [env [name value]]
   (let [type (type->string env (get-type env name))
@@ -163,72 +141,12 @@
         (str "const " type " " name " = " (emit env nil value) ";")
         (str type " " name " = " (emit env nil value) ";")))))    
 
-(defmethod emit 'set!
-  [env target form]
-  (let [[_ to expr] form]
-    (emit env to expr)))
+(def math-ops 
+  (let [base (into {} (for [k '#{+ - * / < > <= >= != << >> %}]
+                        [k (str " " k " ")]))]
+    (merge base '{= " == "})))
 
-(defmethod emit 'pset!
-  [env target form]
-  (let [pointer (emit env nil (second form))
-        value (emit env nil (last form))
-        idx (when (> (count form) 2)
-              (emit env nil (nth form 2)))]
-    (if idx
-      (format "%s[%s] = %s;" pointer idx value)
-      (format "*%s = %s;" pointer value))))
-
-(defmethod emit 'pref
-  [env target form]
-  (let [pointer (emit env nil (second form))
-        idx (emit env nil (last form))
-        s (format "%s[%s]" pointer idx)]
-  (cond (= target :stmt) (str s ";")
-          (nil? target) s
-          :else (str target " = " s ";"))))
-  
-(defmethod emit 'let*
-  [env target form]
-  (let [[_ bindings & body] form
-        bind-pairs (partition 2 bindings)]                      
-    (lines 
-      (loop [acc [] pairs bind-pairs seen #{}]
-        (if (seq pairs)
-          (let [[name value] (first pairs)
-                line (if (seen name)
-                       (emit env name value)
-                       (assignment env (first pairs)))]
-            (recur (conj acc line) (rest pairs) (conj seen name)))
-          acc))
-      (stmts env target body))))
-        
-(defmethod emit 'loop* 
-  [env target form]
-  (let [[_ name bindings & body] form
-        bind-pairs (partition 2 bindings)]
-    (lines
-      (map #(assignment env %) bind-pairs)
-      (str name ":") 
-      (stmts env target body))))
-
-(defmethod emit 'recur* 
-  [env target form]
-  (let [[_ name & args] form
-        [_ names types rtype] (get-type env name)
-        bind-pairs (zipmap names args)]
-    (lines 
-      (for [[k v] bind-pairs] (emit env k v))
-      (str "goto " name ";"))))
-
-(defmethod emit '. ; TODO
-  [env target form]
-  (string/join " " (map str form)))
-
-(defmethod emit 'new  
-  [env target form]
-  (let [[_ clazz & args] form
-        args (map #(emit env nil %) args)]
-    (format "new %s(%s)" clazz (string/join ", " args))))
+(def unary-ops '{not "!" + "+" - "-"}) 
 
 (defn fn-generics
   [type]
@@ -259,11 +177,17 @@
         (str (type->string env type) " " (emit env nil name) ";"))
       "}\n")))
 
-(defmethod emit 'ns*
+; defmethods in alphabetic order
+
+(defmethod emit 'array
   [env target form]
-  (let [[_ name] form]
-    (str "//ns " name)))
-        
+  (let [[_ type dimensions] form]
+    (str "new " (type->string env type) "[" dimensions "]")))
+
+(defmethod emit 'comment
+  [env target form]
+  "\n")
+
 (defmethod emit 'def
   [env target form]
   (let [[_ name value] form]
@@ -275,30 +199,108 @@
   [env target form]
   (stmts env target (rest form)))
 
+(defmethod emit 'fn* ; (fn* (args body)
+  [env target form]
+  (let [[_ argtypes rtype] (get-type env form)
+        [args & body] (second form)
+        args-str (args->string env args argtypes)
+        to-target (if target (str (emit env nil target) " = ") "")]
+    (lines 
+      (str to-target "[&](" args-str ") {")
+      (fn-body env target body rtype)
+      (if target "};" "}"))))
+
+(defmethod emit 'if 
+  [env target form]
+  (let [[_ c t e] form  
+        target (or target :stmt)
+        ce (emit env nil c)
+        te (emit env target t)
+        ee (if e (emit env target e))]
+    (cond (form? e 'if) (format "if (%s) {\n%s\n} else %s" ce te ee)
+          ee           (format "if (%s) {\n%s\n} else {\n%s\n}" ce te ee)
+          :else        (format "if (%s) {\n%s\n}" ce te))))     
+
 (defmethod emit 'include
   [env target form]
   (str "#include \"" (second form) "\"\n"))
+
+(defmethod emit 'let*
+  [env target form]
+  (let [[_ bindings & body] form
+        bind-pairs (partition 2 bindings)]                      
+    (lines 
+      (loop [acc [] pairs bind-pairs seen #{}]
+        (if (seq pairs)
+          (let [[name value] (first pairs)
+                line (if (seen name)
+                       (emit env name value)
+                       (assignment env (first pairs)))]
+            (recur (conj acc line) (rest pairs) (conj seen name)))
+          acc))
+      (stmts env target body))))
+        
+(defmethod emit 'loop* 
+  [env target form]
+  (let [[_ name bindings & body] form
+        bind-pairs (partition 2 bindings)]
+    (lines
+      (map #(assignment env %) bind-pairs)
+      (str name ":") 
+      (stmts env target body))))
+
+(defmethod emit 'new  
+  [env target form]
+  (let [[_ clazz & args] form
+        args (map #(emit env nil %) args)]
+    (format "new %s(%s)" clazz (string/join ", " args))))
+
+(defmethod emit 'ns*
+  [env target form]
+  (let [[_ name] form]
+    (str "//ns " name)))
+
+(defmethod emit 'pref
+  [env target form]
+  (let [pointer (emit env nil (second form))
+        idx (emit env nil (last form))
+        s (format "%s[%s]" pointer idx)]
+  (cond (= target :stmt) (str s ";")
+          (nil? target) s
+          :else (str target " = " s ";"))))
+
+(defmethod emit 'pset!
+  [env target form]
+  (let [pointer (emit env nil (second form))
+        value (emit env nil (last form))
+        idx (when (> (count form) 2)
+              (emit env nil (nth form 2)))]
+    (if idx
+      (format "%s[%s] = %s;" pointer idx value)
+      (format "*%s = %s;" pointer value))))
+
+(defmethod emit 'recur* 
+  [env target form]
+  (let [[_ name & args] form
+        [_ names types rtype] (get-type env name)
+        bind-pairs (zipmap names args)]
+    (lines 
+      (for [[k v] bind-pairs] (emit env k v))
+      (str "goto " name ";"))))
+
+(defmethod emit 'set!
+  [env target form]
+  (let [[_ to expr] form]
+    (emit env to expr)))
 
 (defmethod emit 'use
   [env target form]
   (let [path (.replace (str (second form)) "." "/")]
     (str "#include \"" path ".cpp" "\"\n")))
 
-(defmethod emit 'array
+(defmethod emit '. ; TODO
   [env target form]
-  (let [[_ type dimensions] form]
-    (str "new " (type->string env type) "[" dimensions "]")))
-
-(defmethod emit 'comment
-  [env target form]
-  "\n")
-
-(def math-ops 
-  (let [base (into {} (for [k '#{+ - * / < > <= >= != << >> %}]
-                        [k (str " " k " ")]))]
-    (merge base '{= " == "})))
-
-(def unary-ops '{not "!" + "+" - "-"}) 
+  (string/join " " (map str form)))
 
 (defn emit-signature
   [env [f & r]]
@@ -331,6 +333,8 @@
     (cond (= target :stmt) (str s ";")
           (nil? target) s
           :else (str target " = " s ";"))))
+
+; formatted output
 
 (defn- block-in 
   [indent] 
