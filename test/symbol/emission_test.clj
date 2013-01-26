@@ -11,13 +11,14 @@
   (:require [clojure.string :as string] 
             [symbol.analysis :as analysis]
             [symbol.compiler :as compiler]
+            [symbol.common :as common]
             [symbol.types :as types])
   (:use symbol.emission        
         midje.sweet))
 
 (def core-env 
   (merge 
-    compiler/core-env
+    common/core-env
     '{println [(fn [_0] void)]
       a       [long]
       b       [(fn [long long] long)] 

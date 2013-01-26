@@ -91,16 +91,22 @@
 
 (defmulti simple first)
 
+(defmethod simple 'do
+  [[_ f & r :as form]]
+  (if (seq r) 
+    form
+    f))
+
+(defmethod simple 'fn* 
+  [form]
+  form)
+
 (defmethod simple 'if
   [[_ c & r :as form]]
   (if (complex? c)
     (let [s (gensym)] 
       `(let* [~s ~c] (if ~s ~@r)))
     form))
-
-(defmethod simple 'fn* 
-  [form]
-  form)
 
 (defmethod simple 'let*
   [[_ bindings & body :as form]]
@@ -126,12 +132,6 @@
   (if (some complex? args)
     (wrap form args)
     form))  
-
-(defmethod simple 'do
-  [[_ f & r :as form]]
-  (if (seq r) 
-    form
-    f))
 
 (defmethod simple :default 
   [[_ & args :as form]]

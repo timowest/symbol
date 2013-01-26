@@ -159,49 +159,6 @@
         namespace (->> forms (filter (is-form? 'ns)) first second)]
     (expand-forms namespace (:macros core-forms) forms)))
 
-(def core-env   
-  '{nil   [void]
-    
-     ; special forms 
-    set!  [(sf [_0 _0] void)] 
-    pset! [(sf [(pointer _0) _0] void)
-           (sf [(pointer _0) long _0] void)]
-    pref  [(sf [(pointer _0) long] _0)]
-    not   [(sf [boolean] boolean)]
-    
-    ; operators
-    =     [(fn [_0 _0] boolean)] 
-    !=    [(fn [_0 _0] boolean)]
-    <     [(fn [_0 _0] boolean)]
-    >     [(fn [_0 _0] boolean)]
-    <=    [(fn [_0 _0] boolean)]
-    >=    [(fn [_0 _0] boolean)]
-    +     [(fn [_0 _0] _0)]
-    -     [(fn [_0 _0] _0)]
-    *     [(fn [_0 _0] _0)]    
-    /     [(fn [_0 _0] _0)]
-    %     [(fn [_0 _0] _0)]
-    
-    ; casts
-    short [(fn [_0] short)]
-    ushort [(fn [_0] ushort)]
-    int [(fn [_0] int)]
-    uint [(fn [_0] uint)]
-    long [(fn [_0] long)]
-    ulong [(fn [_0] ulong)]
-    float [(fn [_0] float)]
-    ufloat [(fn [_0] ufloat)]
-    double [(fn [_0] double)]
-    udouble [(fn [_0] udouble)]
-    ldouble [(fn [_0] ldouble)]
-    uldouble [(fn [_0] uldouble)]
-        
-    ; IO operators (temporary)
-    std/cout [out]
-    <<    [(fn [_0 _1] _0)]
-    std/cin [in]
-    >>    [(fn [_0 _1] _0)]})
-
 (declare new-type-env)
 
 (defn forms-to-env

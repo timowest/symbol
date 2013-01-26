@@ -9,13 +9,14 @@
 (ns symbol.types-test
   (:require [clojure.core.logic :as logic]
             [clojure.walk :as walk]
+            [symbol.common :as common]
             [symbol.compiler :as compiler])
   (:use symbol.types 
         midje.sweet))
 
 (def env 
   (merge
-    compiler/core-env
+    common/core-env
     '{dec   [(fn [long] long)]
       inc   [(fn [long] long)]
       println [(fn [_0] void)]             
@@ -23,7 +24,7 @@
 
 (def env2 
   (merge 
-    compiler/core-env
+    common/core-env
     '{person [(pointer Person)]                    
       Person [(class 
                 Person 
@@ -148,7 +149,7 @@
 
 (defn performance1
   []
-  (count (loop [env compiler/core-env n 0]
+  (count (loop [env common/core-env n 0]
            (if (< n 1000)
              (recur (new-env env (list '+ n (inc n))) (inc n))
              env))))

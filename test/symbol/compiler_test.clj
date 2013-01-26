@@ -9,6 +9,7 @@
 (ns symbol.compiler-test
   (:require [symbol.types :as types])
   (:use symbol.compiler        
+        symbol.common
         midje.sweet))
 
 (facts "normalize"
