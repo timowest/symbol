@@ -31,7 +31,8 @@
   (dump "dev-resources/tests/functions2.s") => ok
   (dump "dev-resources/tests/functions3.s") => ok
   (dump "dev-resources/tests/functions4.s") => ok
-  (dump "dev-resources/tests/functions5.s") => ok)
+  (dump "dev-resources/tests/functions5.s") => ok
+  (dump "dev-resources/tests/functions6.s") => ok)
 
 (facts "structs"
   (dump "dev-resources/tests/structs1.s") => ok)
