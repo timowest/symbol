@@ -24,7 +24,9 @@
 (def ok {:exit 0 :out "" :err ""})
 
 (facts "simple"
-  (dump "dev-resources/tests/simple.s") => ok
+  (dump "dev-resources/tests/simple.s") => ok)
+
+(facts "functions"
   (dump "dev-resources/tests/functions1.s") => ok
   (dump "dev-resources/tests/functions2.s") => ok
   (dump "dev-resources/tests/functions3.s") => ok
@@ -33,6 +35,9 @@
 
 (facts "structs"
   (dump "dev-resources/tests/structs1.s") => ok)
+
+(facts "pointers"
+  (dump "dev-resources/tests/pointers.s") => ok) 
 
 (facts "use"
   (binding [compiler/*ns-includes* "dev-resources/tests"]

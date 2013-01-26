@@ -13,7 +13,7 @@
   (:use [clojure.core.logic :exclude [membero]]
         symbol.common))
 
-(declare typedo typeso last-typeo annotatedo geno expand-type)
+(declare typedo typeso last-typeo annotatedo geno expando expand-type)
 
 ; optimization of walk-term for type environments
 (extend-protocol IWalkTerm  
@@ -254,10 +254,10 @@
 
 (defnu casto
   [env form type new-env]
-  ([_ [_ type expr] _ _]
-    (fresh [type2 env2]
-           ; TODO expand type
+  ([_ [_ typet expr] _ _]
+    (fresh [type2 env2]           
            (typedo env expr type2 env2)
+           (expando typet type)
            (assoco env2 form type new-env))))
     
 (defn arrayo
@@ -265,7 +265,7 @@
   (fn [a]
     (let [genv (walk a env)
           gform (walk a form)
-          gtype (list 'pointer (second gform))]
+          gtype (list 'pointer (expand-type (second gform)))]
       (unify a [type new-env] [gtype (update-in genv [gform] conj gtype)]))))
       
 (defn structo 
@@ -273,6 +273,8 @@
   (fn [a]
     (let [genv (walk a env)
           [_ name & members :as gform] (walk a form)
+          members (for [[name type] members]
+                    [name (expand-type type)])
           members (cons [:new []] members)
           gtype (list 'struct name (to-env members))]
       (unify a [type new-env] [gtype (update-in genv [gform] conj gtype)]))))
@@ -285,7 +287,17 @@
   (cond (coll? type) (walk/postwalk-replace 
                        (zipmap expandables (repeatedly lvar))
                        type)
+        (symbol? type) (let [s (str type)]
+                         (if (.endsWith s "*") 
+                           (list 'pointer (expand-type (symbol (.substring s 0 (dec (.length s))))))
+                           type))
         :else type))
+
+(defn expando 
+  [type expanded]
+  (fn [a]
+    (let [gtype (expand-type (walk a type))]
+      (unify a expanded gtype))))
 
 (defn geno
   [template fresh]

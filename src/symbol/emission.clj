@@ -181,12 +181,14 @@
 
 (defmethod emit 'array
   [env target form]
-  (let [[_ type dimensions] form]
+  (let [[_ type dimensions] form
+        [_ type] (get-type env form)]    
     (str "new " (type->string env type) "[" dimensions "]")))
 
 (defmethod emit 'cast
   [env target form]
-  (let [[_ type expr] form]
+  (let [[_ type expr] form
+        type (get-type env form)]
     (str "(" (type->string env type) ")" "(" (emit env nil expr) ")")))
 
 (defmethod emit 'comment
