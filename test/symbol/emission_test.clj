@@ -66,7 +66,10 @@
     => "int fna() {\nreturn 0;\n}\n")
   (fact "defn (annotated 2)"
     (cpp '(defn ^int fna [a b] (+ a b 0)))
-    => "int fna(long _a, long _b) {\nreturn ((_b + _a) + 0);\n}\n")
+    => "int fna(long _a, long _b) {\nreturn ((_a + _b) + 0);\n}\n")
+  (fact "defn (annotated 3)"
+    (cpp '(defn fnb [^int a ^char b]))
+    => "void fnb(int _a, char _b) {\n}\n")    
   (fact "when"
     (cpp '(when d (println "hello") (println "world"))) 
     => "if (d) {\nprintln(\"hello\");\nprintln(\"world\");\n}")  
@@ -187,7 +190,7 @@
             "const std::function<long(long)> inc = _a;")) 
   (fact "eq"
     (cpp '(defn eq [x y] (= x y))) 
-    => "template <class A>\nbool eq(A _a, A _b) {\nreturn (_b == _a);\n}\n")  
+    => "template <class A>\nbool eq(A _a, A _b) {\nreturn (_a == _b);\n}\n")  
   (fact "string"
     (cpp '(def greeting "Hello, world!")) => "const std::string greeting = \"Hello, world!\";")) 
 

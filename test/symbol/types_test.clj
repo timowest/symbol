@@ -124,7 +124,8 @@
 (facts "def annotated"
   (typeof '(def ^int a)) => 'int
   (typeof '(def + ^{:tag (fn [_0 _0] _0)} 'native)) => '(fn [_0 _0] _0)
-  (typeof '(def cos ^{:tag (fn [double] double)} 'native)) => '(fn [double] double))
+  (typeof '(def cos ^{:tag (fn [double] double)} 'native)) => '(fn [double] double)
+  (typeof '(def fna (fn* ([^int aa ^long bb])))) => '(fn [int long] void))
 
 (facts "do"
   (typeof '(do 1 2 true "abc")) => 'string

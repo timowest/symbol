@@ -113,7 +113,7 @@
   [env args types]
   (string/join
     ", "
-    (for [[arg type] (zipmap args types)]
+    (for [[arg type] (map vector args types)]
       (str (type->string env type) " " arg))))
 
 (defn fn-body
@@ -357,7 +357,8 @@
 
 (defmethod emit :default
   [env target form]
-  (let [s (cond (seq? form) (emit-apply env form)
+  (let [s (cond (nil? form) "0"
+                (seq? form) (emit-apply env form)
                 (symbol? form) (munge (str form))
                 ; TODO proper string escaping
                 (string? form) (str "\"" (string/escape form {\newline "\\n" }) "\"")
