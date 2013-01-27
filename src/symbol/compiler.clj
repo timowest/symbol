@@ -124,10 +124,11 @@
                           :else ex))
                   form))))
 
+; TODO make this work with metadata
 (defn expand-all
   [macros form]
-  (walk/prewalk 
-    (fn [x] (if (seq? x) (expand-form macros x) x)) 
+  (walk/prewalk
+    (fn [x] (if (seq? x) (expand-form macros x) x))
     form))
 
 (declare get-contents)
@@ -172,14 +173,15 @@
 
 (defn new-type-env
   [env form]
-  (cond (form? form 'use) (let [[_ ns forms] form
-                                key (list 'use ns)]
-                            (if-not (env key)
-                              (forms-to-env (assoc env key ['void])
-                                            (map analysis/convert forms))
-                              env))
-        :else (or (types/new-env env form)
-                  (throw (IllegalStateException. (str "Type inference failed for " form))))))
+  (if (form? form 'use) 
+    (let [[_ ns forms] form
+          key (list 'use ns)]
+      (if-not (env key)
+        (forms-to-env (assoc env key ['void])
+                      (map analysis/convert forms))
+        env))
+    (or (types/new-env env form)
+        (throw (IllegalStateException. (str "Type inference failed for " form))))))
 
 (defn read-emit
   [file]

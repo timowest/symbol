@@ -60,7 +60,10 @@
     => "long inc2(long _a) {\nreturn (_a + 1);\n}\n")  
   (fact "defn (generic)"
     (cpp '(defn identity [a] a)) 
-    => "template <class A>\nA identity(A _a) {\nreturn _a;\n}\n")  
+    => "template <class A>\nA identity(A _a) {\nreturn _a;\n}\n")
+  (fact "defn (annotated)"
+    (cpp '(defn ^int fna [] 0)) 
+    => "int fna() {\nreturn 0;\n}\n")
   (fact "when"
     (cpp '(when d (println "hello") (println "world"))) 
     => "if (d) {\nprintln(\"hello\");\nprintln(\"world\");\n}")  

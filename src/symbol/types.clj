@@ -106,22 +106,24 @@
           gtypes (map ftype gargs)
           gnenv (merge genv 
                        (zipmap gargs (map vector gtypes)))]
-      (unify a [types new-env] [gtypes gnenv]))))
-      
+      (unify a [types new-env] [gtypes gnenv]))))      
 
 (defnu fno ; (fn args body)
   [env form type new-env]  
   ([_ [_ [?args . ?exprs]] _ _]
-    (fresh [argst env1 env2 env3 rtype]
+    (fresh [argst env1 env2 env3 exprt rtype ]
            (ftypeso env ?args argst env2)
-           (condu
-             ((== [?exprs rtype env3] [[] 'void env2])) 
-             ((last-typeo env2 ?exprs rtype env3)))
+           (condu ((== [?exprs exprt env3] [[] 'void env2])) 
+                  ((last-typeo env2 ?exprs exprt env3)))
+           (condu ((annotatedo form rtype))
+                  ((== rtype exprt)))
            (== type ['fn argst rtype])
            (assoco env3 form type new-env)))
   ([_ [_ ?name [?args . ?exprs]] _ _]
     (fresh [argst env1 env2 env3 env4 rtype]
            (ftypeso env ?args argst env2)
+           (condu ((annotatedo form rtype))
+                  (succeed))
            (== type ['fn argst rtype])
            (updateo env2 ?name type env3)
            (last-typeo env3 ?exprs rtype env4)            
@@ -219,12 +221,23 @@
            (== type ['pointer ?class])
            (assoco env2 form type new-env))))
 
+(defn metao
+  [obj1 obj2 combined]
+  (fn [a]
+    (let [gobj1 (walk a obj1)
+          gobj2 (walk a obj2)
+          gcombined (if (instance? clojure.lang.IObj gobj2)
+                      (with-meta gobj2 (merge (meta gobj1) (meta gobj2)))
+                      gobj2)]
+      (unify a combined gcombined))))
+
 (defnu defo  ; (def name expr)
   [env form type new-env]
   ([_ [_ ?name ?expr] _ _]
-    (fresh [env2 env3]
+    (fresh [exprm env2 env3]
            (updateo env ?name type env2)
-           (typedo env2 ?expr type env3)
+           (metao ?name ?expr exprm)
+           (typedo env2 exprm type env3)
            (assoco env3 form type new-env)))
   ([_ [_ ?name] _ _]
     (fresh [env2]
