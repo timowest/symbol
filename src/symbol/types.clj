@@ -114,14 +114,11 @@
   ([_ [_ [?args . ?exprs]] _ _]
     (fresh [argst env1 env2 env3 rtype]
            (ftypeso env ?args argst env2)
-           (last-typeo env2 ?exprs rtype env3)
+           (condu
+             ((== [?exprs rtype env3] [[] 'void env2])) 
+             ((last-typeo env2 ?exprs rtype env3)))
            (== type ['fn argst rtype])
            (assoco env3 form type new-env)))
-  ([_ [_ [?args]] _ _] ; no body
-    (fresh [argst env1 env2]
-           (ftypeso env ?args argst env2)
-           (== type ['fn argst 'void])
-           (assoco env2 form type new-env)))
   ([_ [_ ?name [?args . ?exprs]] _ _]
     (fresh [argst env1 env2 env3 env4 rtype]
            (ftypeso env ?args argst env2)

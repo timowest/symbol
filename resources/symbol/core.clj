@@ -53,7 +53,7 @@
     (list 'def (with-meta name m)
           ;;todo - restore propagation of fn name
           ;;must figure out how to convey primitive hints to self calls first
-          (cons `fn fdecl) )))
+          (with-meta (cons `fn fdecl) m) )))
 
 (defmacro when
   "Evaluates test. If logical true, evaluates body in an implicit do."
