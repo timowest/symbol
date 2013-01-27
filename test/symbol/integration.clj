@@ -28,6 +28,9 @@
 (facts "simple"
   (dump "dev-resources/tests/simple.s") => ok)
 
+(facts "math"
+  (dump "dev-resources/tests/math.s") => ok)
+
 (facts "functions"
   (dump "dev-resources/tests/functions1.s") => ok
   (dump "dev-resources/tests/functions2.s") => ok

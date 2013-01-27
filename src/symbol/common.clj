@@ -68,7 +68,7 @@
     udouble [(fn [_0] udouble)]
     ldouble [(fn [_0] ldouble)]
     uldouble [(fn [_0] uldouble)]
-        
+    
     ; IO operators (temporary)
     std/cout [out]
     <<    [(fn [_0 _1] _0)]

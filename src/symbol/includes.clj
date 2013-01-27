@@ -22,6 +22,7 @@
    "includes"
    "/usr/local/include"
    "/usr/include/c++/4.6"
+   "/usr/include/c++/4.4"
    "/usr/include"])
 
 (defn get-file
