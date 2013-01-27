@@ -19,12 +19,22 @@
       (if (pred arg) (f arg) arg))
     form))
 
+(defn- fix-dotform
+  [[_ obj name & rest]]
+  (let [name (or (-> name meta :orig) name)]
+    `(. ~obj ~name ~@rest)))
+
 (defn- replace-names
   [form names]
-  (let [mapped (into {}
-                     (for [[k v] (zipmap names (repeatedly gensym))]
-                       [k (with-meta v (or (meta k) {}))]))]
-    (walk/postwalk-replace mapped form)))
+  (let [smap (into {} (for [[k v] (zipmap names (repeatedly gensym))]
+                        [k (with-meta v (assoc (meta k) :orig k))]))]
+    (walk/postwalk 
+      (fn [x] (cond (contains? smap x) (smap x)
+                    ; fix dot forms
+                    (and (seq? x) (= (first x) '.)) (fix-dotform x)
+                    :else x)) 
+      form)))
+    ;(walk/postwalk-replace mapped form)))
 
 (defn fn-names
   [form]

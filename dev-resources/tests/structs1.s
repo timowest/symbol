@@ -22,3 +22,9 @@
 (defn set-value [^Synth* synth idx value]
   (cond (= idx 0) (set! (.freq synth) value)
         (= idx 1) (set! (.output synth) value)))
+
+(defn assign []
+  (let [a (Synth.)
+        freq (.freq a)
+        output (.output a)]
+    (delete a)))
