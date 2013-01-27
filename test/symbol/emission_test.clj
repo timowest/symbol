@@ -62,8 +62,11 @@
     (cpp '(defn identity [a] a)) 
     => "template <class A>\nA identity(A _a) {\nreturn _a;\n}\n")
   (fact "defn (annotated)"
-    (cpp '(defn ^int fna [] 0)) 
+    (cpp '(defn ^int fna [] 0))
     => "int fna() {\nreturn 0;\n}\n")
+  (fact "defn (annotated 2)"
+    (cpp '(defn ^int fna [a b] (+ a b 0)))
+    => "int fna(long _a, long _b) {\nreturn ((_b + _a) + 0);\n}\n")
   (fact "when"
     (cpp '(when d (println "hello") (println "world"))) 
     => "if (d) {\nprintln(\"hello\");\nprintln(\"world\");\n}")  
