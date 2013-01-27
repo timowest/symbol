@@ -147,6 +147,11 @@
 (facts "math include"
   (typeof '(do (include "math.h") (sin 2.0))) => 'double)
 
+(facts "expand type"
+  (expand-type 'char.const*) => '(pointer char)
+  (expand-type 'char*.const) => '(pointer char)
+  (expand-type 'char.const*.const) => '(pointer char))
+
 (defn performance1
   []
   (count (loop [env common/core-env n 0]

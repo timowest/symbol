@@ -297,15 +297,20 @@
 (def ^:private expandables 
   (map #(symbol (str "_" %)) (range 0 10)))
 
+(defn- add-meta
+  [obj k v]
+  (with-meta obj (assoc (meta obj) k v)))
+
 (defn expand-type
   [type]
   (cond (coll? type) (walk/postwalk-replace 
                        (zipmap expandables (repeatedly lvar))
                        type)
+        ; TODO simplify
         (symbol? type) (let [s (str type)]
-                         (if (.endsWith s "*") 
-                           (list 'pointer (expand-type (symbol (.substring s 0 (dec (.length s))))))
-                           type))
+                         (cond (.endsWith s "*")  (list 'pointer (expand-type (symbol (.substring s 0 (dec (.length s))))))
+                               (.endsWith s ".const") (add-meta (expand-type (symbol (.substring s 0 (- (.length s) 6)))) :const true) 
+                               :else type))
         :else type))
 
 (defn expando 

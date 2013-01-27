@@ -100,7 +100,9 @@
 
 (defn type->string
   [env t]  
-  (cond (cpp-types t) (cpp-types t)
+  (cond (:const (meta t)) (let [s (type->string env (with-meta t nil))]
+                            (if (seq? t) (str s " const") (str "const " s)))                              
+        (cpp-types t) (cpp-types t)
         (generics t) (generics t)
         (symbol? t) (emit env nil t)
         (form? (seq t) 'fn) (fn-type->string env t)

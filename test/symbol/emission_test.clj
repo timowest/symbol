@@ -162,6 +162,15 @@
   (cpp 'a->b) => "a__GT_b"
   (cpp 'a<>b) => "a_LT__GT_b")
 
+(defn type2str
+  [s]
+  (->> s types/expand-type (type->string core-env)))
+
+(facts "type to string"
+  (type2str 'char.const*) => "const char*"
+  (type2str 'char*.const) => "char* const"
+  (type2str 'char.const*.const) => "const char* const")
+
 (facts "examples"       
   (fact "multiplier"
     (cpp '(defn multiplier [factor]
