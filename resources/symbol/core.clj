@@ -319,7 +319,6 @@
                (let ~(vec (interleave bs gs))
                  ~@body)))))))
 
-
 (defmacro ns
   [name & forms]
   `(do (ns* ~name) ~@forms))
@@ -340,4 +339,13 @@
     (cons 'do (map #(list 'include %) files))
     &form))
   
+(defmacro match 
+  [val & cases]
+  (let [sym (gensym)
+        cases (apply concat (for [[k v] (partition 2 cases)]
+                              (if (= k :else) [k v] [`(= ~sym ~k) v])))]
+    `(let [~sym ~val]
+       (cond ~@cases))))
+        
+    
     
