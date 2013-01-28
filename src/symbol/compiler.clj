@@ -7,6 +7,7 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns symbol.compiler
+  (:refer-clojure :exclude [== read])
   (:use [symbol.common])
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
@@ -18,6 +19,22 @@
             [symbol.emission :as emission]))
 
 (def ^:dynamic *ns-includes* "src")
+
+; custom version of clojure.core/read
+(defn- read
+  "Reads the next object from stream, which must be an instance of
+  java.io.PushbackReader or some derivee.  stream defaults to the
+  current value of *in* ."
+  {:added "1.0"
+   :static true}
+  ([]
+   (read *in*))
+  ([stream]
+   (read stream true nil))
+  ([stream eof-error? eof-value]
+   (read stream eof-error? eof-value false))
+  ([stream eof-error? eof-value recursive?]
+   (. clojure.lang.SymbolReader (read stream (boolean eof-error?) eof-value recursive?))))
 
 ; copied from clojure.core
 (defn- sigs

@@ -20,7 +20,9 @@
 
 (def literal-types
   {Long      'long
+   Integer   'int   
    Double    'double
+   Float     'float
    String    'string
    Character 'char
    Boolean   'boolean

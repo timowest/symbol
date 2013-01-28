@@ -43,7 +43,10 @@
   (dump "dev-resources/tests/structs1.s") => ok)
 
 (facts "pointers"
-  (dump "dev-resources/tests/pointers.s") => ok) 
+  (dump "dev-resources/tests/pointers.s") => ok)
+
+(facts "literals"
+  (dump "dev-resources/tests/literals.s") => ok)
 
 (facts "use"
   (binding [compiler/*ns-includes* "dev-resources/tests"]
