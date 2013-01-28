@@ -342,7 +342,7 @@
   (fn [a]
     (let [gform (walk a form)]
       (if-let [t (literal-types (.getClass gform))]
-        (unify a [type new-env] [t (assoc (walk a env) gform (vector t))])))))
+        (unify a [type new-env] [t env])))))
 
 (defn failo
   [form]

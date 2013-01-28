@@ -68,9 +68,11 @@
 
 (defn get-type
   [env form]
-  (or 
-    (first (env form))
-    (throw (IllegalStateException. (str "Found no type for " form)))))  
+  (if (instance? Number form) 
+    (literal-types (.getClass form))
+    (or 
+      (first (env form))
+      (throw (IllegalStateException. (str "Found no type for " form))))))  
 
 (defn- emit-selector
   [env target form]

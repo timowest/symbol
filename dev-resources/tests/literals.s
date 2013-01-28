@@ -22,8 +22,12 @@
 
 (defn tests []
   (double-arg (double-rv))
+  (double-arg 0.0)
   (float-arg (float-rv))
+  (float-arg 0.0f)
   (long-arg (long-rv))
-  (int-arg (int-rv)))
+  (long-arg 0)
+  (int-arg (int-rv))
+  (int-arg 0i))
   
   
