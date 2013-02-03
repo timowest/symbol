@@ -42,6 +42,9 @@
 (facts "structs"
   (dump "dev-resources/tests/structs1.s") => ok)
 
+(facts "deftypes"
+  (dump "dev-resources/tests/deftypes.s") => ok)
+
 (facts "pointers"
   (dump "dev-resources/tests/pointers.s") => ok)
 

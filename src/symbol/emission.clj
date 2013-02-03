@@ -171,6 +171,18 @@
       (fn-body env nil body rtype)
       "}\n")))
 
+(defn constructors
+  [env name members]
+  (let [fields (filter #(not (= (first %) :new)) members)]
+    (for [args (members :new)]
+      (let [cargs (for [[name [type]] fields]
+                   (str (type->string env type) " _" (emit env nil name)))
+            cassign (for [[name _] fields]
+                     (str (emit env nil name) "(_" (emit env nil name) ")"))]
+        (if (empty? args) 
+          (str name "() {}")
+          (str name "(" (string/join ", " cargs) ") : " (string/join ", " cassign) " {}"))))))
+               
 (defn def-struct
   [env name value]
   (let [[_ name members] (get-type env name)]
@@ -179,6 +191,7 @@
       (for [[name types] members :when (not (= name :new))
             type types]        
         (str (type->string env type) " " (emit env nil name) ";"))
+      (constructors env name members)
       "};\n")))
 
 ; defmethods in alphabetic order
@@ -209,6 +222,13 @@
           (form? value 'fn*) (def-fn env name value) 
           :else (assignment env [(with-meta name {:const true}) value]))))
 
+(defmethod emit 'deftype
+  [env target form]
+  (let [[_ name args & functions] form]
+    (lines 
+      (def-struct env name args)
+      (map #(emit env target %) functions)))) 
+        
 (defmethod emit 'delete
   [env target form]
   (let [[_ value] form]
