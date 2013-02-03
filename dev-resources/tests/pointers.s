@@ -24,3 +24,16 @@
         c (pref a)
         d (pref a 0)]        
     (delete a)))
+
+; wrapped special forms
+(defn pref_ [a]
+  (pref a))
+
+(defn pref_ [a b]
+  (pref a b))
+
+(defn pset!_ [a b c]
+  (pset! a b c))
+
+(defn pset!_ [a b]
+  (pset! a b))
