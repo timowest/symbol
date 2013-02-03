@@ -34,7 +34,6 @@
                     (and (seq? x) (= (first x) '.)) (fix-dotform x)
                     :else x)) 
       form)))
-    ;(walk/postwalk-replace mapped form)))
 
 (defn fn-names
   [form]
@@ -99,6 +98,22 @@
         bindings (vec (mapcat (juxt mapped identity) forms))]
     `(let* ~bindings ~walked)))
 
+(defn expand-deftype
+  [[_ name args & functions]]  
+    (concat 
+      (list 'deftype name args)
+      (for [[fname [this & fargs] & body] functions]
+        (let [mapped (zipmap args (map #(list '. this %) args))
+              body (walk/postwalk-replace mapped body)
+              this (with-meta this {:tag (list 'pointer name)})]
+          (list 'def fname (fn-names `(fn* ([~this ~@fargs] ~@body))))))))
+                    
+(defn expand-deftypes
+  [form]
+  (postwalk form
+            #(form? % 'deftype)
+            expand-deftype))
+
 (defmulti simple first)
 
 (defmethod simple 'do
@@ -153,4 +168,4 @@
   [form]
   (postwalk form seq? simple))
 
-(def convert (comp simplify expand-ops unique-names expand-loop))
+(def convert (comp simplify expand-deftypes expand-ops unique-names expand-loop))

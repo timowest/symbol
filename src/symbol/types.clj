@@ -108,6 +108,26 @@
                        (zipmap gargs (map vector gtypes)))]
       (unify a [types new-env] [gtypes gnenv]))))      
 
+(defn classo
+  [env name members type new-env]
+  (fn [a]
+    (let [genv (walk a env)
+          gname (walk a name)
+          gmembers (walk a members)
+          types (map ftype gmembers)
+          gmembers (cons [:new types]
+                         (map vector gmembers types))
+          gtype (list 'struct gname (to-env gmembers))]
+      ;(println gtype)
+      (unify a [type new-env] [gtype (update-in genv [gname] conj gtype)]))))          
+
+(defnu deftypeo
+  [env form type new-env]
+  ([_ [_ ?name ?args . ?functions] _ _]
+    (fresh [env2 last]
+           (classo env ?name ?args type env2)
+           (last-typeo env2 ?functions last new-env))))
+           
 (defnu fno ; (fn args body)
   [env form type new-env]  
   ([_ [_ [?args . ?exprs]] _ _]
@@ -206,9 +226,9 @@
            (geto clazz [class-fn clazz members] env)
            (geto ?member membert members)
            (typeso env2 ?args argst env3)
-           (matcha [membert type]
-                   ([['method argst type] type]) 
-                   ([type type]))
+           (matcha [membert ?args type]
+                   ([type [] type])
+                   ([['method argst type] ?args type]))
            (assoco env3 form type new-env))))
                    
 (defnu newo ; (new Class args*)
@@ -375,7 +395,7 @@
 (def handlers
   {'array arrayo 'cast casto 'def defo 'do doo 'fn* fno
    'if ifo 'include includeo 'let* leto 'loop* loopo 'new newo   
-   'recur* recuro 'struct structo '. dot        
+   'recur* recuro 'struct structo '. dot 'deftype deftypeo        
    '= binpredo '!= binpredo '< binpredo '> binpredo '<= binpredo '>= binpredo 
    '+ binopo '- binopo '* binopo '/ binopo '% binopo})
 

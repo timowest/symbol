@@ -127,6 +127,11 @@
   (typeof '(def cos ^{:tag (fn [double] double)} 'native)) => '(fn [double] double)
   (typeof '(def fna (fn* ([^int aa ^long bb])))) => '(fn [int long] void))
 
+(facts "deftype"
+  (typeof '(deftype Type [n1 n2] (def f1 (fn* ([^Type* _1] (+ (. _1 n1) 1)))) 
+                                 (def f2 (fn* ([^Type* _2] (+ (. _2 n2) 1.0)))))) 
+   => '(struct Type {n2 (double) n1 (long) :new ((long double))}))
+
 (facts "do"
   (typeof '(do 1 2 true "abc")) => 'string
   (typeof '(do "abc" 1)) => 'long
