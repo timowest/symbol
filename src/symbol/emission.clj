@@ -171,7 +171,20 @@
       (fn-body env nil body rtype)
       "}\n")))
 
-(defn constructors
+(defn class-signature
+  [env name members]
+  (let [fields (filter #(not (= (first %) :new)) members)
+        types (for [[name [type]] fields]
+                type)
+        sig (->> (flatten types)
+                 (filter #(.startsWith (str %) "_"))
+                 sort
+                 (map #(str "class " (generics %))))]
+    (if-not (empty? sig)
+      (str "template<" (string/join ", " sig) ">")
+      "")))
+
+(defn class-constructors
   [env name members]
   (let [fields (filter #(not (= (first %) :new)) members)]
     (for [args (members :new)]
@@ -187,11 +200,12 @@
   [env name value]
   (let [[_ name members] (get-type env name)]
     (lines
+      (class-signature env name members)
       (str "struct " (emit env nil name) " {")
       (for [[name types] members :when (not (= name :new))
             type types]        
         (str (type->string env type) " " (emit env nil name) ";"))
-      (constructors env name members)
+      (class-constructors env name members)
       "};\n")))
 
 ; defmethods in alphabetic order

@@ -321,15 +321,19 @@
   [obj k v]
   (with-meta obj (assoc (meta obj) k v)))
 
+(defn- shorten
+  [sym amount]
+  (let [s (str sym)]
+    (symbol (.substring s 0 (- (.length s) amount)))))
+  
 (defn expand-type
   [type]
   (cond (coll? type) (walk/postwalk-replace 
                        (zipmap expandables (repeatedly lvar))
                        type)
-        ; TODO simplify
         (symbol? type) (let [s (str type)]
-                         (cond (.endsWith s "*")  (list 'pointer (expand-type (symbol (.substring s 0 (dec (.length s))))))
-                               (.endsWith s ".const") (add-meta (expand-type (symbol (.substring s 0 (- (.length s) 6)))) :const true) 
+                         (cond (.endsWith s "*")  (list 'pointer (expand-type (shorten type 1)))
+                               (.endsWith s ".const") (add-meta (expand-type (shorten type 6)) :const true) 
                                :else type))
         :else type))
 
