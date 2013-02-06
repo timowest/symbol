@@ -101,7 +101,7 @@
 
 (declare expand-all)
 
-(def internal-ns #{"symbol.compiler" "clojure.core"})
+(def internal-ns #{"symbol.compiler" "symbol.integration" "clojure.core"})
 
 (defn normalize
   [form]

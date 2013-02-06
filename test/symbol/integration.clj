@@ -46,7 +46,8 @@
   (dump "dev-resources/tests/deftypes.s") => ok)
 
 (facts "pointers"
-  (dump "dev-resources/tests/pointers.s") => ok)
+  (dump "dev-resources/tests/pointers.s") => ok
+  (dump "dev-resources/tests/pointers2.s") => ok)
 
 (facts "literals"
   (dump "dev-resources/tests/literals.s") => ok)

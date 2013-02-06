@@ -126,7 +126,9 @@
   ([_ [_ ?name ?args . ?functions] _ _]
     (fresh [env2 last]
            (classo env ?name ?args type env2)
-           (last-typeo env2 ?functions last new-env))))
+           (conda
+             ((== [?functions new-env] [[] env2]))
+             ((last-typeo env2 ?functions last new-env))))))
            
 (defnu fno ; (fn args body)
   [env form type new-env]  
@@ -332,7 +334,8 @@
                        (zipmap expandables (repeatedly lvar))
                        type)
         (symbol? type) (let [s (str type)]
-                         (cond (.endsWith s "*")  (list 'pointer (expand-type (shorten type 1)))
+                         (cond (.startsWith s "_") (lvar)
+                               (.endsWith s "*")  (list 'pointer (expand-type (shorten type 1)))
                                (.endsWith s ".const") (add-meta (expand-type (shorten type 6)) :const true) 
                                :else type))
         :else type))
