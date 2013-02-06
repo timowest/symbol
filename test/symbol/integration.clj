@@ -71,6 +71,9 @@
 (facts "extern"
   (dump "dev-resources/tests/extern.s") => ok)
 
+;(facts "gtkmm"
+;  (dump "dev-resources/tests/gtkmm/simple.s") => ok)
+
 ; TEMP
 ;(facts "rogue"
 ;  (dump "../rogue/src/synth.s") => ok)

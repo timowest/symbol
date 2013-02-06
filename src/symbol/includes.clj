@@ -201,8 +201,10 @@
   [local-path]
   (if-let [f (get-file default-paths local-path)]
     (let [temp (doto (File/createTempFile "gccxml" "xml")
-                 (.deleteOnExit))
-          out  (sh "gccxml" (.getAbsolutePath f) (str "-fxml=" (.getAbsolutePath temp)))
+                 (.deleteOnExit))          
+          out  (sh "gccxml"
+                   (.getAbsolutePath f) 
+                   (str "-fxml=" (.getAbsolutePath temp)))
           xml  (get-xml temp)          
           types (get-types xml)
           contents (merge types (get-members xml))
