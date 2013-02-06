@@ -1,5 +1,6 @@
 (ns pointers2)
 
+; XXX is array-of a good name, create might be too generic?
 (defmacro array-of [n expr]
   (let [type (gensym "_")]
     `(let [arr# (array ~type ~n)]
