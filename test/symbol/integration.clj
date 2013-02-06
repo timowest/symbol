@@ -72,8 +72,8 @@
   (dump "dev-resources/tests/extern.s") => ok)
 
 ; TEMP
-(facts "rogue"
-  (dump "../rogue/src/synth.s") => ok)
+;(facts "rogue"
+;  (dump "../rogue/src/synth.s") => ok)
 
 
 

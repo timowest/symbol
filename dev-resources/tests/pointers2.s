@@ -7,7 +7,7 @@
     `(let [arr# (array ~type ~n)]
        (dotimes [i# ~n]
          (pset! arr# i# ~expr))
-     arr#)))
+       arr#)))
 
 (deftype Osc [^int type ^double phase ^double freq])
 
