@@ -316,6 +316,11 @@
         args (map #(emit env nil %) args)]
     (format "new %s(%s)" clazz (string/join ", " args))))
 
+(defmethod emit 'nil?
+  [env target form]
+  (let [[_ expr] form]
+    (str "(" (emit env nil expr) ") == 0")))
+
 (defmethod emit 'ns*
   [env target form]
   (let [[_ name] form]

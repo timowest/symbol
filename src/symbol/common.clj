@@ -40,6 +40,7 @@
            (sf [(pointer _0) long _0] void)]
     pref  [(sf [(pointer _0)] _0)
            (sf [(pointer _0) long] _0)]
+    nil? [(sf [(pointer _0)] boolean)]
     not   [(sf [boolean] boolean)]
     delete [(sf [(pointer _0)] void)]
     

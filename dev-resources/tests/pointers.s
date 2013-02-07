@@ -37,3 +37,6 @@
 
 (defn pset!_ [a b]
   (pset! a b))
+
+(defn nil-check []
+  (nil? (array int 1)))
