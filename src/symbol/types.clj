@@ -328,17 +328,27 @@
   (let [s (str sym)]
     (symbol (.substring s 0 (- (.length s) amount)))))
   
+(defn expand
+  [type]
+  (if (symbol? type) 
+    (let [s (str type)]                             
+      (cond
+        (.startsWith s "_") (if (> (.length s) 2) (lvar) type)
+        (.endsWith s "*") (list 'pointer (expand (shorten type 1)))
+        (.endsWith s ".const") (add-meta (expand (shorten type 6)) :const true)
+        :else type))        
+    type))
+
 (defn expand-type
   [type]
-  (cond (coll? type) (walk/postwalk-replace 
-                       (zipmap expandables (repeatedly lvar))
-                       type)
-        (symbol? type) (let [s (str type)]
-                         (cond (.startsWith s "_") (lvar)
-                               (.endsWith s "*")  (list 'pointer (expand-type (shorten type 1)))
-                               (.endsWith s ".const") (add-meta (expand-type (shorten type 6)) :const true) 
-                               :else type))
-        :else type))
+  (let [type (walk/postwalk expand type)]
+    (if (coll? type)
+      (let [exp (walk/postwalk-replace 
+                  (zipmap expandables (repeatedly lvar))
+                  type)]
+        ; XXX returns type with metadata, if nothing was expanded
+        (if (= exp type) type exp))      
+      type)))
 
 (defn expando 
   [type expanded]

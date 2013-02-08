@@ -43,6 +43,8 @@
     nil? [(sf [(pointer _0)] boolean)]
     not   [(sf [boolean] boolean)]
     delete [(sf [(pointer _0)] void)]
+    inc [(sf [(pointer _0)] (pointer _0))]
+    dec [(sf [(pointer _0)] (pointer _0))]
     
     ; operators
     =     [(fn [_0 _0] boolean)] 

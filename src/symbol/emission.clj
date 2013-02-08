@@ -229,6 +229,11 @@
   [env target form]
   "\n")
 
+(defmethod emit 'dec 
+  [env target form]
+  (let [[_ expr] form]
+    (str "(" (emit env nil expr) ") - 1")))
+
 (defmethod emit 'def
   [env target form]
   (let [[_ name value] form]
@@ -280,7 +285,12 @@
         ee (if e (emit env target e))]
     (cond (form? e 'if) (format "if (%s) {\n%s\n} else %s" ce te ee)
           ee           (format "if (%s) {\n%s\n} else {\n%s\n}" ce te ee)
-          :else        (format "if (%s) {\n%s\n}" ce te))))     
+          :else        (format "if (%s) {\n%s\n}" ce te))))
+
+(defmethod emit 'inc
+  [env target form]
+  (let [[_ expr] form]
+    (str "(" (emit env nil expr) ") + 1")))
 
 (defmethod emit 'include
   [env target form]

@@ -75,9 +75,9 @@
   (dump "dev-resources/tests/gtkmm/simple.s") => ok))
 
 ; TEMP
-(comment (facts "rogue"
+(facts "rogue"
   (dump "../rogue/src/synth.s") => ok
-  (dump "../rogue/src/synth2.s") => ok))
+  (dump "../rogue/src/synth2.s") => ok)
 
 
 
