@@ -56,6 +56,15 @@
         (unify a v f)
         ((membero v gv) a)))))
 
+(defn geto-ts
+  "transitive version of of geto"
+  [k v m]
+  (conde 
+    ((geto k v m))
+    ((fresh [td]
+       (geto k ['typedef k td] m) 
+       (geto-ts td v m)))))
+
 (defn updateo
   [x k v y]
   (fn [a]
@@ -225,7 +234,7 @@
   ([_ [_ ?obj ?member . ?args] _ _]
     (fresh [env2 class-fn clazz members membert argst env3]
            (typedo env ?obj ['pointer clazz] env2)
-           (geto clazz [class-fn clazz members] env)
+           (geto-ts clazz [class-fn clazz members] env)
            (geto ?member membert members)
            (typeso env2 ?args argst env3)
            (matcha [membert ?args type]

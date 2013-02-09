@@ -7,6 +7,7 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns symbol.includes
+  (:refer-clojure :exclude [short])
   (:import [java.io File])
   (:use [clojure.data.zip.xml :only (attr attr= text xml-> xml1->)] 
         [clojure.java.shell :only [sh]]
@@ -86,11 +87,11 @@
                [id 
                 (assoc entry :args (map to-arg args))]))))
 
-(declare shortdef fulldef)
+(declare short full)
 
 (defn argtypes
   [all args]
-  (map #(shortdef all (:type %)) args)) 
+  (map #(short all (:type %)) args)) 
 
 (defn convert-name
   [name]
@@ -101,72 +102,143 @@
     (str/replace #"\s*>" ")") ; replace >
     (read-string)))
 
-(def shortdefs
-  {:ArrayType (fn [all t] (list 'array (shortdef all (:type t)) (:size t)))
-   :CvQualifiedType (fn [all t] (shortdef all (:type t)))
-   :FundamentalType (fn [all t] (cpp-types (:name t)))
-   :PointerType (fn [all t] (list 'pointer (shortdef all (:type t))))
-   :ReferenceType (fn [all t] (shortdef all (:type t)))
-   :Typedef (fn [all t] (shortdef all (:type t)))      
-   :FunctionType (fn [all t] (list 'fn
-                                   (argtypes all (:args t))
-                                   (shortdef all (:returns t))))            
-   :Enumeration (fn [all t] 'int)
-   :EnumValue (fn [all t] 'int)
-   :Union (fn [all t] (symbol (:id t)))
-   :Class (fn [all t] (convert-name (:name t)))
-   :Struct (fn [all t] (convert-name (or (:name t) (:id t))))})
+(defn- selector
+  [all t]
+  (:cat t))
+
+(defmulti short* selector)
+
+(defmethod short* :ArrayType
+  [all t]
+  (list 'array (short all (:type t)) (:size t)))
+
+(defmethod short* :CvQualifiedType
+  [all t]
+  (short all (:type t)))
+
+(defmethod short* :FundamentalType
+  [all t]
+  (cpp-types (:name t)))
+
+(defmethod short* :PointerType
+  [all t]
+  (list 'pointer (short all (:type t))))
+
+(defmethod short* :ReferenceType
+  [all t]
+  (short all (:type t)))
+
+(defmethod short* :Typedef
+  [all t]
+  (short all (:type t)))
+
+(defmethod short* :FunctionType
+  [all t]
+  (list 'fn
+        (argtypes all (:args t))
+        (short all (:returns t))))
+
+(defmethod short* :Enumeration
+  [all t]
+  'int)
+
+(defmethod short* :EnumValue
+  [all t]
+  'int)
+
+(defmethod short* :Union
+  [all t]
+  (symbol (:id t)))
+
+(defmethod short* :Class
+  [all t]
+  (convert-name (:name t)))
+
+(defmethod short* :Struct
+  [all t]
+  (convert-name (or (:name t) (:id t))))
+
+(defmethod short* :default
+  [all t]
+  t)
+
+(defmulti full* selector)
+
+(defmethod full* :Constructor
+  [all t]
+  (list :new (argtypes all (:args t))))
+
+(defmethod full* :Destructor
+  [all t]
+  (list :destruct 'void))
+
+(defmethod full* :Method
+  [all t]
+  (list (symbol (:name t)) 
+        (list 'method
+              (argtypes all (:args t))
+              (short all (:returns t)))))
+
+(defmethod full* :OperatorMethod
+  [all t]
+  (list (symbol (:name t)) 
+        (list 'op 
+              (argtypes all (:args t))
+              (short all (:returns t)))))
+
+(defmethod full* :Field
+  [all t]
+  (list (symbol (:name t)) (short all (:type t))))
+
+(defmethod full* :Variable
+  [all t]
+  (list (symbol (:name t)) (short all (:type t))))
+
+(defmethod full* :Converter
+  [all t]
+  (list 'converter (symbol (:id t)))) ; TODO
+
+(defmethod full* :Union
+  [all t]
+  (list 'struct (symbol (:id t))
+        (map #(full all %)
+             (.split (:members t) " "))))
+
+(defmethod full* :Typedef
+  [all t]
+  (list 'typedef (symbol (:name t))
+        (short all (:type t))))
+
+(defmethod full* :Class
+  [all t]
+  (let [name (convert-name (:name t))]
+    (if (:members t) 
+      (let [members (map #(full all %) 
+                         (.split (:members t) " "))]
+        (list 'class name (to-env (filter coll? members)))) 
+      (list 'class name))))
+
+(defmethod full* :Struct
+  [all t]
+  (let [name (convert-name (or (:name t) (:id t)))]
+    (if (:members t)
+      (let [members (map #(full all %) 
+                         (filter #(pos? (.length %)) (.split (:members t) " ")))]
+        (list 'struct name (to-env (filter coll? members))))                                    
+      (list 'struct name))))
+
+(defmethod full* :default
+  [all t]
+  (short* all t))
+
+(defn- short
+  [all id]
+  (short* all (all id)))
+
+(defn- full
+  [all id]
+  (full* all (all id)))
     
-(def fulldefs 
-  (merge 
-    shortdefs
-    {:Constructor (fn [all t] (list :new (argtypes all (:args t))))
-     :Destructor (fn [all t] (list :destruct 'void))
-     :Method (fn [all t] (list (symbol (:name t)) 
-                               (list 'method
-                                     (argtypes all (:args t))
-                                     (shortdef all (:returns t)))))
-     :OperatorMethod (fn [all t] (list (symbol (:name t)) 
-                                       (list 'op 
-                                             (argtypes all (:args t))
-                                             (shortdef all (:returns t)))))
-     :Field (fn [all t] (list (symbol (:name t)) (shortdef all (:type t))))
-     :Variable (fn [all t] (list (symbol (:name t)) (shortdef all (:type t))))
-     :Converter (fn [all t] (list 'converter (symbol (:id t)))) ; TODO
-     :Union (fn [all t] (list 'struct (symbol (:id t))
-                            (map #(fulldef all %)
-                                 (.split (:members t) " "))))
-     :Typedef (fn [all t] (list 'typedef (symbol (:name t))
-                                (shortdef all (:type t))))
-     :Class (fn [all t] (let [name (convert-name (:name t))]
-                          (if (:members t) 
-                            (let [members (map #(fulldef all %) 
-                                               (.split (:members t) " "))]
-                              (list 'class name (to-env (filter coll? members)))) 
-                            (list 'class name))))     
-     :Struct (fn [all t] (let [name (convert-name (or (:name t) (:id t)))]
-                           (if (:members t)
-                             (let [members (map #(fulldef all %) 
-                                                (filter #(pos? (.length %)) (.split (:members t) " ")))]
-                               (list 'struct name (to-env (filter coll? members)))                                    
-                             (list 'struct name)))))}))
-             
-(defn typedef
-  ([types functions id]
-    (let [type (types id)
-          f (functions (:cat type))]
-      (if f 
-        (f types type)
-        (throw (IllegalStateException. (str "No function for '" id "'")))))))
-
-(defn shortdef
-  [types id]
-  (typedef types shortdefs id))
-
-(defn fulldef
-  [types id]
-  (typedef types fulldefs id))
-
 (defn get-types
   [xml]
   (merge 
@@ -208,11 +280,11 @@
           xml  (get-xml temp)          
           types (get-types xml)
           contents (merge types (get-members xml))
-          shortdefs (into {} (map (fn [id] [id (shortdef types id)]) 
-                                 (keys types)))
-          fulldefs (into {} (map (fn [id] [id (fulldef contents id)]) 
-                                 (keys contents)))               
-          complex    (for [[_ v] fulldefs 
+          shorts (into {} (map (fn [id] [id (short types id)]) 
+                               (keys types)))
+          fulls (into {} (map (fn [id] [id (full contents id)]) 
+                              (keys contents)))               
+          complex    (for [[_ v] fulls 
                            :when (and (seq? v) (#{'class 'struct 'typedef} (first v)))] 
                        (list (second v) v))
           enumerations (for [enum (xml-get xml :Enumeration :id :name)]
@@ -221,12 +293,12 @@
                        (list (symbol (:name enumvalue)) 'int))
           ; TODO only top level vars
           variables (for [[id v] (xml-get xml :Variable :id :name :type)]
-                      (list (symbol (:name v)) (shortdefs (:type v))))            
+                      (list (symbol (:name v)) (shorts (:type v))))            
           functions (for [function (xml-> xml :Function)]
                       (list (symbol (xml1-> function (attr :name)))
                             (list 'fn
-                                  (map shortdefs (xml-> function :Argument (attr :type)))
-                                  (shortdefs (xml1-> function (attr :returns))))))]
+                                  (map shorts (xml-> function :Argument (attr :type)))
+                                  (shorts (xml1-> function (attr :returns))))))]
       (->> (concat complex enumerations enumvalues variables functions) 
            (remove #(.startsWith (str (first %)) "_"))
            to-env))
