@@ -50,11 +50,14 @@
 (defn geto
   [k v m]
   (fn [a]
-    (let [gv (get (walk a m) (walk a k))
-          f (first gv)]
-      (if (and f (empty? (rest gv)))
-        (unify a v f)
-        ((membero v gv) a)))))
+    (let [gk (walk a k)]
+      (if (lvar? gk)
+        ((membero [k [v]] (seq (walk a m))) a)
+        (let [gv (get (walk a m) gk)
+              f (first gv)]
+          (if (and f (empty? (rest gv)))
+            (unify a v f)
+            ((membero v gv) a)))))))
 
 (defn geto-ts
   "transitive version of of geto"
@@ -232,9 +235,9 @@
 (defnu dot ; (. obj member args*)
   [env form type new-env]
   ([_ [_ ?obj ?member . ?args] _ _]
-    (fresh [env2 class-fn clazz members membert argst env3]
+    (fresh [env2 class-fn clazz clazz2 members membert argst env3]
            (typedo env ?obj ['pointer clazz] env2)
-           (geto-ts clazz [class-fn clazz members] env)
+           (geto-ts clazz [class-fn clazz2 members] env)
            (geto ?member membert members)
            (typeso env2 ?args argst env3)
            (matcha [membert ?args type]

@@ -71,13 +71,16 @@
 (facts "extern"
   (dump "dev-resources/tests/extern.s") => ok)
 
+(facts "includes"
+  (dump "dev-resources/tests/includes.s") => ok)
+
 (comment (facts "gtkmm"
   (dump "dev-resources/tests/gtkmm/simple.s") => ok))
 
 ; TEMP
-(facts "rogue"
+(comment (facts "rogue"
   (dump "../rogue/src/synth.s") => ok
-  (dump "../rogue/src/synth2.s") => ok)
+  (dump "../rogue/src/synth2.s") => ok))
 
 
 

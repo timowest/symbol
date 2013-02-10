@@ -204,6 +204,14 @@
         (map #(full all %)
              (.split (:members t) " "))))
 
+(comment (defmethod full* :Typedef
+  [all t]
+  (let [ref (all (:type t))]
+    (if (= (:cat ref) :Struct)
+      (full* all ref)
+      (list 'typedef (symbol (:name t))
+            (short all (:type t)))))))
+
 (defmethod full* :Typedef
   [all t]
   (list 'typedef (symbol (:name t))
