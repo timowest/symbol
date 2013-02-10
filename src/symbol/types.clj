@@ -129,7 +129,8 @@
           types (map ftype gmembers)
           gmembers (cons [:new types]
                          (map vector gmembers types))
-          gtype (list 'struct gname (to-env gmembers))]
+          ; TODO generics
+          gtype (list 'struct gname [] (to-env gmembers))]
       ;(println gtype)
       (unify a [type new-env] [gtype (update-in genv [gname] conj gtype)]))))          
 
@@ -237,7 +238,8 @@
   ([_ [_ ?obj ?member . ?args] _ _]
     (fresh [env2 class-fn clazz clazz2 members membert argst env3]
            (typedo env ?obj ['pointer clazz] env2)
-           (geto-ts clazz [class-fn clazz2 members] env)
+           ; TODO generics
+           (geto-ts clazz [class-fn clazz2 []  members] env)
            (geto ?member membert members)
            (typeso env2 ?args argst env3)
            (matcha [membert ?args type]
@@ -251,7 +253,8 @@
   ([_ [_ ?class . ?args] _ _]
     (fresh [argst members env2 class-fn]
            (typeso env ?args argst env2)
-           (geto ?class [class-fn ?class members] env)
+           ; TODO generics
+           (geto ?class [class-fn ?class [] members] env)
            (geto :new argst members)
            (== type ['pointer ?class])
            (assoco env2 form type new-env))))
@@ -286,12 +289,6 @@
            (last-typeo env ?exprs type env2)
            (assoco env2 form type new-env))))
 
-(defn include* 
-  [path]
-  (if (= path "iostream") 
-    {}
-    (includes/include path)))
-    
 (defn includeo
   [env form type new-env]
   (fn [a]
@@ -300,7 +297,8 @@
           include (second gform)]
       (if (genv gform)
         (unify a [type new-env] ['void genv])
-        (unify a [type new-env] ['void (combine (assoc genv gform ['void]) (include* include))])))))
+        (unify a [type new-env] ['void (combine (assoc genv gform ['void]) 
+                                                (includes/include include))])))))
 
 (defnu casto
   [env form type new-env]
@@ -326,7 +324,8 @@
           members (for [[name type] members]
                     [name (expand-type type)])
           members (cons [:new []] members)
-          gtype (list 'struct name (to-env members))]
+          ; TODO generics
+          gtype (list 'struct name []  (to-env members))]
       (unify a [type new-env] [gtype (update-in genv [gform] conj gtype)]))))
      
 (def ^:private expandables 

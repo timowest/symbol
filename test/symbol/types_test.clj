@@ -26,8 +26,7 @@
   (merge 
     common/core-env
     '{person [(pointer Person)]                    
-      Person [(class 
-                Person 
+      Person [(class Person [] 
                 {name [(pointer char)] 
                  age  [long]
                  olderThan [(method [long] boolean)]
@@ -130,7 +129,7 @@
 (facts "deftype"
   (typeof '(deftype Type [n1 n2] (def f1 (fn* ([^Type* _1] (+ (. _1 n1) 1)))) 
                                  (def f2 (fn* ([^Type* _2] (+ (. _2 n2) 1.0)))))) 
-   => '(struct Type {n2 (double) n1 (long) :new ((long double))}))
+   => '(struct Type [] {n2 (double) n1 (long) :new ((long double))}))
 
 (facts "do"
   (typeof '(do 1 2 true "abc")) => '(pointer char)
@@ -141,7 +140,7 @@
   (typeof '(array long 5)) => '(pointer long))
 
 (facts "struct"
-  (typeof '(struct parent (i1 int) (i2 int))) => '(struct parent {i2 (int), i1 (int), :new ([])}))
+  (typeof '(struct parent (i1 int) (i2 int))) => '(struct parent [] {i2 (int), i1 (int), :new ([])}))
 
 (facts "constants"
   (typeof 1) => 'long

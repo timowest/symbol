@@ -223,8 +223,8 @@
     (if (:members t) 
       (let [members (map #(full all %) 
                          (.split (:members t) " "))]
-        (list 'class name (to-env (filter coll? members)))) 
-      (list 'class name))))
+        (list 'class name [] (to-env (filter coll? members)))) 
+      (list 'class name []))))
 
 (defmethod full* :Struct
   [all t]
@@ -232,8 +232,8 @@
     (if (:members t)
       (let [members (map #(full all %) 
                          (filter #(pos? (.length %)) (.split (:members t) " ")))]
-        (list 'struct name (to-env (filter coll? members))))                                    
-      (list 'struct name))))
+        (list 'struct name [] (to-env (filter coll? members))))                                    
+      (list 'struct name []))))
 
 (defmethod full* :default
   [all t]
@@ -312,7 +312,15 @@
            to-env))
     (throw (IllegalArgumentException. (str "Got no file for " local-path)))))
 
-(def include (memoize include*))
+(def bundled
+  (into {} (for [path ["list"]]
+             (let [[_ & contents] (read-cp (str path ".s"))]
+               [path (to-env (partition 2 contents))]))))
+
+(def include 
+  (let [memoized (memoize include*)]
+    (fn [path]
+      (or (bundled path) (memoized path)))))
 
 (defn- include-pp
   [local-path]

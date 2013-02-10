@@ -7,7 +7,8 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns symbol.common
-  (:require [clojure.walk :as walk]))
+  (:require [clojure.walk :as walk]
+            [clojure.java.io :as jio]))
 
 (defn form?
   [form s]
@@ -17,6 +18,10 @@
   [form]
   (and (seq? form)
        ('#{if let* loop* do} (first form))))
+
+(defn read-cp
+  [path]
+  (-> (jio/resource path) slurp read-string))
 
 (def literal-types
   {Long      'long

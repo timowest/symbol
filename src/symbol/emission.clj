@@ -199,7 +199,7 @@
                
 (defn def-struct
   [env name value]
-  (let [[_ name members] (get-type env name)]
+  (let [[_ name generics members] (get-type env name)]
     (lines
       (class-signature env name members)
       (str "struct " (emit env nil name) " {")
