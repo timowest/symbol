@@ -40,11 +40,15 @@
   (dump "dev-resources/tests/functions6.s") => ok)
 
 (facts "structs"
-  (dump "dev-resources/tests/structs1.s") => ok)
+  (dump "dev-resources/tests/structs1.s") => ok
+  (dump "dev-resources/tests/structs2.s") => ok)
 
 (facts "deftypes"
   (dump "dev-resources/tests/deftypes.s") => ok)
 
+(facts "chars"
+  (dump "dev-resources/tests/chars.s") => ok)
+       
 (facts "pointers"
   (dump "dev-resources/tests/pointers.s") => ok
   (dump "dev-resources/tests/pointers2.s") => ok)
@@ -58,6 +62,9 @@
 
 (facts "audio"
   (dump "dev-resources/tests/audio.s") => ok)
+
+(facts "midi"
+  (dump "dev-resources/tests/midi.s") => ok)
         
 (facts "io"
   (dump "dev-resources/tests/io/example.s")  => ok

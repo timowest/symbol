@@ -242,7 +242,8 @@
            (typeso env2 ?args argst env3)
            (matcha [membert ?args type]
                    ([type [] type])
-                   ([['method argst type] ?args type]))
+                   ([['method argst type] ?args type])
+                   ([['pointer ['fn argst type]] ?args type]))
            (assoco env3 form type new-env))))
                    
 (defnu newo ; (new Class args*)
@@ -345,7 +346,7 @@
   (if (symbol? type) 
     (let [s (str type)]                             
       (cond
-        (.startsWith s "_") (if (> (.length s) 2) (lvar) type)
+        (re-matches #"_\d{2,}" s) (lvar)
         (.endsWith s "*") (list 'pointer (expand (shorten type 1)))
         (.endsWith s ".const") (add-meta (expand (shorten type 6)) :const true)
         :else type))        

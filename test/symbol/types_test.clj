@@ -20,7 +20,7 @@
     '{dec   [(fn [long] long)]
       inc   [(fn [long] long)]
       println [(fn [_0] void)]             
-      substr [(fn [string long] string)]}))
+      substr [(fn [(pointer char) long] (pointer char))]}))
 
 (def env2 
   (merge 
@@ -28,10 +28,10 @@
     '{person [(pointer Person)]                    
       Person [(class 
                 Person 
-                {name [string] 
+                {name [(pointer char)] 
                  age  [long]
                  olderThan [(method [long] boolean)]
-                 :new [[string] [string long]]})]}))
+                 :new [[(pointer char)] [(pointer char) long]]})]}))
 
 (facts "nil"
   (typeof env nil) => 'void)
@@ -41,7 +41,7 @@
   (typeof '(if true 1)) => 'long
   (typeof '(if true 1 2)) => 'long
   (typeof '(if true (let* [b 1] b))) => 'long
-  (typeof '(if true (let* [x 15 z "s"] z))) => 'string)
+  (typeof '(if true (let* [x 15 z "s"] z))) => '(pointer char))
 
 (facts "inline if"
   (typeof env '((if (< 0 1) inc dec) 5)) => 'long
@@ -52,7 +52,7 @@
 
 (facts "fn*"
   (typeof env '(fn* ([a b] (+ a b)))) => '(fn [_0 _0] _0)
-  (typeof env '(fn* ([a] (substr a 1)))) => '(fn [string] string)
+  (typeof env '(fn* ([a] (substr a 1)))) => '(fn [(pointer char)] (pointer char))
   (typeof env '(fn* ([a] (fn* ([b] (+ a b)))))) => '(fn [_0] (fn [_0] _0)))
 
 (facts "fn* annotated"
@@ -78,7 +78,7 @@
 (facts "let*"
   (typeof '(let* [^int x 0] x)) => 'int
   (typeof '(let* [a 1 b "x"] a)) => 'long
-  (typeof '(let* [a 1 b "x"] b)) => 'string)
+  (typeof '(let* [a 1 b "x"] b)) => '(pointer char))
 
 (facts "let* annotated"
   ;(typeof env '(let* [^int a 1] (+ a 2))) => nil ; FIXME
@@ -101,7 +101,7 @@
   => 'void)
   
 (facts "dot"
-  (typeof env2 '(. person name)) => 'string
+  (typeof env2 '(. person name)) => '(pointer char)
   (typeof env2 '(. person age)) => 'long
   (typeof env2 '(. person olderThan 10)) => 'boolean)
 
@@ -123,8 +123,8 @@
 
 (facts "def annotated"
   (typeof '(def ^int a)) => 'int
-  (typeof '(def + ^{:tag (fn [_0 _0] _0)} 'native)) => '(fn [_0 _0] _0)
-  (typeof '(def cos ^{:tag (fn [double] double)} 'native)) => '(fn [double] double)
+  (typeof '(def + ^{:tag (fn [_0 _0] _0)} native)) => '(fn [_0 _0] _0)
+  (typeof '(def cos ^{:tag (fn [double] double)} native)) => '(fn [double] double)
   (typeof '(def fna (fn* ([^int aa ^long bb])))) => '(fn [int long] void))
 
 (facts "deftype"
@@ -133,7 +133,7 @@
    => '(struct Type {n2 (double) n1 (long) :new ((long double))}))
 
 (facts "do"
-  (typeof '(do 1 2 true "abc")) => 'string
+  (typeof '(do 1 2 true "abc")) => '(pointer char)
   (typeof '(do "abc" 1)) => 'long
   (typeof '(do true)) => 'boolean)         
 
@@ -145,7 +145,7 @@
 
 (facts "constants"
   (typeof 1) => 'long
-  (typeof "s") => 'string
+  (typeof "s") => '(pointer char)
   (typeof \s) => 'char
   (typeof 1.2) => 'double
   (typeof 1/2) => 'ratio)

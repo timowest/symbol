@@ -161,9 +161,9 @@
     (cpp '(+ 1 2 (- 3 4 5))) => "((1 + 2) + ((3 - 4) - 5))")) 
 
 (facts "escaping"
-  (cpp 'empty?) => "empty_QMARK_"
-  (cpp 'a->b) => "a__GT_b"
-  (cpp 'a<>b) => "a_LT__GT_b")
+  (emit core-env nil 'empty?) => "empty_QMARK_"
+  (emit core-env nil 'a->b) => "a__GT_b"
+  (emit core-env nil 'a<>b) => "a_LT__GT_b")
 
 (defn type2str
   [s]
@@ -192,6 +192,6 @@
     (cpp '(defn eq [x y] (= x y))) 
     => "template <class A>\nbool eq(A _a, A _b) {\nreturn (_a == _b);\n}\n")  
   (fact "string"
-    (cpp '(def greeting "Hello, world!")) => "const std::string greeting = \"Hello, world!\";")) 
+    (cpp '(def greeting "Hello, world!")) => "const char* greeting = \"Hello, world!\";")) 
 
 

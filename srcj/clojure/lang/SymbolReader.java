@@ -235,7 +235,7 @@ public class SymbolReader {
 
         String s = sb.toString();
         // CUSTOM NUMBERS start
-        boolean convert = Character.isLetter(s.charAt(s.length()-1));
+        boolean convert = Character.isLetter(s.charAt(s.length()-1)) && !s.contains("x");
         Number n;
         if (convert) {
             n = matchNumber(s.substring(0, s.length()-1));

@@ -68,8 +68,8 @@
 
 (defn get-type
   [env form]
-  (if (instance? Number form) 
-    (literal-types (.getClass form))
+  (if-let [type (literal-types (.getClass form))]
+    type
     (or 
       (first (env form))
       (throw (IllegalStateException. (str "Found no type for " form))))))  
@@ -78,6 +78,7 @@
   [env target form]
   (cond (seq? form) (first form)
         (literal-types (type form)) (literal-types (type form))
+        (symbol? form) 'symbol
         :else form))
 
 (defmulti emit emit-selector)
@@ -146,7 +147,7 @@
         (str type " " name " = " (emit env nil value) ";")))))    
 
 (def math-ops 
-  (let [base (into {} (for [k '#{+ - * / < > <= >= != << >> %}]
+  (let [base (into {} (for [k '#{+ - * / < > <= >= != << >> % & |}]
                         [k (str " " k " ")]))]
     (merge base '{= " == "})))
 

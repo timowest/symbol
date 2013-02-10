@@ -308,7 +308,7 @@
                                   (map shorts (xml-> function :Argument (attr :type)))
                                   (shorts (xml1-> function (attr :returns))))))]
       (->> (concat complex enumerations enumvalues variables functions) 
-           (remove #(.startsWith (str (first %)) "_"))
+           (remove #(.startsWith (str (first %)) "__builtin"))
            to-env))
     (throw (IllegalArgumentException. (str "Got no file for " local-path)))))
 

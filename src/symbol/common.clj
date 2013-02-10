@@ -23,11 +23,10 @@
    Integer   'int   
    Double    'double
    Float     'float
-   String    'string
+   String    '(pointer char)
    Character 'char
    Boolean   'boolean
-   clojure.lang.Ratio 'ratio
-   clojure.lang.Symbol 'symbol})
+   clojure.lang.Ratio 'ratio})
 
 (def operators #{'= '!= '+ '- '* '/ '% '> '< '>= '<= '& '| '<< '>>})
 
@@ -58,6 +57,8 @@
     *     [(fn [_0 _0] _0)]    
     /     [(fn [_0 _0] _0)]
     %     [(fn [_0 _0] _0)]
+    &     [(fn [_0 _1] _1)]
+    |     [(fn [_0 _1] _1)]
     
     ; XXX maybe these should be macros instead ?
     ; casts 
