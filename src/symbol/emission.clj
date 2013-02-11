@@ -110,6 +110,10 @@
         (symbol? t) (emit env nil t)
         (form? (seq t) 'fn) (fn-type->string env t)
         (form? (seq t) 'pointer) (str (type->string env (second t)) "*")
+        (coll? t) (let [[raw & generics] (map #(type->string  env %) t)]
+                    (if (empty? generics)
+                      raw
+                      (str raw "<" (string/join ", " generics) ">")))                        
         :else (-> t type str)))
 
 (defn args->string
@@ -325,7 +329,7 @@
   [env target form]
   (let [[_ clazz & args] form
         args (map #(emit env nil %) args)]
-    (format "new %s(%s)" clazz (string/join ", " args))))
+    (format "new %s(%s)" (type->string env clazz) (string/join ", " args))))
 
 (defmethod emit 'nil?
   [env target form]

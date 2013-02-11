@@ -236,10 +236,13 @@
 (defnu dot ; (. obj member args*)
   [env form type new-env]
   ([_ [_ ?obj ?member . ?args] _ _]
-    (fresh [env2 class-fn clazz clazz2 members membert argst env3]
+    (fresh [env2 class-fn clazz clazz2 members membert argst env3 template]
            (typedo env ?obj ['pointer clazz] env2)
-           ; TODO generics
-           (geto-ts clazz [class-fn clazz2 []  members] env)
+           (matcha [clazz]
+                   ([_] (geto-ts clazz [class-fn clazz2 [] members] env))                 
+                   ([[?raw . ?generics]]  
+                     (geto-ts ?raw template env)
+                     (expando template [class-fn clazz2 ?generics members])))                   
            (geto ?member membert members)
            (typeso env2 ?args argst env3)
            (matcha [membert ?args type]
@@ -250,13 +253,16 @@
                    
 (defnu newo ; (new Class args*)
   [env form type new-env]
-  ([_ [_ ?class . ?args] _ _]
-    (fresh [argst members env2 class-fn]
+  ([_ [_ ?class . ?args] _ _] 
+    (fresh [argst clazz2 members env2 class-fn template]
            (typeso env ?args argst env2)
-           ; TODO generics
-           (geto ?class [class-fn ?class [] members] env)
+           (matcha [?class type]                   
+                   ([_ ['pointer clazz2]]
+                     (geto-ts ?class [class-fn clazz2 [] members] env))
+                   ([[?raw . ?generics] ['pointer [clazz2 . ?generics]]]
+                     (geto-ts ?raw template env)
+                     (expando template [class-fn clazz2 ?generics members])))
            (geto :new argst members)
-           (== type ['pointer ?class])
            (assoco env2 form type new-env))))
 
 (defn metao

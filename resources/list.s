@@ -1,8 +1,10 @@
 (contents
     
-list  
-(class list [_0]
- {begin ((method [] (iterator _0)))  
+std/list  
+(class std/list [_0]
+ {:new (())
+  
+  begin ((method [] (iterator _0)))  
   end ((method [] (iterator _0)))
   rbegin ((method [] (reverse_iterator _0)))
   rend ((method [] (reverse_iterator _0)))

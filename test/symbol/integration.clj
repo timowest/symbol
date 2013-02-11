@@ -53,6 +53,9 @@
   (dump "dev-resources/tests/pointers.s") => ok
   (dump "dev-resources/tests/pointers2.s") => ok)
 
+(facts "lists"
+  (dump "dev-resources/tests/lists.s") => ok)
+
 (facts "literals"
   (dump "dev-resources/tests/literals.s") => ok)
 

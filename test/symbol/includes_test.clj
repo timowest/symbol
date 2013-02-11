@@ -43,13 +43,13 @@
   (get-type stdio 'gets) => '(fn ((pointer char)) (pointer char))
   (get-type stdio 'getw) => '(fn ((pointer _IO_FILE)) int))      
 
-(facts "iostream"   
+(comment (facts "iostream"   
   (get-type iostream 'cin) =>  '(basic_istream char (std/char_traits char))
   (get-type iostream 'cout) => '(basic_ostream char (std/char_traits char))
   (get-type iostream 'cerr) => '(basic_ostream char (std/char_traits char))
   (get-type iostream 'istream) => '(typedef istream (basic_istream char (std/char_traits char)))
   (get-type iostream 'ostream) => '(typedef ostream (basic_ostream char (std/char_traits char)))
-  (get-type iostream '(basic_istream char (std/char_traits char))) => (complement nil?))
+  (get-type iostream '(basic_istream char (std/char_traits char))) => (complement nil?)))
 
 ; C++ includes
 

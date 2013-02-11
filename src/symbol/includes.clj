@@ -313,7 +313,7 @@
     (throw (IllegalArgumentException. (str "Got no file for " local-path)))))
 
 (def bundled
-  (into {} (for [path ["list"]]
+  (into {} (for [path ["list" "iostream"]]
              (let [[_ & contents] (read-cp (str path ".s"))]
                [path (to-env (partition 2 contents))]))))
 
