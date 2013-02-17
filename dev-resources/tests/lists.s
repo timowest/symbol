@@ -13,7 +13,3 @@
 
 (defn last  [^{:tag (pointer (std/list _0))} l]
   (. l (back)))
-
-; TODO nth
-
-; TODO cons

@@ -25,6 +25,12 @@
         d (pref a 0)]        
     (delete a)))
 
+; destruct
+(defn fnc []
+  (let [a (array double 4)
+        [b c d e] a]
+    (+ b c d e)))
+
 ; wrapped special forms
 (defn pref_ [a]
   (pref a))

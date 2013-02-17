@@ -333,6 +333,13 @@
     (cons 'do (map #(list 'use %) nss))    
     &form))
 
+; XXX this is temporary and should become a more general function / form
+(defmacro nth
+  [c i & rest]
+  (with-meta
+    (list 'pref c i)
+    (meta &form)))
+
 (defmacro include
   [& files]
   (if (> (count files) 1)
