@@ -48,7 +48,7 @@
   ; or  
   (fact "."
     (expand '(.member obj)) => '(. obj member)
-    (expand '(.member obj arg)) => '(. obj member arg))  
+    (expand '(.member obj arg)) => '(. obj (member arg)))  
   (fact "new"
     (expand '(Class1. arg1 arg2)) => '(new Class1 arg1 arg2))   
   (fact "->"

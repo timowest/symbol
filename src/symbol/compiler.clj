@@ -120,7 +120,9 @@
 (defn expand-dot
   [[m obj & args]]
   (let [member (symbol (.substring (str m) 1))] 
-    (concat (list '. obj member) args)))
+    (if (empty? args)
+      (list '. obj member)
+      (list '. obj (cons member args)))))
   
 (defn expand-new
   [[cl & args]]
@@ -131,8 +133,8 @@
 (defn expand-form
   [macros form]
   (let [fst (first form)]
-    (cond (.startsWith (str fst) ".") (expand-dot form)
-          (.endsWith (str fst) ".") (expand-new form) 
+    (cond (re-matches #"^\..+" (str fst)) (expand-dot form)
+          (re-matches #".+\.$" (str fst)) (expand-new form) 
           :else (if-let [f (macros fst)]
                   (let [ex (f form)]
                     (cond ;(identical? ex form) form

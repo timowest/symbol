@@ -20,9 +20,14 @@
     form))
 
 (defn- fix-dotform
-  [[_ obj name & rest]]
-  (let [name (or (-> name meta :orig) name)]
-    `(. ~obj ~name ~@rest)))
+  [[_ obj margs]]
+  (cond (coll? margs)
+        (let [[name & rest] margs
+               name (or (-> name meta :orig) name)]
+          (list '. obj (cons name rest)))
+        
+        :else
+        (list '. obj (or (-> margs meta :orig) margs))))
 
 (defn- replace-names
   [form names]

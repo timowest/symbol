@@ -235,7 +235,7 @@
     
 (defnu dot ; (. obj member args*)
   [env form type new-env]
-  ([_ [_ ?obj ?member . ?args] _ _]
+  ([_ [_ ?obj [?member . ?args]] _ _]
     (fresh [env2 class-fn clazz clazz2 members membert argst env3 template]
            (typedo env ?obj ['pointer clazz] env2)
            (matcha [clazz]
@@ -245,11 +245,20 @@
                      (expando template [class-fn clazz2 ?generics members])))                   
            (geto ?member membert members)
            (typeso env2 ?args argst env3)
-           (matcha [membert ?args type]
-                   ([type [] type])
+           (matcha [membert ?args type] 
                    ([['method argst type] ?args type])
-                   ([['pointer ['fn argst type]] ?args type]))
-           (assoco env3 form type new-env))))
+                   ([['pointer ['fn argst type]] ?args type]))                                      
+           (assoco env3 form type new-env)))
+  ([_ [_ ?obj ?member] _ _]
+    (fresh [env2 class-fn clazz clazz2 members template]
+           (typedo env ?obj ['pointer clazz] env2)
+           (matcha [clazz]
+                   ([_] (geto-ts clazz [class-fn clazz2 [] members] env))                 
+                   ([[?raw . ?generics]]  
+                     (geto-ts ?raw template env)
+                     (expando template [class-fn clazz2 ?generics members])))                   
+           (geto ?member type members)                                                 
+           (assoco env2 form type new-env))))
                    
 (defnu newo ; (new Class args*)
   [env form type new-env]

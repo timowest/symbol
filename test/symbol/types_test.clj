@@ -102,7 +102,7 @@
 (facts "dot"
   (typeof env2 '(. person name)) => '(pointer char)
   (typeof env2 '(. person age)) => 'long
-  (typeof env2 '(. person olderThan 10)) => 'boolean)
+  (typeof env2 '(. person (olderThan 10))) => 'boolean)
 
 (facts "new"
   ;(typeof env2 '(new Person 1)) => nil

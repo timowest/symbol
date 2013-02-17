@@ -383,10 +383,11 @@
 
 (defmethod emit '. 
   [env target form]
-  (let [[_ obj member & args] (map #(emit env nil %) form)
-        s (if (empty? args)
-              (str obj "->" member)
-              (str obj "->" member "(" (string/join ", " args) ")"))]
+  (let [[_ obj margs] form
+        s (if (coll? margs) 
+            (let [[member & args] (map #(emit env nil %) margs)]
+              (str obj "->" member "(" (string/join ", " args) ")"))
+            (str obj "->" (emit env nil margs)))]
     (cond (= target :stmt) (str s ";")
           (nil? target) s
           :else (str (emit env nil target) " = " s ";"))))
