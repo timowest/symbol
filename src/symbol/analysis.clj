@@ -44,6 +44,10 @@
   [form]
   (let [args (first (nth form (if (symbol? (second form)) 2 1)))]
     (replace-names form args)))
+
+(defn method-names
+  [form]  
+  (replace-names form (second form)))
   
 (defn let-names
   [form]
@@ -104,14 +108,15 @@
     `(let* ~bindings ~walked)))
 
 (defn expand-deftype
-  [[_ name args & functions]]  
+  [[_ name args & methods]]  
     (concat 
       (list 'deftype name args)
-      (for [[fname [this & fargs] & body] functions]
+      (for [[mname [this & margs] & body] methods]
         (let [mapped (zipmap args (map #(list '. this %) args))
               body (walk/postwalk-replace mapped body)
-              this (with-meta this {:tag (list 'pointer name)})]
-          (list 'def fname (fn-names `(fn* ([~this ~@fargs] ~@body))))))))
+              this (with-meta this {:tag (list 'pointer name) :this true})]
+          (list 'method mname
+                (method-names (concat (list 'method (cons this margs)) body)))))))
                     
 (defn expand-deftypes
   [form]

@@ -189,18 +189,30 @@
       (str "template<" (string/join ", " sig) ">")
       "")))
 
+(defn first=? 
+  [coll f]
+  (and (coll? coll) (= (first coll) f)))
+
 (defn class-constructors
   [env name members]
   (let [fields (filter #(not (= (first %) :new)) members)]
     (for [args (members :new)]
-      (let [cargs (for [[name [type]] fields]
+      (let [cargs (for [[name [type]] fields
+                        :when (not (first=? type 'method))]
                    (str (type->string env type) " _" (emit env nil name)))
-            cassign (for [[name _] fields]
+            cassign (for [[name [type]] fields
+                          :when (not (first=? type 'method))]
                      (str (emit env nil name) "(_" (emit env nil name) ")"))]
         (if (empty? args) 
           (str name "() {}")
           (str name "(" (string/join ", " cargs) ") : " (string/join ", " cassign) " {}"))))))
-               
+
+(defn method-entry
+  [env name type]
+  (let [[_ args rtype] type]
+    (str (emit env nil rtype) " " (emit env nil name) 
+         "(" (string/join ", " (map #(emit env nil %) args)) ");")))   
+  
 (defn def-struct
   [env name value]
   (let [[_ name generics members] (get-type env name)]
@@ -208,8 +220,10 @@
       (class-signature env name members)
       (str "struct " (emit env nil name) " {")
       (for [[name types] members :when (not (= name :new))
-            type types]        
-        (str (type->string env type) " " (emit env nil name) ";"))
+            type types]     
+        (if (first=? type 'method)
+          (method-entry env name type)
+          (str (type->string env type) " " (emit env nil name) ";")))
       (class-constructors env name members)
       "};\n")))
 
@@ -325,6 +339,19 @@
       (str name ":") 
       (stmts env target body))))
 
+(defmethod emit 'method
+  [env target form]
+  (let [[_ name [_ [this & args] & body]] form
+        this-types (type->string env (second (get-type env this)))
+        [_ argst rtype] (get-type env form)
+        rtypes (type->string env rtype)
+        args-str (args->string env args argst)
+        name-str (emit env nil name)]
+    (lines
+      (format "%s %s::%s(%s) {" rtypes this-types name-str args-str)
+      (fn-body env nil body rtype)
+      "}\n")))    
+
 (defmethod emit 'new  
   [env target form]
   (let [[_ clazz & args] form
@@ -384,10 +411,13 @@
 (defmethod emit '. 
   [env target form]
   (let [[_ obj margs] form
+        obj-type (get-type env obj)
+        sep (if (and (coll? obj-type) (= (first obj-type) 'pointer)) "->" ".")
+        obj (if (-> obj meta :this) "this" obj)
         s (if (coll? margs) 
-            (let [[member & args] (map #(emit env nil %) margs)]
-              (str obj "->" member "(" (string/join ", " args) ")"))
-            (str obj "->" (emit env nil margs)))]
+            (let [[member & args] (map #(emit env nil %) margs)]                              
+              (str obj sep member "(" (string/join ", " args) ")"))
+            (str obj sep (emit env nil margs)))]
     (cond (= target :stmt) (str s ";")
           (nil? target) s
           :else (str (emit env nil target) " = " s ";"))))

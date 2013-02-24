@@ -4,3 +4,6 @@
 
 (defn get-a [^_Struct* s]
   (.a s))
+
+(defn get-b [^_Struct s]
+  (.b s))

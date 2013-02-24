@@ -4,8 +4,8 @@
 
 (comment 
 (deftype Generic [f s] 
-  (first [_] f) 
-  (second [_] s))
+  (first [_1] f) 
+  (second [_2] s))
 
 (defn new-generic [fn ln]
   (Generic. fn ln))
@@ -17,8 +17,8 @@
 ; concrete #1
 
 (deftype Concrete [n1 n2] 
-  (f1 [_] (+ n1 1)) 
-  (f2 [_] (+ n2 1.0)))
+  (f1 [_3] (+ n1 1)) 
+  (f2 [_4] (+ n2 1.0)))
 
 (defn new-concrete [n1 n2]
   (Concrete. n1 n2))

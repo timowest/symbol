@@ -39,12 +39,14 @@
 
 (facts "expand deftypes"
    (expand-deftypes '(deftype Type [fn ln] (first [_] fn) (last [_] ln))) 
-                 => '(deftype Type [fn ln] (def first (fn* ([_] (. _ fn)))) 
-                                           (def last (fn* ([_] (. _ ln)))))
+                 => '(deftype Type [fn ln] (method first (method (_) (. _ fn))) 
+                                           (method last (method (_) (. _ ln))))
+                 
    (provided (gensym) => '_)
    (expand-deftypes '(deftype Type [n1 n2] (f1 [_] (+ n1 1)) (f2 [_] (+ n2 1.0))))
-                 => '(deftype Type [n1 n2] (def f1 (fn* ([_] (+ (. _ n1) 1)))) 
-                                           (def f2 (fn* ([_] (+ (. _ n2) 1.0)))))
+                 => '(deftype Type [n1 n2] (method f1 (method (_) (+ (. _ n1) 1))) 
+                                           (method f2 (method (_) (+ (. _ n2) 1.0))))
+                 
    (provided (gensym) => '_))
 
 (facts "simplify"       

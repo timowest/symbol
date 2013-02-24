@@ -136,12 +136,25 @@
 
 (defnu deftypeo
   [env form type new-env]
-  ([_ [_ ?name ?args . ?functions] _ _]
+  ([_ [_ ?name ?args . ?methods] _ _]
     (fresh [env2 last]
            (classo env ?name ?args type env2)
            (conda
-             ((== [?functions new-env] [[] env2]))
-             ((last-typeo env2 ?functions last new-env))))))
+             ((== [?methods new-env] [[] env2]))
+             ((last-typeo env2 ?methods last new-env))))))
+
+(defnu methodo ; (method name (method [this & args] & exprs)
+  [env form type new-env]
+  ([_ [_ ?name [_ [?this . ?args] . ?exprs]] _ _]
+    (fresh [argst env2 rtype env3 thist class-fn clazz members env4 members2 env5]
+           (typedo env ?this ['pointer clazz] env2)
+           (geto clazz [class-fn clazz [] members] env2)
+           (ftypeso env2 ?args argst env3)
+           (last-typeo env3 ?exprs rtype env4)
+           (== type ['method argst rtype])           
+           (updateo members ?name type members2)
+           (assoco env4 clazz [class-fn clazz [] members2] env5)
+           (assoco env5 form type new-env))))    
            
 (defnu fno ; (fn args body)
   [env form type new-env]  
@@ -236,8 +249,9 @@
 (defnu dot ; (. obj member args*)
   [env form type new-env]
   ([_ [_ ?obj [?member . ?args]] _ _]
-    (fresh [env2 class-fn clazz clazz2 members membert argst env3 template]
-           (typedo env ?obj ['pointer clazz] env2)
+    (fresh [env2 class-fn cl clazz clazz2 members membert argst env3 template]
+           (typedo env ?obj cl env2)
+           (matcha [cl clazz] ([['pointer clazz] clazz]) ([clazz clazz]))
            (matcha [clazz]
                    ([_] (geto-ts clazz [class-fn clazz2 [] members] env))                 
                    ([[?raw . ?generics]]  
@@ -250,8 +264,9 @@
                    ([['pointer ['fn argst type]] ?args type]))                                      
            (assoco env3 form type new-env)))
   ([_ [_ ?obj ?member] _ _]
-    (fresh [env2 class-fn clazz clazz2 members template]
-           (typedo env ?obj ['pointer clazz] env2)
+    (fresh [env2 class-fn cl clazz clazz2 members template]
+           (typedo env ?obj cl env2)
+           (matcha [cl clazz] ([['pointer clazz] clazz]) ([clazz clazz]))
            (matcha [clazz]
                    ([_] (geto-ts clazz [class-fn clazz2 [] members] env))                 
                    ([[?raw . ?generics]]  
@@ -411,9 +426,10 @@
 (defn failo
   [form]
   (fn [a]
-    (let [gform (walk a form)]          
+    (let [gform (walk a form)
+          form (or (-> gform meta :orig) gform)]
       (throw (IllegalStateException. 
-             (str "Type inference failed for " (print-str gform)))))))
+             (str "Type inference failed for " (print-str form)))))))
 
 ; OPTIMIZE
 (defnu last-typeo
@@ -437,7 +453,7 @@
 (def skipped #{'ns* 'comment 'extern})
 
 (def handlers
-  {'array arrayo 'cast casto 'def defo 'do doo 'fn* fno
+  {'array arrayo 'cast casto 'def defo 'do doo 'fn* fno 'method methodo
    'if ifo 'include includeo 'let* leto 'loop* loopo 'new newo   
    'recur* recuro 'struct structo '. dot 'deftype deftypeo        
    '= binpredo '!= binpredo '< binpredo '> binpredo '<= binpredo '>= binpredo 
