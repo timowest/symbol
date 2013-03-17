@@ -13,7 +13,7 @@ The following things were too big challenges for me
 * efficient dynamic memory management 
 * gccxml doesn't support templates
 
-If anyone is interested to take over and copy some ideas please contact me.
+If anyone is interested to take over or copy some ideas please contact me.
 
 symbol has working
 * type inference for functions and classes
